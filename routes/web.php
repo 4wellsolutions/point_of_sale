@@ -45,7 +45,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user-login', [ProfileController::class, "loginUserById"]);
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::get('/password/change', [ProfileController::class, 'password'])->name('change.password');
+    Route::put('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // ── USER MANAGEMENT (Admin only) ──
     Route::resource('users', UserController::class);

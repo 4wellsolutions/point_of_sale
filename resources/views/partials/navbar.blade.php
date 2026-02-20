@@ -13,16 +13,18 @@
     <ul class="navbar-nav ml-auto">
         <!-- Profile dropdown -->
         <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
                 {{ Auth::user()->name }}
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{{ route('profile') }}">Profile</a></li>
-                <li><a class="dropdown-item" href="{{ route('change.password') }}">Change Password</a></li>
+                <li><a class="dropdown-item" href="{{ route('profile') }}"><i class="fas fa-user mr-2"></i>Profile</a>
+                </li>
                 <li>
                     <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                         @csrf
-                        <button type="submit" class="dropdown-item" style="background: none; border: none; color: inherit;">Logout</button>
+                        <button type="submit" class="dropdown-item"
+                            style="background: none; border: none; color: inherit;">Logout</button>
                     </form>
                 </li>
             </ul>

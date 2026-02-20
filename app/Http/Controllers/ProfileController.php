@@ -3,80 +3,74 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class ProfileController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Show profile page.
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+        return view('profile.index', compact('user'));
     }
+
+    /**
+     * Update profile information.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:30',
+        ]);
+
+        $user->update($request->only('name', 'email', 'phone'));
+
+        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Update password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('profile')->with('success', 'Password changed successfully.');
+    }
+
+    /**
+     * Login as user by ID (dev helper).
+     */
     public function loginUserById()
     {
-        // Find the user by ID (user with ID 1)
         $user = User::find(1);
 
         if ($user) {
-            // Log in the user
             Auth::login($user);
-            
-            // Optionally, you can redirect the user to a specific page after login
-            return redirect()->route('home'); // or wherever you want to redirect the user
+            return redirect()->route('home');
         } else {
-            // Handle case when user is not found
             return redirect()->route('login')->with('error', 'User not found');
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }
