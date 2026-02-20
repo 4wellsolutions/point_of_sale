@@ -41,7 +41,8 @@
                         <select name="customer_id" class="form-control">
                             <option value="">All Customers</option>
                             @foreach($customers as $c)
-                                <option value="{{ $c->id }}" {{ request('customer_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ request('customer_id') == $c->id ? 'selected' : '' }}>
+                                    {{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -55,7 +56,8 @@
                     </div>
                     <div class="col-md-3 d-flex gap-2">
                         <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
-                        <a href="{{ route('reports.sales') }}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i>Reset</a>
+                        <a href="{{ route('reports.sales') }}" class="btn btn-outline-secondary"><i
+                                class="fas fa-times me-1"></i>Reset</a>
                     </div>
                 </div>
             </form>
@@ -64,7 +66,9 @@
 
     <!-- Table -->
     <div class="card">
-        <div class="card-header"><h5 class="mb-0"><i class="fas fa-table me-2"></i>Sales Data</h5></div>
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Sales Data</h5>
+        </div>
         <div class="card-body table-responsive p-0">
             <table class="table table-hover table-striped align-middle mb-0">
                 <thead class="table-dark">
@@ -85,14 +89,21 @@
                             <td>{{ $loop->iteration + ($sales->currentPage() - 1) * $sales->perPage() }}</td>
                             <td><a href="{{ route('sales.show', $sale->id) }}"><strong>{{ $sale->invoice_no }}</strong></a></td>
                             <td>{{ $sale->customer->name ?? '—' }}</td>
-                            <td><small class="text-muted">{{ \Carbon\Carbon::parse($sale->date)->format('d M Y') }}</small></td>
-                            <td class="text-end">{{ setting('currency_symbol') }}{{ number_format($sale->total_amount ?? 0, 2) }}</td>
-                            <td class="text-end">{{ setting('currency_symbol') }}{{ number_format($sale->discount ?? 0, 2) }}</td>
-                            <td class="text-end"><strong>{{ setting('currency_symbol') }}{{ number_format($sale->net_amount ?? 0, 2) }}</strong></td>
+                            <td><small class="text-muted">{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</small>
+                            </td>
+                            <td class="text-end">
+                                {{ setting('currency_symbol') }}{{ number_format($sale->total_amount ?? 0, 2) }}</td>
+                            <td class="text-end">
+                                {{ setting('currency_symbol') }}{{ number_format($sale->discount_amount ?? 0, 2) }}</td>
+                            <td class="text-end">
+                                <strong>{{ setting('currency_symbol') }}{{ number_format($sale->net_amount ?? 0, 2) }}</strong>
+                            </td>
                             <td><small>{{ $sale->user->name ?? '—' }}</small></td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center py-4 text-muted">No sales found for the selected filters.</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">No sales found for the selected filters.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

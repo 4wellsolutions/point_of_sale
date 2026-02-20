@@ -91,12 +91,12 @@
                                     href="{{ route('purchases.show', $purchase->id) }}"><strong>{{ $purchase->invoice_no }}</strong></a>
                             </td>
                             <td>{{ $purchase->vendor->name ?? '—' }}</td>
-                            <td><small class="text-muted">{{ \Carbon\Carbon::parse($purchase->date)->format('d M Y') }}</small>
+                            <td><small class="text-muted">{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</small>
                             </td>
                             <td class="text-end">
                                 {{ setting('currency_symbol') }}{{ number_format($purchase->total_amount ?? 0, 2) }}</td>
                             <td class="text-end">
-                                {{ setting('currency_symbol') }}{{ number_format($purchase->discount ?? 0, 2) }}</td>
+                                {{ setting('currency_symbol') }}{{ number_format($purchase->discount_amount ?? 0, 2) }}</td>
                             <td class="text-end">
                                 <strong>{{ setting('currency_symbol') }}{{ number_format($purchase->net_amount ?? 0, 2) }}</strong>
                             </td>

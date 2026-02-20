@@ -28,16 +28,16 @@ class ReportController extends Controller
             $query->where('customer_id', $request->customer_id);
         }
         if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', $request->date_from);
+            $query->whereDate('sale_date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', $request->date_to);
+            $query->whereDate('sale_date', '<=', $request->date_to);
         }
 
         $sales = $query->latest('id')->paginate(50)->appends($request->query());
 
         $totalAmount = (clone $query)->getQuery()->sum('net_amount');
-        $totalDiscount = (clone $query)->getQuery()->sum('discount');
+        $totalDiscount = (clone $query)->getQuery()->sum('discount_amount');
         $totalCount = (clone $query)->getQuery()->count();
 
         $customers = Customer::orderBy('name')->get();
@@ -56,16 +56,16 @@ class ReportController extends Controller
             $query->where('vendor_id', $request->vendor_id);
         }
         if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', $request->date_from);
+            $query->whereDate('purchase_date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', $request->date_to);
+            $query->whereDate('purchase_date', '<=', $request->date_to);
         }
 
         $purchases = $query->latest('id')->paginate(50)->appends($request->query());
 
         $totalAmount = (clone $query)->getQuery()->sum('net_amount');
-        $totalDiscount = (clone $query)->getQuery()->sum('discount');
+        $totalDiscount = (clone $query)->getQuery()->sum('discount_amount');
         $totalCount = (clone $query)->getQuery()->count();
 
         $vendors = Vendor::orderBy('name')->get();
@@ -82,8 +82,8 @@ class ReportController extends Controller
         $dateTo = $request->date_to ?? Carbon::now()->toDateString();
 
         // Sales revenue
-        $salesRevenue = Sale::whereDate('date', '>=', $dateFrom)
-            ->whereDate('date', '<=', $dateTo)
+        $salesRevenue = Sale::whereDate('sale_date', '>=', $dateFrom)
+            ->whereDate('sale_date', '<=', $dateTo)
             ->sum('net_amount');
 
         // Cost of goods sold (from sale items' purchase prices)
@@ -91,13 +91,13 @@ class ReportController extends Controller
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_items.deleted_at')
-            ->whereDate('sales.date', '>=', $dateFrom)
-            ->whereDate('sales.date', '<=', $dateTo)
+            ->whereDate('sales.sale_date', '>=', $dateFrom)
+            ->whereDate('sales.sale_date', '<=', $dateTo)
             ->sum(DB::raw('sale_items.quantity * sale_items.purchase_price'));
 
         // Total purchases
-        $totalPurchases = Purchase::whereDate('date', '>=', $dateFrom)
-            ->whereDate('date', '<=', $dateTo)
+        $totalPurchases = Purchase::whereDate('purchase_date', '>=', $dateFrom)
+            ->whereDate('purchase_date', '<=', $dateTo)
             ->sum('net_amount');
 
         // Total expenses
