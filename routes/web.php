@@ -23,11 +23,15 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ExpenseTypeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\StockAlertController;
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Stock Alerts
+    Route::get('/stock-alerts', [StockAlertController::class, 'index'])->name('stock-alerts.index');
 
     // Cache clear (protected)
     Route::get('/clear-cache', function () {

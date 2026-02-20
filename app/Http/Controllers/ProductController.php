@@ -9,6 +9,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductController extends Controller
 {
@@ -67,19 +68,19 @@ class ProductController extends Controller
     {
         // Validate incoming request data, including the image
         $request->validate([
-            'name'          => 'required|string|max:255|unique:products,name',
-            'sku'           => 'nullable|string|unique:products,sku',
-            'flavour_id'    => 'nullable|exists:flavours,id',
-            'packing_id'    => 'nullable|exists:packings,id',
-            'category_id'   => 'nullable|exists:categories,id',
-            'barcode'       => 'nullable|string|unique:products,barcode',
-            'weight'        => 'nullable|numeric',
-            'volume'        => 'nullable|numeric',
-            'status'        => 'required|in:active,inactive,discontinued',
-            'gst'           => 'required|numeric|min:0|max:100',
-            'reorder_level'  => 'required|integer|min:0',
-            'max_stock_level'=> 'required|integer|min:0',
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'name' => 'required|string|max:255|unique:products,name',
+            'sku' => 'nullable|string|unique:products,sku',
+            'flavour_id' => 'nullable|exists:flavours,id',
+            'packing_id' => 'nullable|exists:packings,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'barcode' => 'nullable|string|unique:products,barcode',
+            'weight' => 'nullable|numeric',
+            'volume' => 'nullable|numeric',
+            'status' => 'required|in:active,inactive,discontinued',
+            'gst' => 'required|numeric|min:0|max:100',
+            'reorder_level' => 'required|integer|min:0',
+            'max_stock_level' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         // Retrieve all input data
@@ -149,19 +150,19 @@ class ProductController extends Controller
     {
         // Validate incoming request data, including the image
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'sku'           => 'required|string|unique:products,sku,' . $product->id,
-            'flavour_id'    => 'required|exists:flavours,id',
-            'packing_id'    => 'required|exists:packings,id',
-            'category_id'   => 'nullable|exists:categories,id',
-            'barcode'       => 'nullable|string|unique:products,barcode,' . $product->id,
-            'weight'        => 'nullable|numeric',
-            'volume'        => 'nullable|numeric',
-            'status'        => 'required|in:active,inactive,discontinued',
-            'gst'           => 'required|numeric|min:0|max:100',
-            'reorder_level'  => 'required|integer|min:0',
-            'max_stock_level'=> 'required|integer|min:0',
-            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Image validation
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:products,sku,' . $product->id,
+            'flavour_id' => 'required|exists:flavours,id',
+            'packing_id' => 'required|exists:packings,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'barcode' => 'nullable|string|unique:products,barcode,' . $product->id,
+            'weight' => 'nullable|numeric',
+            'volume' => 'nullable|numeric',
+            'status' => 'required|in:active,inactive,discontinued',
+            'gst' => 'required|numeric|min:0|max:100',
+            'reorder_level' => 'required|integer|min:0',
+            'max_stock_level' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Image validation
         ]);
 
         // Retrieve all input data
@@ -248,12 +249,12 @@ class ProductController extends Controller
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                ->orWhere('sku', 'like', "%{$search}%");
         }
 
         // Select the necessary fields, including 'image'
         $products = $query->orderBy('name')
-                          ->paginate($perPage, ['id', 'name', 'sku', 'image'], 'page', $page);
+            ->paginate($perPage, ['id', 'name', 'sku', 'image'], 'page', $page);
 
         // Transform the data to match Select2's expected format
         $formattedProducts = $products->getCollection()->map(function ($product) {
@@ -291,7 +292,7 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
-    public function getBatches(Request $request,$productId)
+    public function getBatches(Request $request, $productId)
     {
         $product = Product::with('batches')->findOrFail($productId);
 
@@ -304,6 +305,65 @@ class ProductController extends Controller
             ];
         });
 
-        return response()->json(['success' => true,'batches' => $batches]);
+        return response()->json(['success' => true, 'batches' => $batches]);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Product::with(['flavour', 'packing', 'category']);
+        if ($request->filled('name'))
+            $query->where('name', 'like', '%' . $request->name . '%');
+        if ($request->filled('category_id'))
+            $query->where('category_id', $request->category_id);
+        if ($request->filled('flavour_id'))
+            $query->where('flavour_id', $request->flavour_id);
+        if ($request->filled('status'))
+            $query->where('status', $request->status);
+        $products = $query->get();
+
+        $pdf = Pdf::loadView('exports.products', [
+            'products' => $products,
+            'title' => 'Products Report',
+            'filters' => array_filter([
+                $request->name ? 'Name: ' . $request->name : null,
+                $request->category_id ? 'Category filtered' : null,
+                $request->status ? 'Status: ' . $request->status : null,
+            ]),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('products-report.pdf');
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $query = Product::with(['flavour', 'packing', 'category']);
+        if ($request->filled('name'))
+            $query->where('name', 'like', '%' . $request->name . '%');
+        if ($request->filled('category_id'))
+            $query->where('category_id', $request->category_id);
+        if ($request->filled('flavour_id'))
+            $query->where('flavour_id', $request->flavour_id);
+        if ($request->filled('status'))
+            $query->where('status', $request->status);
+        $products = $query->get();
+
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="products-report.csv"'];
+        $callback = function () use ($products) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['#', 'Name', 'Category', 'Flavour', 'Packing', 'GST %', 'Status']);
+            foreach ($products as $i => $product) {
+                fputcsv($file, [
+                    $i + 1,
+                    $product->name,
+                    $product->category->name ?? '',
+                    $product->flavour->name ?? '',
+                    $product->packing->name ?? '',
+                    $product->gst ?? 0,
+                    $product->status,
+                ]);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VendorController extends Controller
 {
@@ -262,5 +263,44 @@ class VendorController extends Controller
         $vendor->delete();
 
         return redirect()->route('vendors.index')->with('success', 'Vendor deleted successfully.');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Vendor::with('type');
+        if ($request->filled('name'))
+            $query->where('name', 'like', '%' . $request->name . '%');
+        if ($request->filled('type_id'))
+            $query->where('type_id', $request->type_id);
+        $vendors = $query->orderBy('name')->get();
+
+        $pdf = Pdf::loadView('exports.vendors', [
+            'vendors' => $vendors,
+            'title' => 'Vendors Report',
+            'filters' => [],
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('vendors-report.pdf');
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $query = Vendor::with('type');
+        if ($request->filled('name'))
+            $query->where('name', 'like', '%' . $request->name . '%');
+        if ($request->filled('type_id'))
+            $query->where('type_id', $request->type_id);
+        $vendors = $query->orderBy('name')->get();
+
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="vendors-report.csv"'];
+        $callback = function () use ($vendors) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['#', 'Name', 'Email', 'Phone', 'Type', 'Balance']);
+            foreach ($vendors as $i => $v) {
+                fputcsv($file, [$i + 1, $v->name, $v->email ?? '', $v->phone ?? '', $v->type->name ?? '', $v->balance ?? 0]);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
     }
 }

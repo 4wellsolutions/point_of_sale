@@ -25,10 +25,12 @@
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">
                         <label class="form-label">Type</label>
-                        <select name="type" class="form-select form-select-sm">
+                        <select name="transaction_type" class="form-select form-select-sm">
                             <option value="">All Types</option>
-                            <option value="payment" {{ request('type') == 'payment' ? 'selected' : '' }}>Payment</option>
-                            <option value="receipt" {{ request('type') == 'receipt' ? 'selected' : '' }}>Receipt</option>
+                            <option value="credit" {{ request('transaction_type') == 'credit' ? 'selected' : '' }}>Credit
+                            </option>
+                            <option value="debit" {{ request('transaction_type') == 'debit' ? 'selected' : '' }}>Debit
+                            </option>
                         </select>
                     </div>
                     <div class="col-md-2">

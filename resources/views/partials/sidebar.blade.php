@@ -384,9 +384,9 @@
 
                 <!-- Stock -->
                 <li
-                    class="nav-item has-treeview {{ request()->is('inventory*') || request()->is('stock-loss-damage*') ? 'menu-open' : '' }}">
+                    class="nav-item has-treeview {{ request()->is('inventory*') || request()->is('stock-loss-damage*') || request()->is('stock-alerts*') ? 'menu-open' : '' }}">
                     <a href="#"
-                        class="nav-link {{ request()->is('inventory*') || request()->is('stock-loss-damage*') ? 'active' : '' }}">
+                        class="nav-link {{ request()->is('inventory*') || request()->is('stock-loss-damage*') || request()->is('stock-alerts*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-warehouse"></i>
                         <p>Inventory <i class="right fas fa-angle-left"></i></p>
                     </a>
@@ -396,6 +396,13 @@
                                 class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Stock Movements</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('stock-alerts.index') }}"
+                                class="nav-link {{ request()->routeIs('stock-alerts.index') ? 'active' : '' }}">
+                                <i class="fas fa-exclamation-triangle nav-icon text-warning"></i>
+                                <p>Stock Alerts</p>
                             </a>
                         </li>
                         <li class="nav-item">

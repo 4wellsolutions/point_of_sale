@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Vendor;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DB;
 use Auth;
 
@@ -18,14 +19,20 @@ class TransactionController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Eager load paymentMethod and transactionable relationships for efficiency
-        $transactions = Transaction::with(['paymentMethod', 'transactionable'])
-                            ->latest()
-                            ->get();
-
-        return view('transactions.index', compact('transactions'));
+        $query = Transaction::with(['paymentMethod', 'transactionable']);
+        if ($request->filled('transaction_type'))
+            $query->where('transaction_type', $request->transaction_type);
+        if ($request->filled('payment_method_id'))
+            $query->where('payment_method_id', $request->payment_method_id);
+        if ($request->filled('from_date'))
+            $query->whereDate('transaction_date', '>=', $request->from_date);
+        if ($request->filled('to_date'))
+            $query->whereDate('transaction_date', '<=', $request->to_date);
+        $transactions = $query->latest('transaction_date')->paginate(20);
+        $paymentMethods = PaymentMethod::orderBy('name')->get();
+        return view('transactions.index', compact('transactions', 'paymentMethods'));
     }
 
     /**
@@ -50,86 +57,86 @@ class TransactionController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
-	{
-	    // Validate the incoming request data
-	    $validatedData = $request->validate([
-	        'payment_method_id' => 'required|exists:payment_methods,id',
-	        'amount' => 'required|numeric|min:0.01',
-	        'transaction_type' => 'required|in:credit,debit',
-	        'transaction_date' => 'required|date',
-	        'transactionable_type' => 'required|in:customer,vendor',
-	        'transactionable_id' => [
-	            'required',
-	            function ($attribute, $value, $fail) use ($request) {
-	                if ($request->transactionable_type === 'customer') {
-	                    if (!Customer::where('id', $value)->exists()) {
-	                        $fail('The selected customer is invalid.');
-	                    }
-	                } elseif ($request->transactionable_type === 'vendor') {
-	                    if (!Vendor::where('id', $value)->exists()) {
-	                        $fail('The selected vendor is invalid.');
-	                    }
-	                }
-	            },
-	        ],
-	    ]);
+    {
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'amount' => 'required|numeric|min:0.01',
+            'transaction_type' => 'required|in:credit,debit',
+            'transaction_date' => 'required|date',
+            'transactionable_type' => 'required|in:customer,vendor',
+            'transactionable_id' => [
+                'required',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->transactionable_type === 'customer') {
+                        if (!Customer::where('id', $value)->exists()) {
+                            $fail('The selected customer is invalid.');
+                        }
+                    } elseif ($request->transactionable_type === 'vendor') {
+                        if (!Vendor::where('id', $value)->exists()) {
+                            $fail('The selected vendor is invalid.');
+                        }
+                    }
+                },
+            ],
+        ]);
 
-	    // Determine the fully qualified class name based on the transactionable_type
-	    $transactionableType = $request->transactionable_type === 'customer'
-	        ? Customer::class
-	        : Vendor::class;
+        // Determine the fully qualified class name based on the transactionable_type
+        $transactionableType = $request->transactionable_type === 'customer'
+            ? Customer::class
+            : Vendor::class;
 
-	    DB::beginTransaction(); // Start the transaction
+        DB::beginTransaction(); // Start the transaction
 
-	    try {
-	        // Create the transaction using the polymorphic relationship
-	        $transaction = Transaction::create([
-	            'payment_method_id'    => $validatedData['payment_method_id'],
-	            'amount'               => $validatedData['amount'],
-	            'transaction_type'     => $validatedData['transaction_type'],
-	            'transaction_date'     => $validatedData['transaction_date'],
-	            'transactionable_id'   => $validatedData['transactionable_id'],
-	            'transactionable_type' => $transactionableType,
-                'user_id'              => Auth::User()->id,
+        try {
+            // Create the transaction using the polymorphic relationship
+            $transaction = Transaction::create([
+                'payment_method_id' => $validatedData['payment_method_id'],
+                'amount' => $validatedData['amount'],
+                'transaction_type' => $validatedData['transaction_type'],
+                'transaction_date' => $validatedData['transaction_date'],
+                'transactionable_id' => $validatedData['transactionable_id'],
+                'transactionable_type' => $transactionableType,
+                'user_id' => Auth::User()->id,
 
-	        ]);
+            ]);
 
-	        // Update the ledger
-	        $debit     = $transaction->transaction_type === 'debit' ? $transaction->amount : 0;
-	        $credit    = $transaction->transaction_type === 'credit' ? $transaction->amount : 0;
+            // Update the ledger
+            $debit = $transaction->transaction_type === 'debit' ? $transaction->amount : 0;
+            $credit = $transaction->transaction_type === 'credit' ? $transaction->amount : 0;
 
-	        // Fetch the last ledger entry to calculate the new balance
-	        $lastLedgerEntry = LedgerEntry::where('ledgerable_id', $validatedData['transactionable_id'])
-	            ->where('ledgerable_type', $transactionableType)
-	            ->latest('date')
-	            ->first();
+            // Fetch the last ledger entry to calculate the new balance
+            $lastLedgerEntry = LedgerEntry::where('ledgerable_id', $validatedData['transactionable_id'])
+                ->where('ledgerable_type', $transactionableType)
+                ->latest('date')
+                ->first();
 
-	        $lastBalance = $lastLedgerEntry ? $lastLedgerEntry->balance : 0;
-	        $newBalance = $lastBalance + $credit - $debit;
+            $lastBalance = $lastLedgerEntry ? $lastLedgerEntry->balance : 0;
+            $newBalance = $lastBalance + $credit - $debit;
 
-	        // Create a new ledger entry
-	        LedgerEntry::create([
-	            'ledgerable_id'    => $validatedData['transactionable_id'],
-	            'ledgerable_type'  => $transactionableType,
-	            'transaction_id'   => $transaction->id,
-	            'date'             => $transaction->transaction_date,
-	            'description'      => 'Transaction recorded',
-	            'debit'            => $debit,
-	            'credit'           => $credit,
-	            'balance'          => $newBalance,
-                'user_id'          => Auth::User()->id,
-	        ]);
+            // Create a new ledger entry
+            LedgerEntry::create([
+                'ledgerable_id' => $validatedData['transactionable_id'],
+                'ledgerable_type' => $transactionableType,
+                'transaction_id' => $transaction->id,
+                'date' => $transaction->transaction_date,
+                'description' => 'Transaction recorded',
+                'debit' => $debit,
+                'credit' => $credit,
+                'balance' => $newBalance,
+                'user_id' => Auth::User()->id,
+            ]);
 
-	        DB::commit(); // Commit the transaction
-	    } catch (\Exception $e) {
-	        DB::rollBack(); // Rollback the transaction on failure
-	        return redirect()->back()->withErrors(['error' => 'An error occurred while processing the transaction: ' . $e->getMessage()]);
-	    }
+            DB::commit(); // Commit the transaction
+        } catch (\Exception $e) {
+            DB::rollBack(); // Rollback the transaction on failure
+            return redirect()->back()->withErrors(['error' => 'An error occurred while processing the transaction: ' . $e->getMessage()]);
+        }
 
-	    // Redirect to the transactions index with a success message
-	    return redirect()->route('transactions.index')
-	                     ->with('success', 'Transaction added successfully.');
-	}
+        // Redirect to the transactions index with a success message
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaction added successfully.');
+    }
 
     /**
      * Show the form for editing the specified transaction.
@@ -203,7 +210,7 @@ class TransactionController extends Controller
 
         // Redirect to the transactions index with a success message
         return redirect()->route('transactions.index')
-                         ->with('success', 'Transaction updated successfully.');
+            ->with('success', 'Transaction updated successfully.');
     }
 
     /**
@@ -222,6 +229,58 @@ class TransactionController extends Controller
 
         // Redirect to the transactions index with a success message
         return redirect()->route('transactions.index')
-                         ->with('success', 'Transaction deleted successfully.');
+            ->with('success', 'Transaction deleted successfully.');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Transaction::with(['paymentMethod', 'transactionable']);
+        if ($request->filled('transaction_type'))
+            $query->where('transaction_type', $request->transaction_type);
+        if ($request->filled('payment_method_id'))
+            $query->where('payment_method_id', $request->payment_method_id);
+        if ($request->filled('from_date'))
+            $query->whereDate('transaction_date', '>=', $request->from_date);
+        if ($request->filled('to_date'))
+            $query->whereDate('transaction_date', '<=', $request->to_date);
+        $transactions = $query->latest('transaction_date')->get();
+
+        $pdf = Pdf::loadView('exports.transactions', [
+            'transactions' => $transactions,
+            'title' => 'Transactions Report',
+            'filters' => array_filter([
+                $request->transaction_type ? 'Type: ' . $request->transaction_type : null,
+                $request->from_date ? 'From: ' . $request->from_date : null,
+                $request->to_date ? 'To: ' . $request->to_date : null,
+            ]),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('transactions-report.pdf');
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $query = Transaction::with(['paymentMethod', 'transactionable']);
+        if ($request->filled('transaction_type'))
+            $query->where('transaction_type', $request->transaction_type);
+        if ($request->filled('payment_method_id'))
+            $query->where('payment_method_id', $request->payment_method_id);
+        if ($request->filled('from_date'))
+            $query->whereDate('transaction_date', '>=', $request->from_date);
+        if ($request->filled('to_date'))
+            $query->whereDate('transaction_date', '<=', $request->to_date);
+        $transactions = $query->latest('transaction_date')->get();
+
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="transactions-report.csv"'];
+        $callback = function () use ($transactions) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['#', 'Date', 'Type', 'Party', 'Payment Method', 'Amount', 'Reference']);
+            foreach ($transactions as $i => $t) {
+                $party = $t->transactionable ? ($t->transactionable->name ?? 'N/A') : 'N/A';
+                fputcsv($file, [$i + 1, $t->transaction_date, $t->transaction_type, $party, $t->paymentMethod->name ?? '', $t->amount, $t->reference ?? '']);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
     }
 }

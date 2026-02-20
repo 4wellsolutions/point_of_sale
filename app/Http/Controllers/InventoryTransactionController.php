@@ -70,8 +70,32 @@ class InventoryTransactionController extends Controller
 
         // Generate PDF for View
         $pdf = Pdf::loadView('reports.inventory.pdf', compact('transactions'))
-                  ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'portrait');
 
         return $pdf->stream('reports.inventory_transactions.pdf'); // Display in browser instead of downloading
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $query = InventoryTransaction::with(['product', 'user']);
+        if ($request->filled('product_id'))
+            $query->where('product_id', $request->product_id);
+        if ($request->filled('user_id'))
+            $query->where('user_id', $request->user_id);
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $query->whereBetween('created_at', [$request->from_date, $request->to_date]);
+        }
+        $transactions = $query->latest()->get();
+
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="inventory-transactions.csv"'];
+        $callback = function () use ($transactions) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['#', 'Date', 'Product', 'Quantity', 'Type', 'User']);
+            foreach ($transactions as $i => $t) {
+                fputcsv($file, [$i + 1, $t->created_at->format('Y-m-d'), $t->product->name ?? '', $t->quantity, $t->transactionable_type ?? '', $t->user->name ?? '']);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -93,6 +93,9 @@
                                         <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-info" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        <a href="{{ route('sales.edit', $sale->id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
                                         <a href="{{ route('sales.pdf', $sale->id) }}" class="btn btn-sm btn-secondary" title="PDF"
                                             target="_blank">
                                             <i class="fas fa-file-pdf"></i>

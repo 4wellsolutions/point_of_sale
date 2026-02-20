@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Type;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CustomerController extends Controller
 {
@@ -77,13 +78,13 @@ class CustomerController extends Controller
     {
         // Validation rules
         $request->validate([
-            'name'      => 'required|string|max:255|unique:customers,name',
-            'email'     => 'nullable|email|unique:customers,email',
-            'phone'     => 'nullable|string|max:20',
-            'address'   => 'nullable|string|max:255',
-            'whatsapp'  => 'nullable|string|max:20',
-            'type_id'   => 'nullable|exists:types,id',
-            'image'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'name' => 'required|string|max:255|unique:customers,name',
+            'email' => 'nullable|email|unique:customers,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'whatsapp' => 'nullable|string|max:20',
+            'type_id' => 'nullable|exists:types,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->all();
@@ -230,5 +231,44 @@ class CustomerController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Customer::with('type');
+        if ($request->filled('name'))
+            $query->where('name', 'like', '%' . $request->name . '%');
+        if ($request->filled('type_id'))
+            $query->where('type_id', $request->type_id);
+        $customers = $query->orderBy('name')->get();
+
+        $pdf = Pdf::loadView('exports.customers', [
+            'customers' => $customers,
+            'title' => 'Customers Report',
+            'filters' => [],
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('customers-report.pdf');
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $query = Customer::with('type');
+        if ($request->filled('name'))
+            $query->where('name', 'like', '%' . $request->name . '%');
+        if ($request->filled('type_id'))
+            $query->where('type_id', $request->type_id);
+        $customers = $query->orderBy('name')->get();
+
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="customers-report.csv"'];
+        $callback = function () use ($customers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['#', 'Name', 'Email', 'Phone', 'Type', 'Balance']);
+            foreach ($customers as $i => $c) {
+                fputcsv($file, [$i + 1, $c->name, $c->email ?? '', $c->phone ?? '', $c->type->name ?? '', $c->balance ?? 0]);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
     }
 }
