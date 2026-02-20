@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 
-class Location extends Model
+class Location extends Model implements AuditableContract
 {
-    use HasFactory;
+    use HasFactory, Auditable;
     protected $fillable = ['name', 'description'];
 }

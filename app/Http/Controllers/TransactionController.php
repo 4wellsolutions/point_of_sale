@@ -108,7 +108,7 @@ class TransactionController extends Controller
             // Fetch the last ledger entry to calculate the new balance
             $lastLedgerEntry = LedgerEntry::where('ledgerable_id', $validatedData['transactionable_id'])
                 ->where('ledgerable_type', $transactionableType)
-                ->latest('date')
+                ->latest('id')
                 ->first();
 
             $lastBalance = $lastLedgerEntry ? $lastLedgerEntry->balance : 0;
@@ -224,12 +224,45 @@ class TransactionController extends Controller
         // Find the transaction or fail with 404
         $transaction = Transaction::findOrFail($id);
 
-        // Delete the transaction
-        $transaction->delete();
+        DB::beginTransaction();
+        try {
+            // Create a reversal ledger entry
+            $lastLedgerEntry = LedgerEntry::where('ledgerable_id', $transaction->transactionable_id)
+                ->where('ledgerable_type', $transaction->transactionable_type)
+                ->latest('id')
+                ->first();
+
+            $lastBalance = $lastLedgerEntry ? $lastLedgerEntry->balance : 0;
+
+            // Reverse: if original was debit, reversal is credit and vice versa
+            $reversalDebit = $transaction->transaction_type === 'credit' ? $transaction->amount : 0;
+            $reversalCredit = $transaction->transaction_type === 'debit' ? $transaction->amount : 0;
+            $newBalance = $lastBalance + $reversalCredit - $reversalDebit;
+
+            LedgerEntry::create([
+                'ledgerable_id' => $transaction->transactionable_id,
+                'ledgerable_type' => $transaction->transactionable_type,
+                'transaction_id' => $transaction->id,
+                'date' => now(),
+                'description' => 'Reversal: Transaction #' . $transaction->id . ' deleted',
+                'debit' => $reversalDebit,
+                'credit' => $reversalCredit,
+                'balance' => $newBalance,
+                'user_id' => Auth::user()->id,
+            ]);
+
+            // Delete the transaction
+            $transaction->delete();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error deleting transaction: ' . $e->getMessage()]);
+        }
 
         // Redirect to the transactions index with a success message
         return redirect()->route('transactions.index')
-            ->with('success', 'Transaction deleted successfully.');
+            ->with('success', 'Transaction deleted and ledger reversed successfully.');
     }
 
     public function exportPdf(Request $request)

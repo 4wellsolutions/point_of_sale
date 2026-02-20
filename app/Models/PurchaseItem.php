@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 
-class PurchaseItem extends Model
+class PurchaseItem extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
     protected $fillable = [
         'purchase_id',
         'product_id',
@@ -21,7 +23,7 @@ class PurchaseItem extends Model
         'total_amount',
     ];
     protected $dates = ['deleted_at'];
-    
+
     public function purchase()
     {
         return $this->belongsTo(Purchase::class);
@@ -36,5 +38,5 @@ class PurchaseItem extends Model
     {
         return $this->belongsTo(Location::class);
     }
-    
+
 }

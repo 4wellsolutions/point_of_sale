@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
 use App\Models\Customer;
+use App\Models\Vendor;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Batch;
@@ -105,13 +106,20 @@ class SalesController extends Controller
         \DB::beginTransaction();
 
         try {
+            // Generate invoice number
+            $lastInvoice = Sale::max('invoice_no');
+            $invoiceNo = $lastInvoice ? $lastInvoice + 1 : 1;
+
             // Create the sale record
             $sale = Sale::create([
                 'customer_id' => $validatedData['customer_id'],
+                'invoice_no' => $invoiceNo,
                 'sale_date' => $validatedData['sale_date'],
                 'total_amount' => $validatedData['total_amount'],
                 'discount_amount' => $validatedData['discount_amount'],
                 'net_amount' => $validatedData['net_amount'],
+                'user_id' => auth()->id(),
+                'notes' => $validatedData['notes'] ?? null,
             ]);
 
             // Iterate through each sale item
@@ -236,10 +244,10 @@ class SalesController extends Controller
 
     protected function calculateNewBalance($customerId, $amount, $type)
     {
-        // Fetch the latest ledger entry balance for the vendor via the polymorphic relationship
+        // Fetch the latest ledger entry balance for the customer
         $latestLedger = LedgerEntry::where('ledgerable_id', $customerId)
-            ->where('ledgerable_type', Vendor::class)
-            ->latest('date')
+            ->where('ledgerable_type', Customer::class)
+            ->latest('id')
             ->first();
 
         $previousBalance = $latestLedger ? $latestLedger->balance : 0;
@@ -316,17 +324,42 @@ class SalesController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $netAmount = $sale->total_amount - ($validated['discount_amount'] ?? 0);
+        $oldNetAmount = $sale->net_amount;
+        $newNetAmount = $sale->total_amount - ($validated['discount_amount'] ?? 0);
 
-        $sale->update([
-            'customer_id' => $validated['customer_id'],
-            'sale_date' => $validated['sale_date'],
-            'discount_amount' => $validated['discount_amount'] ?? 0,
-            'net_amount' => $netAmount,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        \DB::beginTransaction();
+        try {
+            $sale->update([
+                'customer_id' => $validated['customer_id'],
+                'sale_date' => $validated['sale_date'],
+                'discount_amount' => $validated['discount_amount'] ?? 0,
+                'net_amount' => $newNetAmount,
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        return redirect()->route('sales.index')->with('success', 'Sale updated successfully.');
+            // If net amount changed, create an adjustment ledger entry
+            $difference = $newNetAmount - $oldNetAmount;
+            if (abs($difference) > 0.001) {
+                $customer = Customer::find($sale->customer_id);
+                $adjustmentLedger = new LedgerEntry([
+                    'transaction_id' => null,
+                    'date' => now(),
+                    'description' => 'Sale Adjustment - Invoice #' . $sale->invoice_no,
+                    'debit' => $difference < 0 ? abs($difference) : 0,
+                    'credit' => $difference > 0 ? $difference : 0,
+                    'balance' => $this->calculateNewBalance($sale->customer_id, abs($difference), $difference > 0 ? 'credit' : 'debit'),
+                    'user_id' => auth()->id(),
+                ]);
+                $adjustmentLedger->ledgerable()->associate($customer);
+                $adjustmentLedger->save();
+            }
+
+            \DB::commit();
+            return redirect()->route('sales.index')->with('success', 'Sale updated successfully.');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error updating sale: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -334,7 +367,87 @@ class SalesController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $sale = Sale::with(['saleItems', 'transactions'])->findOrFail($id);
+
+        \DB::beginTransaction();
+        try {
+            // 1. Restore stock for each sale item
+            foreach ($sale->saleItems as $item) {
+                $batch = Batch::where('product_id', $item->product_id)
+                    ->where('batch_no', $item->batch_no)
+                    ->first();
+
+                if ($batch) {
+                    $batchStock = BatchStock::where('batch_id', $batch->id)
+                        ->where('location_id', $item->location_id)
+                        ->first();
+
+                    if ($batchStock) {
+                        $batchStock->increment('quantity', $item->quantity);
+                    } else {
+                        // Re-create the batch stock if it was depleted
+                        BatchStock::create([
+                            'batch_id' => $batch->id,
+                            'product_id' => $item->product_id,
+                            'location_id' => $item->location_id,
+                            'quantity' => $item->quantity,
+                            'purchase_price' => $item->purchase_price,
+                            'sale_price' => $item->sale_price,
+                        ]);
+                    }
+
+                    // Create reversal inventory transaction
+                    InventoryTransaction::create([
+                        'product_id' => $item->product_id,
+                        'location_id' => $item->location_id,
+                        'batch_id' => $batch->id,
+                        'quantity' => $item->quantity,
+                        'user_id' => auth()->id(),
+                        'transactionable_id' => $sale->id,
+                        'transactionable_type' => Sale::class,
+                    ]);
+                }
+
+                $item->delete();
+            }
+
+            // 2. Reverse ledger entries for this sale
+            $saleLedgers = LedgerEntry::where('ledgerable_id', $sale->customer_id)
+                ->where('ledgerable_type', Customer::class)
+                ->where('description', 'LIKE', '%Invoice #' . $sale->invoice_no . '%')
+                ->get();
+
+            foreach ($saleLedgers as $ledger) {
+                // Create reversal entry
+                $reversalLedger = new LedgerEntry([
+                    'transaction_id' => $ledger->transaction_id,
+                    'date' => now(),
+                    'description' => 'Reversal: ' . $ledger->description,
+                    'debit' => $ledger->credit,
+                    'credit' => $ledger->debit,
+                    'balance' => $this->calculateNewBalance($sale->customer_id, $ledger->credit ?: $ledger->debit, $ledger->credit > 0 ? 'debit' : 'credit'),
+                    'user_id' => auth()->id(),
+                ]);
+                $customer = Customer::find($sale->customer_id);
+                $reversalLedger->ledgerable()->associate($customer);
+                $reversalLedger->save();
+            }
+
+            // 3. Delete transactions/payments
+            foreach ($sale->transactions as $transaction) {
+                $transaction->delete();
+            }
+
+            // 4. Delete the sale (soft delete)
+            $sale->delete();
+
+            \DB::commit();
+            return redirect()->route('sales.index')->with('success', 'Sale deleted and all effects reversed.');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Sale Delete Error: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Error deleting sale: ' . $e->getMessage()]);
+        }
     }
 
     public function exportPdf(Request $request)

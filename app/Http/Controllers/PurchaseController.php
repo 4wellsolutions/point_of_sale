@@ -247,42 +247,64 @@ class PurchaseController extends Controller
         }
 
         // 6. Proceed to store the purchase and related data
-        // try {
         DB::beginTransaction();
 
-        // Create the purchase
-        $purchase = Purchase::create([
-            'vendor_id' => $request->vendor_id,
-            'invoice_no' => $request->invoice_no,
-            'purchase_date' => $request->purchase_date,
-            'discount_amount' => $request->discount_amount,
-            'total_amount' => $request->total_amount,
-            'net_amount' => $request->net_amount,
-            'notes' => $request->notes,
-            'user_id' => auth()->id(),
-        ]);
+        try {
 
-        // Iterate through each purchase item and create PurchaseItem records
-        foreach ($request->purchase_items as $item) {
-            $itemTotal = $item['quantity'] * $item['purchase_price'];
+            // Create the purchase
+            $purchase = Purchase::create([
+                'vendor_id' => $request->vendor_id,
+                'invoice_no' => $request->invoice_no,
+                'purchase_date' => $request->purchase_date,
+                'discount_amount' => $request->discount_amount,
+                'total_amount' => $request->total_amount,
+                'net_amount' => $request->net_amount,
+                'notes' => $request->notes,
+                'user_id' => auth()->id(),
+            ]);
 
-            // Find the batch
-            $batch = Batch::where('product_id', $item['product_id'])
-                ->where('batch_no', $item['batch_no'])
-                ->first();
+            // Iterate through each purchase item and create PurchaseItem records
+            foreach ($request->purchase_items as $item) {
+                $itemTotal = $item['quantity'] * $item['purchase_price'];
 
-            if ($batch) {
-                // Check if a corresponding BatchStock entry exists
-                $batchStock = $batch->stock; // Assuming the relationship is defined between Batch and BatchStock
+                // Find the batch
+                $batch = Batch::where('product_id', $item['product_id'])
+                    ->where('batch_no', $item['batch_no'])
+                    ->first();
 
-                if ($batchStock) {
-                    // Update the existing BatchStock entry with the new quantity
-                    $batchStock->update([
-                        'quantity' => $batchStock->quantity + $item['quantity'],
-                        'purchase_price' => $item['purchase_price'],
-                    ]);
+                if ($batch) {
+                    // Check if a corresponding BatchStock entry exists for this location
+                    $batchStock = BatchStock::where('batch_id', $batch->id)
+                        ->where('location_id', $item['location_id'])
+                        ->first();
+
+                    if ($batchStock) {
+                        // Update the existing BatchStock quantity (don't overwrite purchase_price)
+                        $batchStock->update([
+                            'quantity' => $batchStock->quantity + $item['quantity'],
+                        ]);
+                    } else {
+                        // Create new BatchStock entry if it doesn't exist for this location
+                        BatchStock::create([
+                            'batch_id' => $batch->id,
+                            'product_id' => $item['product_id'],
+                            'quantity' => $item['quantity'],
+                            'purchase_price' => $item['purchase_price'],
+                            'sale_price' => $item['sale_price'],
+                            'location_id' => $item['location_id'],
+                            'expiry_date' => $item['expiry_date'] ?? null,
+                        ]);
+                    }
                 } else {
-                    // Create new BatchStock entry if it doesn't exist
+                    // If the batch doesn't exist, create a new batch
+                    $batch = Batch::create([
+                        'product_id' => $item['product_id'],
+                        'batch_no' => $item['batch_no'],
+                        'purchase_date' => $request->purchase_date,
+                        'invoice_no' => $request->invoice_no,
+                    ]);
+
+                    // Create the new BatchStock entry for the new batch
                     BatchStock::create([
                         'batch_id' => $batch->id,
                         'product_id' => $item['product_id'],
@@ -293,140 +315,118 @@ class PurchaseController extends Controller
                         'expiry_date' => $item['expiry_date'] ?? null,
                     ]);
                 }
-            } else {
-                // If the batch doesn't exist, create a new batch
-                $batch = Batch::create([
+
+                // Create the purchase item record
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
                     'product_id' => $item['product_id'],
                     'batch_no' => $item['batch_no'],
-                    'purchase_date' => $request->purchase_date,
-                    'invoice_no' => $request->invoice_no,
-                ]);
-
-                // Create the new BatchStock entry for the new batch
-                BatchStock::create([
-                    'batch_id' => $batch->id,
-                    'product_id' => $item['product_id'],
+                    'location_id' => $item['location_id'],
+                    'expiry_date' => $item['expiry_date'] ?? null,
                     'quantity' => $item['quantity'],
                     'purchase_price' => $item['purchase_price'],
                     'sale_price' => $item['sale_price'],
-                    'location_id' => $item['location_id'],
-                    'expiry_date' => $item['expiry_date'] ?? null, // Optional: handle expiry if present
+                    'total_amount' => $itemTotal,
                 ]);
-            }
 
-            // Create the purchase item record
-            PurchaseItem::create([
-                'purchase_id' => $purchase->id,
-                'product_id' => $item['product_id'],
-                'batch_no' => $item['batch_no'],
-                'location_id' => $item['location_id'],
-                'expiry_date' => $item['expiry_date'] ?? null,
-                'quantity' => $item['quantity'],
-                'purchase_price' => $item['purchase_price'],
-                'sale_price' => $item['sale_price'],
-                'total_amount' => $itemTotal,
-            ]);
-
-
-            $vendor = Vendor::find($purchase->vendor_id);
-
-            // Create the InventoryTransaction instance
-            $transaction = InventoryTransaction::create([
-                'product_id' => $item['product_id'],
-                'location_id' => $item['location_id'],
-                'batch_id' => $batch->id,
-                'quantity' => $item['quantity'],
-                'user_id' => auth()->id(),
-                'transactionable_id' => $purchase->id,
-                'transactionable_type' => get_class($purchase),
-            ]);
-
-        }
-
-
-        // Update total_amount and net_amount in the purchase record
-        $purchase->update([
-            'total_amount' => $request->total_amount,
-            'net_amount' => $request->net_amount,
-        ]);
-
-        // 7. Create Ledger Entry for the Purchase (Debit)
-        $purchaseLedger = new LedgerEntry([
-            'transaction_id' => null,
-            'date' => now(),
-            'description' => 'Purchase Invoice #' . $purchase->invoice_no,
-            'debit' => $request->net_amount + $request->discount_amount,
-            'credit' => 0,
-            'balance' => $this->calculateNewBalance($purchase->vendor_id, $request->net_amount + $request->discount_amount, 'debit'),
-            'user_id' => auth()->id(),
-        ]);
-
-        // Now set the polymorphic relation to the vendor
-        $vendor = Vendor::find($purchase->vendor_id);
-        $purchaseLedger->ledgerable()->associate($vendor);
-
-        // Save the ledger entry
-        $purchaseLedger->save();
-
-        // 8. Handle Payment Methods only if provided
-        if (is_array($request->payment_methods) && count($request->payment_methods) > 0) {
-            foreach ($request->payment_methods as $payment) {
-                // Create Transaction (Credit) for each payment
-                $transaction = Transaction::create([
-                    'payment_method_id' => $payment['payment_method_id'],
-                    'vendor_id' => $purchase->vendor_id,
-                    'customer_id' => null,
-                    'amount' => $payment['amount'],
+                // Create the InventoryTransaction instance
+                InventoryTransaction::create([
+                    'product_id' => $item['product_id'],
+                    'location_id' => $item['location_id'],
+                    'batch_id' => $batch->id,
+                    'quantity' => $item['quantity'],
+                    'user_id' => auth()->id(),
                     'transactionable_id' => $purchase->id,
                     'transactionable_type' => get_class($purchase),
-                    'transaction_type' => 'credit',
-                    'transaction_date' => now(),
                 ]);
-
-                // Create Ledger Entry for the Payment (Credit)
-                $paymentLedger = new LedgerEntry([
-                    'transaction_id' => $transaction->id,
-                    'date' => now(),
-                    'description' => 'Payment for Purchase Invoice #' . $purchase->invoice_no,
-                    'debit' => 0,
-                    'credit' => $payment['amount'], // Money coming in
-                    'balance' => $this->calculateNewBalance($purchase->vendor_id, $payment['amount'], 'credit'),
-                    'user_id' => auth()->id(),
-                ]);
-
-                // Associate the ledger with the Vendor (polymorphic relationship)
-                $vendor = Vendor::find($purchase->vendor_id); // Get the Vendor model instance
-                $paymentLedger->ledgerable()->associate($vendor);
-
-                // Save the payment ledger entry
-                $paymentLedger->save();
 
             }
+
+
+            // Update total_amount and net_amount in the purchase record
+            $purchase->update([
+                'total_amount' => $request->total_amount,
+                'net_amount' => $request->net_amount,
+            ]);
+
+            // 7. Create Ledger Entry for the Purchase (Debit)
+            $purchaseLedger = new LedgerEntry([
+                'transaction_id' => null,
+                'date' => now(),
+                'description' => 'Purchase Invoice #' . $purchase->invoice_no,
+                'debit' => $request->net_amount + $request->discount_amount,
+                'credit' => 0,
+                'balance' => $this->calculateNewBalance($purchase->vendor_id, $request->net_amount + $request->discount_amount, 'debit'),
+                'user_id' => auth()->id(),
+            ]);
+
+            // Now set the polymorphic relation to the vendor
+            $vendor = Vendor::find($purchase->vendor_id);
+            $purchaseLedger->ledgerable()->associate($vendor);
+
+            // Save the ledger entry
+            $purchaseLedger->save();
+
+            // 8. Handle Payment Methods only if provided
+            if (is_array($request->payment_methods) && count($request->payment_methods) > 0) {
+                foreach ($request->payment_methods as $payment) {
+                    // Create Transaction (Credit) for each payment
+                    $transaction = Transaction::create([
+                        'payment_method_id' => $payment['payment_method_id'],
+                        'vendor_id' => $purchase->vendor_id,
+                        'customer_id' => null,
+                        'amount' => $payment['amount'],
+                        'transactionable_id' => $purchase->id,
+                        'transactionable_type' => get_class($purchase),
+                        'transaction_type' => 'credit',
+                        'transaction_date' => now(),
+                    ]);
+
+                    // Create Ledger Entry for the Payment (Credit)
+                    $paymentLedger = new LedgerEntry([
+                        'transaction_id' => $transaction->id,
+                        'date' => now(),
+                        'description' => 'Payment for Purchase Invoice #' . $purchase->invoice_no,
+                        'debit' => 0,
+                        'credit' => $payment['amount'], // Money coming in
+                        'balance' => $this->calculateNewBalance($purchase->vendor_id, $payment['amount'], 'credit'),
+                        'user_id' => auth()->id(),
+                    ]);
+
+                    // Associate the ledger with the Vendor (polymorphic relationship)
+                    $vendor = Vendor::find($purchase->vendor_id); // Get the Vendor model instance
+                    $paymentLedger->ledgerable()->associate($vendor);
+
+                    // Save the payment ledger entry
+                    $paymentLedger->save();
+
+                }
+            }
+
+            // 9. Commit the transaction
+            DB::commit();
+
+            // 10. Return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase has been successfully saved.',
+                'redirect' => route('purchases.index')
+            ], 200);
+
+        } catch (\Exception $e) {
+            // 11. Rollback the transaction on error
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Purchase Store Error: ' . $e->getMessage());
+
+            // Return error response
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while saving the purchase. Please try again later.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // 9. Commit the transaction
-        DB::commit();
-
-        // 10. Return success response
-        return response()->json([
-            'success' => true,
-            'message' => 'Purchase has been successfully saved.',
-            'redirect' => route('purchases.index')
-        ], 200);
-
-        // } catch (\Exception $e) {
-        //     // 11. Rollback the transaction on error
-        //     DB::rollBack();
-
-        //     // Log the error for debugging
-        //     \Log::error('Purchase Store Error: ' . $e->getMessage());
-
-        //     // Return error response
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'An unexpected error occurred while saving the purchase. Please try again later.',
-        //     ], 500);
-        // }
     }
 
     public function generatePdf($purchaseId)
@@ -444,7 +444,7 @@ class PurchaseController extends Controller
         // Fetch the latest ledger entry balance for the vendor via the polymorphic relationship
         $latestLedger = LedgerEntry::where('ledgerable_id', $vendorId)
             ->where('ledgerable_type', Vendor::class) // Ensure it’s a vendor
-            ->latest('date')
+            ->latest('id')
             ->first();
 
         $previousBalance = $latestLedger ? $latestLedger->balance : 0;
@@ -456,6 +456,139 @@ class PurchaseController extends Controller
         }
 
         return $previousBalance;
+    }
+
+    /**
+     * Update the specified purchase in storage (header-only edit).
+     */
+    public function update(Request $request, $id)
+    {
+        $purchase = Purchase::findOrFail($id);
+
+        $validated = $request->validate([
+            'vendor_id' => 'required|exists:vendors,id',
+            'purchase_date' => 'required|date',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $oldNetAmount = $purchase->net_amount;
+        $newNetAmount = $purchase->total_amount - ($validated['discount_amount'] ?? 0);
+
+        DB::beginTransaction();
+        try {
+            $purchase->update([
+                'vendor_id' => $validated['vendor_id'],
+                'purchase_date' => $validated['purchase_date'],
+                'discount_amount' => $validated['discount_amount'] ?? 0,
+                'net_amount' => $newNetAmount,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            // If net amount changed, create an adjustment ledger entry
+            $difference = $newNetAmount - $oldNetAmount;
+            if (abs($difference) > 0.001) {
+                $vendor = Vendor::find($purchase->vendor_id);
+                $adjustmentLedger = new LedgerEntry([
+                    'transaction_id' => null,
+                    'date' => now(),
+                    'description' => 'Purchase Adjustment - Invoice #' . $purchase->invoice_no,
+                    'debit' => $difference > 0 ? $difference : 0,
+                    'credit' => $difference < 0 ? abs($difference) : 0,
+                    'balance' => $this->calculateNewBalance($purchase->vendor_id, abs($difference), $difference > 0 ? 'debit' : 'credit'),
+                    'user_id' => auth()->id(),
+                ]);
+                $adjustmentLedger->ledgerable()->associate($vendor);
+                $adjustmentLedger->save();
+            }
+
+            DB::commit();
+            return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error updating purchase: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove the specified purchase from storage with full reversal.
+     */
+    public function destroy($id)
+    {
+        $purchase = Purchase::with(['purchaseItems', 'transactions'])->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            // 1. Reverse stock for each purchase item
+            foreach ($purchase->purchaseItems as $item) {
+                $batch = Batch::where('product_id', $item->product_id)
+                    ->where('batch_no', $item->batch_no)
+                    ->first();
+
+                if ($batch) {
+                    $batchStock = BatchStock::where('batch_id', $batch->id)
+                        ->where('location_id', $item->location_id)
+                        ->first();
+
+                    if ($batchStock) {
+                        $batchStock->decrement('quantity', $item->quantity);
+                        // Delete batch stock if quantity reaches zero
+                        if ($batchStock->quantity <= 0) {
+                            $batchStock->delete();
+                        }
+                    }
+
+                    // Create reversal inventory transaction
+                    InventoryTransaction::create([
+                        'product_id' => $item->product_id,
+                        'location_id' => $item->location_id,
+                        'batch_id' => $batch->id,
+                        'quantity' => -$item->quantity,
+                        'user_id' => auth()->id(),
+                        'transactionable_id' => $purchase->id,
+                        'transactionable_type' => Purchase::class,
+                    ]);
+                }
+
+                $item->delete();
+            }
+
+            // 2. Reverse ledger entries for this purchase
+            $purchaseLedgers = LedgerEntry::where('ledgerable_id', $purchase->vendor_id)
+                ->where('ledgerable_type', Vendor::class)
+                ->where('description', 'LIKE', '%Invoice #' . $purchase->invoice_no . '%')
+                ->get();
+
+            foreach ($purchaseLedgers as $ledger) {
+                $reversalLedger = new LedgerEntry([
+                    'transaction_id' => $ledger->transaction_id,
+                    'date' => now(),
+                    'description' => 'Reversal: ' . $ledger->description,
+                    'debit' => $ledger->credit,
+                    'credit' => $ledger->debit,
+                    'balance' => $this->calculateNewBalance($purchase->vendor_id, $ledger->debit ?: $ledger->credit, $ledger->debit > 0 ? 'credit' : 'debit'),
+                    'user_id' => auth()->id(),
+                ]);
+                $vendor = Vendor::find($purchase->vendor_id);
+                $reversalLedger->ledgerable()->associate($vendor);
+                $reversalLedger->save();
+            }
+
+            // 3. Delete transactions/payments
+            foreach ($purchase->transactions as $transaction) {
+                $transaction->delete();
+            }
+
+            // 4. Delete the purchase (soft delete)
+            $purchase->delete();
+
+            DB::commit();
+            return redirect()->route('purchases.index')->with('success', 'Purchase deleted and all effects reversed.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Purchase Delete Error: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Error deleting purchase: ' . $e->getMessage()]);
+        }
     }
 
     public function exportPdf(Request $request)

@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 
-class Batch extends Model
+class Batch extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
     protected $fillable = [
         'product_id',
         'batch_no',
@@ -33,6 +35,10 @@ class Batch extends Model
     public function inventoryTransactions()
     {
         return $this->hasMany(InventoryTransaction::class);
+    }
+    public function stock()
+    {
+        return $this->hasOne(BatchStock::class);
     }
     public function batchstocks()
     {

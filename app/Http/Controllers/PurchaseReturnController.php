@@ -13,6 +13,7 @@ use App\Models\InventoryTransaction;
 use App\Models\LedgerEntry;
 use App\Models\Transaction;
 use App\Models\PaymentMethod;
+use App\Models\BatchStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Validator;
@@ -35,7 +36,7 @@ class PurchaseReturnController extends Controller
     public function create()
     {
         $invoice_no = $this->generateReturnNo();
-        return view('purchase_returns.create',compact("invoice_no"));
+        return view('purchase_returns.create', compact("invoice_no"));
     }
 
     /**
@@ -66,64 +67,64 @@ class PurchaseReturnController extends Controller
     {
         // Step 1: Define validation rules
         $rules = [
-            'purchase_id'                => 'required|exists:purchases,id',
-            'invoice_no'                 => 'required|unique:purchase_returns,invoice_no',
-            'return_date'                => 'required|date',
-            'discount_amount'            => 'required|numeric|min:0',
-            'notes'                      => 'nullable|string|max:1000',
+            'purchase_id' => 'required|exists:purchases,id',
+            'invoice_no' => 'required|unique:purchase_returns,invoice_no',
+            'return_date' => 'required|date',
+            'discount_amount' => 'required|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
 
-            'return_items'               => 'required|array|min:1',
+            'return_items' => 'required|array|min:1',
             'return_items.*.purchase_item_id' => 'required|exists:purchase_items,id',
-            'return_items.*.product_id'        => 'required|exists:products,id',
-            'return_items.*.quantity'          => 'required|integer|min:1',
-            'return_items.*.unit_price'        => 'required|numeric|min:0',
+            'return_items.*.product_id' => 'required|exists:products,id',
+            'return_items.*.quantity' => 'required|integer|min:1',
+            'return_items.*.unit_price' => 'required|numeric|min:0',
 
-            'total_amount'      => 'required|numeric|min:0',
-            'net_amount'        => 'required|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
+            'net_amount' => 'required|numeric|min:0',
 
-            'payment_methods'                      => 'nullable|array',
+            'payment_methods' => 'nullable|array',
             'payment_methods.*.payment_method_id' => 'required_with:payment_methods.*.amount|exists:payment_methods,id',
-            'payment_methods.*.amount'            => 'required_with:payment_methods.*.payment_method_id|numeric|min:0.01',
+            'payment_methods.*.amount' => 'required_with:payment_methods.*.payment_method_id|numeric|min:0.01',
         ];
 
         // Step 2: Define custom error messages
         $messages = [
-            'purchase_id.required'                => 'Purchase ID is required.',
-            'purchase_id.exists'                  => 'The selected purchase does not exist.',
-            'invoice_no.required'                 => 'Invoice number is required.',
-            'invoice_no.unique'                   => 'This invoice number has already been used.',
-            'return_date.required'                => 'Please select a return date.',
-            'return_date.date'                    => 'Return date must be a valid date.',
-            'discount_amount.required'            => 'Discount amount is required.',
-            'discount_amount.numeric'             => 'Discount amount must be a number.',
-            'discount_amount.min'                 => 'Discount amount cannot be negative.',
-            'notes.string'                        => 'Notes must be a valid text.',
-            'notes.max'                           => 'Notes cannot exceed 1000 characters.',
-            'return_items.required'               => 'Please add at least one product to the return.',
-            'return_items.array'                  => 'Return items must be an array.',
-            'return_items.min'                    => 'Please add at least one product to the return.',
+            'purchase_id.required' => 'Purchase ID is required.',
+            'purchase_id.exists' => 'The selected purchase does not exist.',
+            'invoice_no.required' => 'Invoice number is required.',
+            'invoice_no.unique' => 'This invoice number has already been used.',
+            'return_date.required' => 'Please select a return date.',
+            'return_date.date' => 'Return date must be a valid date.',
+            'discount_amount.required' => 'Discount amount is required.',
+            'discount_amount.numeric' => 'Discount amount must be a number.',
+            'discount_amount.min' => 'Discount amount cannot be negative.',
+            'notes.string' => 'Notes must be a valid text.',
+            'notes.max' => 'Notes cannot exceed 1000 characters.',
+            'return_items.required' => 'Please add at least one product to the return.',
+            'return_items.array' => 'Return items must be an array.',
+            'return_items.min' => 'Please add at least one product to the return.',
             'return_items.*.purchase_item_id.required' => 'Please select the original purchase item.',
-            'return_items.*.purchase_item_id.exists'   => 'Selected purchase item does not exist.',
-            'return_items.*.product_id.required'       => 'Please select a product.',
-            'return_items.*.product_id.exists'         => 'Selected product does not exist.',
-            'return_items.*.quantity.required'         => 'Please enter the quantity to return.',
-            'return_items.*.quantity.integer'          => 'Quantity must be an integer.',
-            'return_items.*.quantity.min'              => 'Quantity must be at least 1.',
-            'return_items.*.unit_price.required'       => 'Please enter the unit price.',
-            'return_items.*.unit_price.numeric'        => 'Unit price must be a number.',
-            'return_items.*.unit_price.min'            => 'Unit price cannot be negative.',
-            'total_amount.required'     => 'Total amount is required.',
-            'total_amount.numeric'      => 'Total amount must be a number.',
-            'total_amount.min'          => 'Total amount cannot be negative.',
-            'net_amount.required'       => 'Net amount is required.',
-            'net_amount.numeric'        => 'Net amount must be a number.',
-            'net_amount.min'            => 'Net amount cannot be negative.',
-            'payment_methods.array'                         => 'Payment methods must be an array.',
+            'return_items.*.purchase_item_id.exists' => 'Selected purchase item does not exist.',
+            'return_items.*.product_id.required' => 'Please select a product.',
+            'return_items.*.product_id.exists' => 'Selected product does not exist.',
+            'return_items.*.quantity.required' => 'Please enter the quantity to return.',
+            'return_items.*.quantity.integer' => 'Quantity must be an integer.',
+            'return_items.*.quantity.min' => 'Quantity must be at least 1.',
+            'return_items.*.unit_price.required' => 'Please enter the unit price.',
+            'return_items.*.unit_price.numeric' => 'Unit price must be a number.',
+            'return_items.*.unit_price.min' => 'Unit price cannot be negative.',
+            'total_amount.required' => 'Total amount is required.',
+            'total_amount.numeric' => 'Total amount must be a number.',
+            'total_amount.min' => 'Total amount cannot be negative.',
+            'net_amount.required' => 'Net amount is required.',
+            'net_amount.numeric' => 'Net amount must be a number.',
+            'net_amount.min' => 'Net amount cannot be negative.',
+            'payment_methods.array' => 'Payment methods must be an array.',
             'payment_methods.*.payment_method_id.required_with' => 'Please select a payment method.',
-            'payment_methods.*.payment_method_id.exists'   => 'Selected payment method does not exist.',
-            'payment_methods.*.amount.required_with'            => 'Please enter the payment amount.',
-            'payment_methods.*.amount.numeric'             => 'Payment amount must be a number.',
-            'payment_methods.*.amount.min'                 => 'Payment amount must be at least 0.01.',
+            'payment_methods.*.payment_method_id.exists' => 'Selected payment method does not exist.',
+            'payment_methods.*.amount.required_with' => 'Please enter the payment amount.',
+            'payment_methods.*.amount.numeric' => 'Payment amount must be a number.',
+            'payment_methods.*.amount.min' => 'Payment amount must be at least 0.01.',
         ];
 
         // Step 3: Create validator instance
@@ -140,15 +141,15 @@ class PurchaseReturnController extends Controller
                 }
 
                 $submittedTotal = round($request->total_amount, 2);
-                $expectedTotal  = round($calculatedTotal, 2);
+                $expectedTotal = round($calculatedTotal, 2);
 
                 if ($submittedTotal !== $expectedTotal) {
                     $validator->errors()->add('total_amount', 'The total amount does not match the sum of all return items.');
                 }
 
                 $calculatedNet = $calculatedTotal - ($request->discount_amount ?? 0);
-                $submittedNet  = round($request->net_amount, 2);
-                $expectedNet   = round($calculatedNet, 2);
+                $submittedNet = round($request->net_amount, 2);
+                $expectedNet = round($calculatedNet, 2);
 
                 if ($submittedNet !== $expectedNet) {
                     $validator->errors()->add('net_amount', 'The net amount does not match the total amount minus the discount.');
@@ -178,9 +179,9 @@ class PurchaseReturnController extends Controller
         }
 
         // Step 6: Proceed to store the purchase return and related data
-        // try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
+        try {
             // Recalculate totals on the server side
             $calculatedTotal = 0;
             foreach ($request->return_items as $item) {
@@ -194,15 +195,15 @@ class PurchaseReturnController extends Controller
 
             // Create the purchase return
             $purchaseReturn = PurchaseReturn::create([
-                'purchase_id'     => $request->purchase_id,
-                'invoice_no'      => $request->invoice_no,
-                'vendor_id'       => $purchase->vendor_id,
-                'return_date'     => $request->return_date,
+                'purchase_id' => $request->purchase_id,
+                'invoice_no' => $request->invoice_no,
+                'vendor_id' => $purchase->vendor_id,
+                'return_date' => $request->return_date,
                 'discount_amount' => $calculatedDiscount,
-                'notes'           => $request->notes,
-                'total_amount'    => $calculatedTotal,
-                'net_amount'      => $calculatedNet,
-                'user_id'         => auth()->id(),
+                'notes' => $request->notes,
+                'total_amount' => $calculatedTotal,
+                'net_amount' => $calculatedNet,
+                'user_id' => auth()->id(),
             ]);
 
             // Iterate through each return item and create PurchaseReturnItem records
@@ -212,77 +213,67 @@ class PurchaseReturnController extends Controller
                 // Fetch the original purchase item
                 $purchaseItem = PurchaseItem::findOrFail($item['purchase_item_id']);
 
-                // Update the purchase item to reflect the returned quantity
-                $purchaseItem->quantity = ($purchaseItem->quantity ?? 0) + $item['quantity'];
-                $purchaseItem->save();
-
-                // Update the batch quantity
+                // Find the batch and batch stock
+                $batch = null;
                 if ($purchaseItem->batch_no) {
                     $batch = Batch::where('product_id', $item['product_id'])
-                                  ->where('batch_no', $purchaseItem->batch_no)
-                                  ->first();
+                        ->where('batch_no', $purchaseItem->batch_no)
+                        ->first();
 
                     if ($batch) {
-                        // Get the batch stock for the current batch
-                        $batchStock = $batch->stock; // Assuming the relationship is defined with batch_stock
+                        // Get the batch stock for the current batch and location
+                        $batchStock = BatchStock::where('batch_id', $batch->id)
+                            ->where('location_id', $purchaseItem->location_id)
+                            ->first();
 
                         if ($batchStock && $batchStock->quantity > 0) {
-                            // Skip expired batches
-                            if ($batch->expiry_date && $batch->expiry_date < now()->toDateString()) {
-                                // Skip expired batch or handle differently (optional)
-                                continue;
-                            }
-
                             // Decrement the batch stock quantity based on the return quantity
                             $batchStock->decrement('quantity', $item['quantity']);
 
-                            // Optional: Delete the batch stock if quantity becomes zero
+                            // Delete the batch stock if quantity becomes zero or negative
                             if ($batchStock->quantity <= 0) {
                                 $batchStock->delete();
                             }
-                        } else {
-                            // Handle the case where batch stock is not found or quantity is zero
-                            // You might want to log or handle this scenario
                         }
                     }
                 }
 
-
                 // Create purchase return item
                 PurchaseReturnItem::create([
                     'purchase_return_id' => $purchaseReturn->id,
-                    'purchase_item_id'   => $item['purchase_item_id'],
-                    'product_id'         => $item['product_id'],
-                    'quantity'           => $item['quantity'],
-                    'unit_price'         => $item['unit_price'],
-                    'total_amount'       => $itemTotal,
+                    'purchase_item_id' => $item['purchase_item_id'],
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total_amount' => $itemTotal,
                 ]);
 
                 // Log the inventory transaction (reverse the purchase)
                 InventoryTransaction::create([
-                    'product_id'               => $item['product_id'],
-                    'batch_id'                 => $batch->id ?? null,
-                    'qty_change'               => -$item['quantity'], // Negative for return
-                    'transaction_type'         => 'purchase_return',
-                    'transaction_reference_id' => $purchaseReturn->id,
-                    'user_id'                  => auth()->id(),
+                    'product_id' => $item['product_id'],
+                    'location_id' => $purchaseItem->location_id,
+                    'batch_id' => $batch->id ?? null,
+                    'quantity' => -$item['quantity'],
+                    'user_id' => auth()->id(),
+                    'transactionable_id' => $purchaseReturn->id,
+                    'transactionable_type' => PurchaseReturn::class,
                 ]);
             }
 
             // Step 7: Create Ledger Entry for the Purchase Return (Credit)
+            $vendor = Vendor::find($purchase->vendor_id);
             $purchaseReturnLedger = new LedgerEntry([
-                'transaction_id' => null, // To be associated later if needed
-                'date'           => now(),
-                'description'    => 'Purchase Return Invoice #' . $purchaseReturn->invoice_no,
-                'debit'          => 0,
-                'credit'         => $calculatedNet + $calculatedDiscount, // Money coming in
-                'balance'        => $this->calculateNewBalance($purchase->vendor_id, $calculatedNet + $calculatedDiscount, 'credit'),
-                'vendor_id'      => $purchase->vendor_id,
-                'customer_id'    => null,
+                'transaction_id' => null,
+                'date' => now(),
+                'description' => 'Purchase Return Invoice #' . $purchaseReturn->invoice_no,
+                'debit' => 0,
+                'credit' => $calculatedNet + $calculatedDiscount,
+                'balance' => $this->calculateNewBalance($purchase->vendor_id, $calculatedNet + $calculatedDiscount, 'credit'),
+                'user_id' => auth()->id(),
             ]);
 
-            // Associate the ledger with the Vendor
-            $purchaseReturnLedger->ledgerable()->associate($purchaseReturn);
+            // Associate the ledger with the Vendor (not PurchaseReturn)
+            $purchaseReturnLedger->ledgerable()->associate($vendor);
             $purchaseReturnLedger->save();
 
             // Step 8: Handle Payment Methods only if provided
@@ -291,30 +282,29 @@ class PurchaseReturnController extends Controller
 
                     // Create Transaction (Debit) for each payment method used in the return
                     $transaction = Transaction::create([
-                        'payment_method_id'    => $payment['payment_method_id'],
-                        'vendor_id'            => $purchase->vendor_id,
-                        'customer_id'          => null,
-                        'amount'               => $payment['amount'],
-                        'transactionable_id'   => $purchaseReturn->id,
+                        'payment_method_id' => $payment['payment_method_id'],
+                        'vendor_id' => $purchase->vendor_id,
+                        'customer_id' => null,
+                        'amount' => $payment['amount'],
+                        'transactionable_id' => $purchaseReturn->id,
                         'transactionable_type' => PurchaseReturn::class,
-                        'transaction_type'     => 'debit', // Debit for payment in return
-                        'transaction_date'     => now(),
+                        'transaction_type' => 'debit',
+                        'transaction_date' => now(),
                     ]);
 
                     // Create Ledger Entry for the Payment (Debit)
                     $paymentLedger = new LedgerEntry([
                         'transaction_id' => $transaction->id,
-                        'date'           => now(),
-                        'description'    => 'Payment for Purchase Return Invoice #' . $purchaseReturn->invoice_no,
-                        'debit'          => $payment['amount'], // Money going out
-                        'credit'         => 0,
-                        'balance'        => $this->calculateNewBalance($purchase->vendor_id, $payment['amount'], 'debit'),
-                        'vendor_id'      => $purchase->vendor_id,
-                        'customer_id'    => null,
+                        'date' => now(),
+                        'description' => 'Payment for Purchase Return Invoice #' . $purchaseReturn->invoice_no,
+                        'debit' => $payment['amount'],
+                        'credit' => 0,
+                        'balance' => $this->calculateNewBalance($purchase->vendor_id, $payment['amount'], 'debit'),
+                        'user_id' => auth()->id(),
                     ]);
 
                     // Associate the ledger with the Vendor
-                    $paymentLedger->ledgerable()->associate($purchase->vendor);
+                    $paymentLedger->ledgerable()->associate($vendor);
                     $paymentLedger->save();
                 }
             }
@@ -329,19 +319,20 @@ class PurchaseReturnController extends Controller
                 'redirect' => route('purchase-returns.index')
             ], 200);
 
-        // } catch (\Exception $e) {
-        //     // Step 11: Rollback the transaction on error
-        //     DB::rollBack();
+        } catch (\Exception $e) {
+            // Step 11: Rollback the transaction on error
+            DB::rollBack();
 
-        //     // Log the error for debugging
-        //     \Log::error('Purchase Return Store Error: ' . $e->getMessage());
+            // Log the error for debugging
+            \Log::error('Purchase Return Store Error: ' . $e->getMessage());
 
-        //     // Return error response
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'An unexpected error occurred while saving the purchase return. Please try again later.',
-        //     ], 500);
-        // }
+            // Return error response
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while saving the purchase return. Please try again later.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 
@@ -357,9 +348,9 @@ class PurchaseReturnController extends Controller
     {
         // Fetch the latest ledger entry for the vendor to get the current balance
         $latestLedger = LedgerEntry::where('ledgerable_type', \App\Models\Vendor::class)
-                              ->where('ledgerable_id', $vendorId)
-                              ->orderBy('date', 'desc')
-                              ->first();
+            ->where('ledgerable_id', $vendorId)
+            ->latest('id')
+            ->first();
 
         $previousBalance = $latestLedger ? $latestLedger->balance : 0;
 
@@ -380,7 +371,7 @@ class PurchaseReturnController extends Controller
     public function show(PurchaseReturn $purchaseReturn)
     {
         // Eager load vendor, return items, and related purchase
-        $purchaseReturn->load(['vendor', 'returnItems.product', 'purchase','ledgerEntries']);
+        $purchaseReturn->load(['vendor', 'returnItems.product', 'purchase', 'ledgerEntries']);
         return view('purchase_returns.show', compact('purchaseReturn'));
     }
 
@@ -402,78 +393,78 @@ class PurchaseReturnController extends Controller
         // Define validation rules
         $rules = [
             // Purchase Return Information
-            'purchase_id'                => 'required|exists:purchases,id',
-            'return_no'                  => 'required|unique:purchase_returns,return_no,' . $purchaseReturn->id,
-            'return_date'                => 'required|date',
-            'discount_amount'            => 'required|numeric|min:0',
-            'notes'                      => 'nullable|string|max:1000',
+            'purchase_id' => 'required|exists:purchases,id',
+            'return_no' => 'required|unique:purchase_returns,return_no,' . $purchaseReturn->id,
+            'return_date' => 'required|date',
+            'discount_amount' => 'required|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
 
             // Return Items
-            'return_items'               => 'required|array|min:1',
+            'return_items' => 'required|array|min:1',
             'return_items.*.purchase_item_id' => 'required|exists:purchase_items,id',
-            'return_items.*.product_id'        => 'required|exists:products,id',
-            'return_items.*.batch_no'          => 'required|string|max:255',
-            'return_items.*.quantity'          => 'required|integer|min:1',
-            'return_items.*.unit_price'        => 'required|numeric|min:0',
-            
+            'return_items.*.product_id' => 'required|exists:products,id',
+            'return_items.*.batch_no' => 'required|string|max:255',
+            'return_items.*.quantity' => 'required|integer|min:1',
+            'return_items.*.unit_price' => 'required|numeric|min:0',
+
             // Calculated Fields
-            'total_amount'      => 'required|numeric|min:0',
-            'net_amount'        => 'required|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
+            'net_amount' => 'required|numeric|min:0',
 
             // Payment Methods - Made Optional
-            'payment_methods'                      => 'nullable|array',
+            'payment_methods' => 'nullable|array',
             'payment_methods.*.payment_method_id' => 'required_with:payment_methods.*.amount|exists:payment_methods,id',
-            'payment_methods.*.amount'            => 'required_with:payment_methods.*.payment_method_id|numeric|min:0.01',
+            'payment_methods.*.amount' => 'required_with:payment_methods.*.payment_method_id|numeric|min:0.01',
         ];
 
         // Define custom error messages
         $messages = [
             // Purchase Return Information
-            'purchase_id.required'                => 'Please select a purchase to return.',
-            'purchase_id.exists'                  => 'The selected purchase does not exist.',
-            'return_no.required'                  => 'Return number is required.',
-            'return_no.unique'                    => 'This return number has already been used. Please refresh to get a new one.',
-            'return_date.required'                => 'Please select a return date.',
-            'return_date.date'                    => 'Return date must be a valid date.',
-            'discount_amount.required'            => 'Discount amount is required.',
-            'discount_amount.numeric'             => 'Discount amount must be a number.',
-            'discount_amount.min'                 => 'Discount amount cannot be negative.',
-            'notes.string'                        => 'Notes must be a valid text.',
-            'notes.max'                           => 'Notes cannot exceed 1000 characters.',
+            'purchase_id.required' => 'Please select a purchase to return.',
+            'purchase_id.exists' => 'The selected purchase does not exist.',
+            'return_no.required' => 'Return number is required.',
+            'return_no.unique' => 'This return number has already been used. Please refresh to get a new one.',
+            'return_date.required' => 'Please select a return date.',
+            'return_date.date' => 'Return date must be a valid date.',
+            'discount_amount.required' => 'Discount amount is required.',
+            'discount_amount.numeric' => 'Discount amount must be a number.',
+            'discount_amount.min' => 'Discount amount cannot be negative.',
+            'notes.string' => 'Notes must be a valid text.',
+            'notes.max' => 'Notes cannot exceed 1000 characters.',
 
             // Return Items
-            'return_items.required'               => 'Please add at least one product to the return.',
-            'return_items.array'                  => 'Return items must be an array.',
-            'return_items.min'                    => 'Please add at least one product to the return.',
+            'return_items.required' => 'Please add at least one product to the return.',
+            'return_items.array' => 'Return items must be an array.',
+            'return_items.min' => 'Please add at least one product to the return.',
             'return_items.*.purchase_item_id.required' => 'Please select the original purchase item.',
-            'return_items.*.purchase_item_id.exists'   => 'Selected purchase item does not exist.',
-            'return_items.*.product_id.required'       => 'Please select a product.',
-            'return_items.*.product_id.exists'         => 'Selected product does not exist.',
-            'return_items.*.batch_no.required'         => 'Please enter the batch number.',
-            'return_items.*.batch_no.string'           => 'Batch number must be a valid string.',
-            'return_items.*.batch_no.max'              => 'Batch number cannot exceed 255 characters.',
-            'return_items.*.quantity.required'         => 'Please enter the quantity to return.',
-            'return_items.*.quantity.integer'          => 'Quantity must be an integer.',
-            'return_items.*.quantity.min'              => 'Quantity must be at least 1.',
-            'return_items.*.unit_price.required'       => 'Please enter the unit price.',
-            'return_items.*.unit_price.numeric'        => 'Unit price must be a number.',
-            'return_items.*.unit_price.min'            => 'Unit price cannot be negative.',
+            'return_items.*.purchase_item_id.exists' => 'Selected purchase item does not exist.',
+            'return_items.*.product_id.required' => 'Please select a product.',
+            'return_items.*.product_id.exists' => 'Selected product does not exist.',
+            'return_items.*.batch_no.required' => 'Please enter the batch number.',
+            'return_items.*.batch_no.string' => 'Batch number must be a valid string.',
+            'return_items.*.batch_no.max' => 'Batch number cannot exceed 255 characters.',
+            'return_items.*.quantity.required' => 'Please enter the quantity to return.',
+            'return_items.*.quantity.integer' => 'Quantity must be an integer.',
+            'return_items.*.quantity.min' => 'Quantity must be at least 1.',
+            'return_items.*.unit_price.required' => 'Please enter the unit price.',
+            'return_items.*.unit_price.numeric' => 'Unit price must be a number.',
+            'return_items.*.unit_price.min' => 'Unit price cannot be negative.',
 
             // Calculated Fields
-            'total_amount.required'     => 'Total amount is required.',
-            'total_amount.numeric'      => 'Total amount must be a number.',
-            'total_amount.min'          => 'Total amount cannot be negative.',
-            'net_amount.required'       => 'Net amount is required.',
-            'net_amount.numeric'        => 'Net amount must be a number.',
-            'net_amount.min'            => 'Net amount cannot be negative.',
+            'total_amount.required' => 'Total amount is required.',
+            'total_amount.numeric' => 'Total amount must be a number.',
+            'total_amount.min' => 'Total amount cannot be negative.',
+            'net_amount.required' => 'Net amount is required.',
+            'net_amount.numeric' => 'Net amount must be a number.',
+            'net_amount.min' => 'Net amount cannot be negative.',
 
             // Payment Methods - Updated Messages
-            'payment_methods.array'                         => 'Payment methods must be an array.',
+            'payment_methods.array' => 'Payment methods must be an array.',
             'payment_methods.*.payment_method_id.required_with' => 'Please select a payment method.',
-            'payment_methods.*.payment_method_id.exists'   => 'Selected payment method does not exist.',
-            'payment_methods.*.amount.required_with'            => 'Please enter the payment amount.',
-            'payment_methods.*.amount.numeric'             => 'Payment amount must be a number.',
-            'payment_methods.*.amount.min'                 => 'Payment amount must be at least 0.01.',
+            'payment_methods.*.payment_method_id.exists' => 'Selected payment method does not exist.',
+            'payment_methods.*.amount.required_with' => 'Please enter the payment amount.',
+            'payment_methods.*.amount.numeric' => 'Payment amount must be a number.',
+            'payment_methods.*.amount.min' => 'Payment amount must be at least 0.01.',
         ];
 
         // Create validator instance
@@ -489,15 +480,15 @@ class PurchaseReturnController extends Controller
                 }
 
                 $submittedTotal = round($request->total_amount, 2);
-                $expectedTotal  = round($calculatedTotal, 2);
+                $expectedTotal = round($calculatedTotal, 2);
 
                 if ($submittedTotal !== $expectedTotal) {
                     $validator->errors()->add('total_amount', 'The total amount does not match the sum of all return items.');
                 }
 
-                $calculatedNet      = $calculatedTotal - ($request->discount_amount ?? 0);
-                $submittedNet       = round($request->net_amount, 2);
-                $expectedNet        = round($calculatedNet, 2);
+                $calculatedNet = $calculatedTotal - ($request->discount_amount ?? 0);
+                $submittedNet = round($request->net_amount, 2);
+                $expectedNet = round($calculatedNet, 2);
 
                 if ($submittedNet !== $expectedNet) {
                     $validator->errors()->add('net_amount', 'The net amount does not match the total amount minus the discount.');
@@ -529,14 +520,14 @@ class PurchaseReturnController extends Controller
 
             // Update the purchase return record
             $purchaseReturn->update([
-                'purchase_id'     => $request->purchase_id,
-                'vendor_id'       => $request->vendor_id,
-                'return_no'       => $request->return_no,
-                'return_date'     => $request->return_date,
+                'purchase_id' => $request->purchase_id,
+                'vendor_id' => $request->vendor_id,
+                'return_no' => $request->return_no,
+                'return_date' => $request->return_date,
                 'discount_amount' => $calculatedDiscount,
-                'notes'           => $request->notes,
-                'total_amount'    => $calculatedTotal,
-                'net_amount'      => $calculatedNet,
+                'notes' => $request->notes,
+                'total_amount' => $calculatedTotal,
+                'net_amount' => $calculatedNet,
             ]);
 
             $totalAmount = 0;
@@ -558,8 +549,8 @@ class PurchaseReturnController extends Controller
 
                         // Update batch details if necessary
                         $batch = Batch::where('product_id', $item['product_id'])
-                                      ->where('batch_no', $item['batch_no'])
-                                      ->first();
+                            ->where('batch_no', $item['batch_no'])
+                            ->first();
 
                         if ($batch) {
                             // Update batch total_qty_received
@@ -577,21 +568,21 @@ class PurchaseReturnController extends Controller
                         // Update purchase return item
                         $returnItem->update([
                             'purchase_item_id' => $item['purchase_item_id'],
-                            'product_id'       => $item['product_id'],
-                            'batch_no'         => $item['batch_no'],
-                            'quantity'         => $item['quantity'],
-                            'unit_price'       => $item['unit_price'],
-                            'total_amount'     => $item['quantity'] * $item['unit_price'],
+                            'product_id' => $item['product_id'],
+                            'batch_no' => $item['batch_no'],
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price'],
+                            'total_amount' => $item['quantity'] * $item['unit_price'],
                         ]);
 
                         // Log the inventory transaction
                         InventoryTransaction::create([
-                            'product_id'               => $item['product_id'],
-                            'batch_id'                 => $batch->id,
-                            'qty_change'               => -$item['quantity'],
-                            'transaction_type'         => 'purchase_return_update',
+                            'product_id' => $item['product_id'],
+                            'batch_id' => $batch->id,
+                            'qty_change' => -$item['quantity'],
+                            'transaction_type' => 'purchase_return_update',
                             'transaction_reference_id' => $purchaseReturn->id,
-                            'user_id'                  => auth()->id(),
+                            'user_id' => auth()->id(),
                         ]);
 
                         $totalAmount += $returnItem->total_amount;
@@ -606,8 +597,8 @@ class PurchaseReturnController extends Controller
 
                     // Find existing batch
                     $batch = Batch::where('product_id', $item['product_id'])
-                                  ->where('batch_no', $item['batch_no'])
-                                  ->first();
+                        ->where('batch_no', $item['batch_no'])
+                        ->first();
 
                     if (!$batch) {
                         // Handle the case where the batch does not exist
@@ -624,21 +615,21 @@ class PurchaseReturnController extends Controller
                     // Create the purchase return item record
                     $returnItem = $purchaseReturn->returnItems()->create([
                         'purchase_item_id' => $item['purchase_item_id'],
-                        'product_id'       => $item['product_id'],
-                        'batch_no'         => $item['batch_no'],
-                        'quantity'         => $item['quantity'],
-                        'unit_price'       => $item['unit_price'],
-                        'total_amount'     => $itemTotalAmount,
+                        'product_id' => $item['product_id'],
+                        'batch_no' => $item['batch_no'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'total_amount' => $itemTotalAmount,
                     ]);
 
                     // Log the inventory transaction
                     InventoryTransaction::create([
-                        'product_id'               => $item['product_id'],
-                        'batch_id'                 => $batch->id,
-                        'qty_change'               => -$item['quantity'],
-                        'transaction_type'         => 'purchase_return',
+                        'product_id' => $item['product_id'],
+                        'batch_id' => $batch->id,
+                        'qty_change' => -$item['quantity'],
+                        'transaction_type' => 'purchase_return',
                         'transaction_reference_id' => $purchaseReturn->id,
-                        'user_id'                  => auth()->id(),
+                        'user_id' => auth()->id(),
                     ]);
 
                     $newItemIds[] = $returnItem->id;
@@ -656,12 +647,12 @@ class PurchaseReturnController extends Controller
 
                         // Log the inventory transaction as a positive change
                         InventoryTransaction::create([
-                            'product_id'               => $returnItem->product_id,
-                            'batch_id'                 => $returnItem->batch_id,
-                            'qty_change'               => $returnItem->quantity,
-                            'transaction_type'         => 'purchase_return_delete',
+                            'product_id' => $returnItem->product_id,
+                            'batch_id' => $returnItem->batch_id,
+                            'qty_change' => $returnItem->quantity,
+                            'transaction_type' => 'purchase_return_delete',
                             'transaction_reference_id' => $purchaseReturn->id,
-                            'user_id'                  => auth()->id(),
+                            'user_id' => auth()->id(),
                         ]);
 
                         // Delete the purchase return item
@@ -672,8 +663,8 @@ class PurchaseReturnController extends Controller
 
             // Update total_amount in the purchase return record
             $purchaseReturn->update([
-                'total_amount'   => $totalAmount,
-                'net_amount'     => $totalAmount - $purchaseReturn->discount_amount,
+                'total_amount' => $totalAmount,
+                'net_amount' => $totalAmount - $purchaseReturn->discount_amount,
             ]);
 
             DB::commit();
@@ -692,7 +683,7 @@ class PurchaseReturnController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while updating the purchase return.',
-                'errors'  => $e->getMessage(),
+                'errors' => $e->getMessage(),
             ], 500);
         }
     }
@@ -709,8 +700,8 @@ class PurchaseReturnController extends Controller
             // Reverse inventory changes
             foreach ($purchaseReturn->returnItems as $item) {
                 $batch = Batch::where('product_id', $item->product_id)
-                              ->where('batch_no', $item->batch_no)
-                              ->first();
+                    ->where('batch_no', $item->batch_no)
+                    ->first();
 
                 if ($batch) {
                     // Increment the stock back
@@ -719,12 +710,12 @@ class PurchaseReturnController extends Controller
 
                 // Log the inventory transaction as a reverse of the return
                 InventoryTransaction::create([
-                    'product_id'               => $item->product_id,
-                    'batch_id'                 => $batch->id,
-                    'qty_change'               => $item->quantity,
-                    'transaction_type'         => 'purchase_return_delete',
+                    'product_id' => $item->product_id,
+                    'batch_id' => $batch->id,
+                    'qty_change' => $item->quantity,
+                    'transaction_type' => 'purchase_return_delete',
                     'transaction_reference_id' => $purchaseReturn->id,
-                    'user_id'                  => auth()->id(),
+                    'user_id' => auth()->id(),
                 ]);
             }
 

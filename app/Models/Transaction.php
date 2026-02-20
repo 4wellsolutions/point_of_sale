@@ -5,19 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 
-class Transaction extends Model
+class Transaction extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
     protected $fillable = [
-        'payment_method_id', 
+        'payment_method_id',
         'vendor_id',
         'customer_id',
         'user_id',
-        'amount', 
-        'transactionable_id', 
-        'transactionable_type', 
-        'transaction_type', 
+        'amount',
+        'transactionable_id',
+        'transactionable_type',
+        'transaction_type',
         'transaction_date'
     ];
 
