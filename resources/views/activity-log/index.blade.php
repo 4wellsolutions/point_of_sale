@@ -60,6 +60,8 @@
                                     <option value="created" {{ request('event') == 'created' ? 'selected' : '' }}>Created</option>
                                     <option value="updated" {{ request('event') == 'updated' ? 'selected' : '' }}>Updated</option>
                                     <option value="deleted" {{ request('event') == 'deleted' ? 'selected' : '' }}>Deleted</option>
+                                    <option value="login" {{ request('event') == 'login' ? 'selected' : '' }}>Login</option>
+                                    <option value="logout" {{ request('event') == 'logout' ? 'selected' : '' }}>Logout</option>
                                 </select>
                             </div>
                         </div>
@@ -148,6 +150,10 @@
                                     <span class="badge badge-info"><i class="fas fa-edit mr-1"></i>Updated</span>
                                 @elseif($audit->event === 'deleted')
                                     <span class="badge badge-danger"><i class="fas fa-trash mr-1"></i>Deleted</span>
+                                @elseif($audit->event === 'login')
+                                    <span class="badge" style="background:#10b981;color:#fff"><i class="fas fa-sign-in-alt mr-1"></i>Login</span>
+                                @elseif($audit->event === 'logout')
+                                    <span class="badge" style="background:#f59e0b;color:#fff"><i class="fas fa-sign-out-alt mr-1"></i>Logout</span>
                                 @else
                                     <span class="badge badge-secondary">{{ ucfirst($audit->event) }}</span>
                                 @endif

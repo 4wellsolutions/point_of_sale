@@ -360,6 +360,52 @@
                     </li>
                 @endif
 
+                <!-- ── REPORTS ── -->
+                <li class="sidebar-section-header">Reports</li>
+                <li class="nav-item has-treeview {{ request()->is('reports*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p>Reports <i class="right fas fa-angle-left"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('reports.sales') }}"
+                                class="nav-link {{ request()->routeIs('reports.sales') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Sales Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.purchases') }}"
+                                class="nav-link {{ request()->routeIs('reports.purchases') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Purchase Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.profit-loss') }}"
+                                class="nav-link {{ request()->routeIs('reports.profit-loss') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Profit & Loss</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.expenses') }}"
+                                class="nav-link {{ request()->routeIs('reports.expenses') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Expense Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.stock') }}"
+                                class="nav-link {{ request()->routeIs('reports.stock') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Stock Report</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- ── USER MANAGEMENT (Admin only) ── -->
                 @if(auth()->user()->isAdmin())
                     <li class="sidebar-section-header">Administration</li>

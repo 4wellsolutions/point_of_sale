@@ -140,6 +140,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/stock-loss-damage-batches', [StockLossDamageController::class, 'getBatches'])->name('stock-loss-damage.batches');
     });
 
+    // ── REPORTS ──
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/sales', [\App\Http\Controllers\ReportController::class, 'sales'])->name('sales');
+        Route::get('/purchases', [\App\Http\Controllers\ReportController::class, 'purchases'])->name('purchases');
+        Route::get('/profit-loss', [\App\Http\Controllers\ReportController::class, 'profitLoss'])->name('profit-loss');
+        Route::get('/expenses', [\App\Http\Controllers\ReportController::class, 'expenses'])->name('expenses');
+        Route::get('/stock', [\App\Http\Controllers\ReportController::class, 'stock'])->name('stock');
+    });
+
     // ── SETTINGS ──
     Route::middleware('module:settings')->group(function () {
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
@@ -150,5 +159,5 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/', function () {
     return redirect('/login');
 });
-Auth::routes();
+Auth::routes(['register' => false]);
 

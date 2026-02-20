@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 use OwenIt\Auditing\Auditable;
 
 class Setting extends Model implements AuditableContract
 {
-    use Auditable;
+    use SoftDeletes, Auditable;
 
     protected $fillable = ['key', 'value'];
 
