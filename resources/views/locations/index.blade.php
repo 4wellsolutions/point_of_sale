@@ -13,12 +13,6 @@
             </a>
         </div>
         <div class="card-body">
-            @if(session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
-
             @if($locations->isEmpty())
                 <p>No locations found.</p>
             @else
@@ -44,7 +38,9 @@
                                     <a href="{{ route('locations.edit', $location->id) }}" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('locations.destroy', $location->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this location?');">
+                                    <form action="{{ route('locations.destroy', $location->id) }}" method="POST"
+                                        style="display:inline-block;"
+                                        onsubmit="return confirm('Are you sure you want to delete this location?');">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-danger btn-sm" type="submit">

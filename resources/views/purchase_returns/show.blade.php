@@ -34,8 +34,10 @@
                     <h5>Original Purchase</h5>
                     <p><strong>Invoice No:</strong> {{ $purchaseReturn->purchase->invoice_no ?? 'N/A' }}</p>
                     <p><strong>Purchase Date:</strong> {{ $purchaseReturn->purchase->purchase_date ?? 'N/A' }}</p>
-                    <p><strong>Total Amount:</strong> ${{ number_format($purchaseReturn->purchase->total_amount, 2) ?? 'N/A' }}</p>
-                    <p><strong>Net Amount:</strong> ${{ number_format($purchaseReturn->purchase->net_amount, 2) ?? 'N/A' }}</p>
+                    <p><strong>Total Amount:</strong>
+                          {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->purchase->total_amount, 2) ?? 'N/A' }}</p>
+                    <p><strong>Net Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->purchase->net_amount, 2) ?? 'N/A' }}
+                    </p>
                 </div>
             </div>
 
@@ -44,15 +46,15 @@
                 <div class="col-md-6">
                     <h5>Return Details</h5>
                     <p><strong>Return Date:</strong> {{ $purchaseReturn->return_date }}</p>
-                    <p><strong>Discount Amount:</strong> ${{ number_format($purchaseReturn->discount_amount, 2) }}</p>
-                    <p><strong>Total Amount:</strong> ${{ number_format($purchaseReturn->total_amount, 2) }}</p>
-                    <p><strong>Net Amount:</strong> ${{ number_format($purchaseReturn->net_amount, 2) }}</p>
+                    <p><strong>Discount Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->discount_amount, 2) }}</p>
+                    <p><strong>Total Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->total_amount, 2) }}</p>
+                    <p><strong>Net Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->net_amount, 2) }}</p>
                 </div>
                 <div class="col-md-6">
                     <h5>Financial Summary</h5>
-                    <p><strong>Total Amount:</strong> ${{ number_format($purchaseReturn->total_amount, 2) }}</p>
-                    <p><strong>Discount Amount:</strong> ${{ number_format($purchaseReturn->discount_amount, 2) }}</p>
-                    <p><strong>Net Amount:</strong> ${{ number_format($purchaseReturn->net_amount, 2) }}</p>
+                    <p><strong>Total Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->total_amount, 2) }}</p>
+                    <p><strong>Discount Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->discount_amount, 2) }}</p>
+                    <p><strong>Net Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->net_amount, 2) }}</p>
                 </div>
             </div>
 
@@ -68,8 +70,8 @@
                                 <th>Batch No</th>
                                 <th>Location</th>
                                 <th>Quantity</th>
-                                <th>Unit Price ($)</th>
-                                <th>Total ($)</th>
+                                <th>Unit Price ({{ setting('currency_symbol', '$') }})</th>
+                                <th>Total ({{ setting('currency_symbol', '$') }})</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,7 +102,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Payment Method</th>
-                                <th>Amount ($)</th>
+                                <th>Amount ({{ setting('currency_symbol', '$') }})</th>
                                 <th>Transaction Date</th>
                             </tr>
                         </thead>

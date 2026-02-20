@@ -19,9 +19,11 @@
                     <td>{{ $sale->invoice_no }}</td>
                     <td>{{ $sale->customer->name ?? 'Walk-in' }}</td>
                     <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</td>
-                    <td class="text-right">${{ number_format($sale->total_amount, 2) }}</td>
-                    <td class="text-right">${{ number_format($sale->discount_amount, 2) }}</td>
-                    <td class="text-right fw-bold">${{ number_format($sale->net_amount, 2) }}</td>
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ number_format($sale->total_amount, 2) }}</td>
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ number_format($sale->discount_amount, 2) }}
+                    </td>
+                    <td class="text-right fw-bold">
+                        {{ setting('currency_symbol', '$') }}{{ number_format($sale->net_amount, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -29,6 +31,7 @@
 
     <div class="summary">
         <p><strong>Total Sales:</strong> {{ $sales->count() }}</p>
-        <p><strong>Total Amount:</strong> ${{ number_format($sales->sum('net_amount'), 2) }}</p>
+        <p><strong>Total Amount:</strong>
+            {{ setting('currency_symbol', '$') }}{{ number_format($sales->sum('net_amount'), 2) }}</p>
     </div>
 @endsection

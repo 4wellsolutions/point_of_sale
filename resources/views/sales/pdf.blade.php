@@ -26,15 +26,15 @@
                 <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('F j, Y') }}</td>
             </tr>
             <tr>
-                <td><strong>Total Amount ($):</strong></td>
+                <td><strong>Total Amount ({{ setting('currency_symbol', '$') }}):</strong></td>
                 <td>{{ number_format($sale->total_amount, 2) }}</td>
             </tr>
             <tr>
-                <td><strong>Discount ($):</strong></td>
+                <td><strong>Discount ({{ setting('currency_symbol', '$') }}):</strong></td>
                 <td>{{ number_format($sale->discount_amount, 2) }}</td>
             </tr>
             <tr>
-                <td><strong>Net Amount ($):</strong></td>
+                <td><strong>Net Amount ({{ setting('currency_symbol', '$') }}):</strong></td>
                 <td>{{ number_format($sale->net_amount, 2) }}</td>
             </tr>
         </table>
@@ -57,7 +57,7 @@
                     <th style="border: 1px solid #ddd; padding: 5px;">Batch No.</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">Quantity</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">Sale Price</th>
-                    <th style="border: 1px solid #ddd; padding: 5px;">Total ($)</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Total ({{ setting('currency_symbol', '$') }})</th>
                 </tr>
             </thead>
             <tbody>
@@ -105,7 +105,7 @@
                     <tr>
                         <th style="border: 1px solid #ddd; padding: 5px;">Date</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Payment Method</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Amount ($)</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Amount ({{ setting('currency_symbol', '$') }})</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -115,18 +115,21 @@
                                 {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('F j, Y') }}
                             </td>
                             <td style="border: 1px solid #ddd; padding: 5px;">{{ $transaction->paymentMethod->method_name }}</td>
-                            <td style="border: 1px solid #ddd; padding: 5px; text-align: right;">{{ number_format($transaction->amount, 2) }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: right;">
+                                {{ number_format($transaction->amount, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
                         <th colspan="2" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Total Payment:</th>
-                        <th style="border: 1px solid #ddd; padding: 5px; text-align: right;">{{ number_format($sale->transactions->sum('amount'), 2) }}</th>
+                        <th style="border: 1px solid #ddd; padding: 5px; text-align: right;">
+                            {{ number_format($sale->transactions->sum('amount'), 2) }}</th>
                     </tr>
                     <tr>
                         <th colspan="2" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Remaining Balance:</th>
-                        <th style="border: 1px solid #ddd; padding: 5px; text-align: right;">{{ number_format($sale->net_amount - $sale->transactions->sum('amount'), 2) }}</th>
+                        <th style="border: 1px solid #ddd; padding: 5px; text-align: right;">
+                            {{ number_format($sale->net_amount - $sale->transactions->sum('amount'), 2) }}</th>
                     </tr>
                 </tfoot>
             </table>

@@ -41,7 +41,7 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->name . '%');
         }
 
-        $products = $query->paginate(20);
+        $products = $query->latest()->paginate(20);
 
         $flavours = Flavour::all();
         $packings = Packing::all();
@@ -119,6 +119,10 @@ class ProductController extends Controller
 
         // Create the product with the validated data
         Product::create($data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Product created successfully.']);
+        }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
@@ -261,8 +265,7 @@ class ProductController extends Controller
             return [
                 'id' => $product->id,
                 'text' => "{$product->name} (SKU: {$product->sku})", // Combining name and SKU for better display
-                'image_url' => $product->image ? url($product->image) : asset('products/product.png'),
-                // 'Storage::url($product->image)' generates the correct URL to access the image
+                'image_url' => $product->image ? Storage::url($product->image) : asset('product-images/product.png'),
                 // If 'image' is null, a default image is provided
             ];
         });

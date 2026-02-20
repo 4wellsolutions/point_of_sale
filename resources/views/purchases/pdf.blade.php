@@ -19,13 +19,13 @@
                 <tr>
                     <th>Purchase Date:</th>
                     <td>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('F j, Y') }}</td>
-                    <th>Total Amount ($):</th>
+                    <th>Total Amount ({{ setting('currency_symbol', '$') }}):</th>
                     <td>{{ number_format($purchase->total_amount, 2) }}</td>
                 </tr>
                 <tr>
-                    <th>Discount ($):</th>
+                    <th>Discount ({{ setting('currency_symbol', '$') }}):</th>
                     <td>{{ number_format($purchase->discount_amount, 2) }}</td>
-                    <th>Net Amount ($):</th>
+                    <th>Net Amount ({{ setting('currency_symbol', '$') }}):</th>
                     <td>{{ number_format($purchase->net_amount, 2) }}</td>
                 </tr>
             </table>
@@ -49,8 +49,8 @@
                         <th>Location</th>
                         <th>Batch No.</th>
                         <th>Quantity</th>
-                        <th>Cost Per Piece ($)</th>
-                        <th>Total ($)</th>
+                        <th>Cost Per Piece ({{ setting('currency_symbol', '$') }})</th>
+                        <th>Total ({{ setting('currency_symbol', '$') }})</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,7 +95,7 @@
                         <tr>
                             <th>Date</th>
                             <th>Payment Method</th>
-                            <th>Amount ($)</th>
+                            <th>Amount ({{ setting('currency_symbol', '$') }})</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -12,7 +12,7 @@
             <h5 class="mb-0"><i class="fas fa-cash-register me-2"></i>All Sales</h5>
             <div class="d-flex gap-2 export-buttons">
                 <a href="{{ route('sales.export.pdf', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
-                    title="Export PDF">
+                    title="Export PDF" target="_blank">
                     <i class="fas fa-file-pdf me-1"></i>PDF
                 </a>
                 <a href="{{ route('sales.export.csv', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
@@ -86,9 +86,12 @@
                                     <td><span class="badge bg-secondary">{{ $sale->invoice_no }}</span></td>
                                     <td><strong>{{ $sale->customer->name ?? 'Walk-in' }}</strong></td>
                                     <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</td>
-                                    <td class="text-end">${{ number_format($sale->total_amount, 2) }}</td>
-                                    <td class="text-end">${{ number_format($sale->discount_amount, 2) }}</td>
-                                    <td class="text-end fw-bold">${{ number_format($sale->net_amount, 2) }}</td>
+                                    <td class="text-end">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($sale->total_amount, 2) }}</td>
+                                    <td class="text-end">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($sale->discount_amount, 2) }}</td>
+                                    <td class="text-end fw-bold">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($sale->net_amount, 2) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-info" title="View">
                                             <i class="fas fa-eye"></i>

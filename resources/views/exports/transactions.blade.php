@@ -24,7 +24,8 @@
                     </td>
                     <td>{{ $transaction->vendor->name ?? $transaction->customer->name ?? '—' }}</td>
                     <td>{{ $transaction->paymentMethod->name ?? '—' }}</td>
-                    <td class="text-right fw-bold">${{ number_format($transaction->amount, 2) }}</td>
+                    <td class="text-right fw-bold">
+                        {{ setting('currency_symbol', '$') }}{{ number_format($transaction->amount, 2) }}</td>
                     <td>{{ $transaction->reference ?? '—' }}</td>
                 </tr>
             @endforeach
@@ -33,6 +34,7 @@
 
     <div class="summary">
         <p><strong>Total Transactions:</strong> {{ $transactions->count() }}</p>
-        <p><strong>Total Amount:</strong> ${{ number_format($transactions->sum('amount'), 2) }}</p>
+        <p><strong>Total Amount:</strong>
+            {{ setting('currency_symbol', '$') }}{{ number_format($transactions->sum('amount'), 2) }}</p>
     </div>
 @endsection

@@ -11,28 +11,28 @@
         <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
             <div class="kpi-card kpi-sales">
                 <i class="fas fa-chart-line kpi-icon"></i>
-                <div class="kpi-value">${{ number_format($todaySales, 0) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol', '$') }}{{ number_format($todaySales, 0) }}</div>
                 <div class="kpi-label">Today's Sales</div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
             <div class="kpi-card kpi-purchases">
                 <i class="fas fa-shopping-cart kpi-icon"></i>
-                <div class="kpi-value">${{ number_format($todayPurchases, 0) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol', '$') }}{{ number_format($todayPurchases, 0) }}</div>
                 <div class="kpi-label">Today's Purchases</div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
             <div class="kpi-card kpi-revenue">
                 <i class="fas fa-dollar-sign kpi-icon"></i>
-                <div class="kpi-value">${{ number_format($monthSales, 0) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol', '$') }}{{ number_format($monthSales, 0) }}</div>
                 <div class="kpi-label">Monthly Revenue</div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
             <div class="kpi-card kpi-expenses">
                 <i class="fas fa-money-bill-wave kpi-icon"></i>
-                <div class="kpi-value">${{ number_format($monthExpenses, 0) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol', '$') }}{{ number_format($monthExpenses, 0) }}</div>
                 <div class="kpi-label">Monthly Expenses</div>
             </div>
         </div>
@@ -47,7 +47,7 @@
                         <i class="fas fa-shopping-bag text-primary fa-lg"></i>
                     </div>
                     <div>
-                        <h5 class="mb-0">${{ number_format($monthPurchases, 0) }}</h5>
+                        <h5 class="mb-0">{{ setting('currency_symbol', '$') }}{{ number_format($monthPurchases, 0) }}</h5>
                         <small class="text-muted">Monthly Purchases</small>
                     </div>
                 </div>
@@ -124,7 +124,7 @@
                                             </td>
                                             <td class="text-end">
                                                 <span
-                                                    class="fw-bold text-success">${{ number_format($item->total_revenue, 0) }}</span>
+                                                    class="fw-bold text-success">{{ setting('currency_symbol', '$') }}{{ number_format($item->total_revenue, 0) }}</span>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -166,7 +166,7 @@
                                         <tr>
                                             <td>{{ $sale->customer->name ?? 'Walk-in' }}</td>
                                             <td><small>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</small></td>
-                                            <td class="text-end fw-bold">${{ number_format($sale->net_amount, 2) }}</td>
+                                            <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ number_format($sale->net_amount, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -205,7 +205,7 @@
                                             <td>{{ $purchase->vendor->name ?? 'N/A' }}</td>
                                             <td><small>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</small>
                                             </td>
-                                            <td class="text-end fw-bold">${{ number_format($purchase->net_amount, 2) }}</td>
+                                            <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ number_format($purchase->net_amount, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

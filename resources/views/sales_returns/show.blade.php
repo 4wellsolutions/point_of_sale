@@ -23,7 +23,8 @@
             <p><strong>Customer:</strong> {{ $salesReturn->sale->customer->name ?? 'N/A' }}</p>
             <p><strong>Quantity Returned:</strong> {{ $salesReturn->qty_returned }}</p>
             <p><strong>Return Reason:</strong> {{ $salesReturn->return_reason ?? 'N/A' }}</p>
-            <p><strong>Refund Amount:</strong> ${{ number_format($salesReturn->refund_amount, 2) }}</p>
+            <p><strong>Refund Amount:</strong>
+                {{ setting('currency_symbol', '$') }}{{ number_format($salesReturn->refund_amount, 2) }}</p>
             <p><strong>Created At:</strong> {{ $salesReturn->created_at->format('d M Y, H:i') }}</p>
             <p><strong>Updated At:</strong> {{ $salesReturn->updated_at->format('d M Y, H:i') }}</p>
         </div>

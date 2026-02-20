@@ -12,7 +12,7 @@
             <h5 class="mb-0"><i class="fas fa-users me-2"></i>All Customers</h5>
             <div class="d-flex gap-2 export-buttons">
                 <a href="{{ route('customers.export.pdf', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
-                    title="Export PDF">
+                    title="Export PDF" target="_blank">
                     <i class="fas fa-file-pdf me-1"></i>PDF
                 </a>
                 <a href="{{ route('customers.export.csv', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
@@ -45,7 +45,8 @@
                             <option value="">All Types</option>
                             @foreach($types ?? [] as $type)
                                 <option value="{{ $type->id }}" {{ request('type_id') == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}</option>
+                                    {{ $type->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -104,11 +105,13 @@
                                     <td><span class="badge bg-info">{{ $customer->type->name ?? '—' }}</span></td>
                                     <td class="fw-bold">
                                         @if(($customer->balance ?? 0) > 0)
-                                            <span class="text-success">${{ number_format($customer->balance, 2) }}</span>
+                                            <span
+                                                class="text-success">{{ setting('currency_symbol', '$') }}{{ number_format($customer->balance, 2) }}</span>
                                         @elseif(($customer->balance ?? 0) < 0)
-                                            <span class="text-danger">${{ number_format($customer->balance, 2) }}</span>
+                                            <span
+                                                class="text-danger">{{ setting('currency_symbol', '$') }}{{ number_format($customer->balance, 2) }}</span>
                                         @else
-                                            $0.00
+                                            {{ setting('currency_symbol', '$') }}0.00
                                         @endif
                                     </td>
                                     <td class="text-center action-btns">

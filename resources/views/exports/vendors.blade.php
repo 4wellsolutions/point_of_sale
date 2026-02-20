@@ -19,7 +19,7 @@
                     <td>{{ $vendor->email ?? '—' }}</td>
                     <td>{{ $vendor->phone ?? '—' }}</td>
                     <td>{{ $vendor->type->name ?? '—' }}</td>
-                    <td class="text-right">${{ number_format($vendor->balance ?? 0, 2) }}</td>
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ number_format($vendor->balance ?? 0, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>

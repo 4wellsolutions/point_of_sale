@@ -30,7 +30,7 @@
                     <textarea name="return_reason" class="form-control" rows="4">{{ old('return_reason', $salesReturn->return_reason) }}</textarea>
                 </div>
                 <div class="mb-3">
-                    <label for="refund_amount" class="form-label">Refund Amount ($) <span class="text-danger">*</span></label>
+                    <label for="refund_amount" class="form-label">Refund Amount ({{ setting('currency_symbol', '$') }}) <span class="text-danger">*</span></label>
                     <input type="number" step="0.01" name="refund_amount" class="form-control" required min="0" value="{{ old('refund_amount', $salesReturn->refund_amount) }}">
                 </div>
                 <button class="btn btn-success" type="submit">

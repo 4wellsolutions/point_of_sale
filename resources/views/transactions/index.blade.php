@@ -12,7 +12,7 @@
             <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>All Transactions</h5>
             <div class="d-flex gap-2 export-buttons">
                 <a href="{{ route('transactions.export.pdf', request()->query()) }}"
-                    class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-pdf me-1"></i>PDF</a>
+                    class="btn btn-sm btn-outline-secondary" target="_blank"><i class="fas fa-file-pdf me-1"></i>PDF</a>
                 <a href="{{ route('transactions.export.csv', request()->query()) }}"
                     class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-csv me-1"></i>CSV</a>
                 <a href="{{ route('transactions.create') }}" class="btn btn-sm btn-primary"><i
@@ -94,7 +94,8 @@
                                         {{ $transaction->vendor->name ?? $transaction->customer->name ?? '—' }}
                                     </td>
                                     <td>{{ $transaction->paymentMethod->name ?? '—' }}</td>
-                                    <td class="text-end fw-bold">${{ number_format($transaction->amount, 2) }}</td>
+                                    <td class="text-end fw-bold">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($transaction->amount, 2) }}</td>
                                     <td><small class="text-muted">{{ $transaction->reference ?? '—' }}</small></td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('transactions.edit', $transaction->id) }}" class="btn btn-sm btn-warning"

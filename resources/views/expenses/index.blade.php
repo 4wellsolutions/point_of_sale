@@ -11,8 +11,8 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>All Expenses</h5>
             <div class="d-flex gap-2 export-buttons">
-                <a href="{{ route('expenses.export.pdf', request()->query()) }}" class="btn btn-sm btn-outline-secondary"><i
-                        class="fas fa-file-pdf me-1"></i>PDF</a>
+                <a href="{{ route('expenses.export.pdf', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
+                    target="_blank"><i class="fas fa-file-pdf me-1"></i>PDF</a>
                 <a href="{{ route('expenses.export.csv', request()->query()) }}" class="btn btn-sm btn-outline-secondary"><i
                         class="fas fa-file-csv me-1"></i>CSV</a>
                 <a href="{{ route('expenses.create') }}" class="btn btn-sm btn-primary"><i class="fas fa-plus me-1"></i>Add
@@ -29,7 +29,8 @@
                             <option value="">All Types</option>
                             @foreach($expenseTypes ?? [] as $type)
                                 <option value="{{ $type->id }}" {{ request('expense_type_id') == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}</option>
+                                    {{ $type->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -74,7 +75,8 @@
                                     <td>{{ \Carbon\Carbon::parse($expense->date)->format('d M Y') }}</td>
                                     <td><span class="badge bg-warning">{{ $expense->expenseType->name ?? '—' }}</span></td>
                                     <td>{{ Str::limit($expense->description, 50) }}</td>
-                                    <td class="text-end fw-bold">${{ number_format($expense->amount, 2) }}</td>
+                                    <td class="text-end fw-bold">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($expense->amount, 2) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('expenses.edit', $expense->id) }}" class="btn btn-sm btn-warning"
                                             title="Edit"><i class="fas fa-edit"></i></a>

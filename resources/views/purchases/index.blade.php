@@ -12,7 +12,7 @@
             <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>All Purchases</h5>
             <div class="d-flex gap-2 export-buttons">
                 <a href="{{ route('purchases.export.pdf', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
-                    title="Export PDF">
+                    title="Export PDF" target="_blank">
                     <i class="fas fa-file-pdf me-1"></i>PDF
                 </a>
                 <a href="{{ route('purchases.export.csv', request()->query()) }}" class="btn btn-sm btn-outline-secondary"
@@ -35,7 +35,8 @@
                             <option value="">All Vendors</option>
                             @foreach($vendors ?? [] as $vendor)
                                 <option value="{{ $vendor->id }}" {{ request('vendor_id') == $vendor->id ? 'selected' : '' }}>
-                                    {{ $vendor->name }}</option>
+                                    {{ $vendor->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -87,9 +88,12 @@
                                     <td><span class="badge bg-secondary">{{ $purchase->invoice_no }}</span></td>
                                     <td><strong>{{ $purchase->vendor->name ?? '—' }}</strong></td>
                                     <td>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</td>
-                                    <td class="text-end">${{ number_format($purchase->total_amount, 2) }}</td>
-                                    <td class="text-end">${{ number_format($purchase->discount_amount, 2) }}</td>
-                                    <td class="text-end fw-bold">${{ number_format($purchase->net_amount, 2) }}</td>
+                                    <td class="text-end">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($purchase->total_amount, 2) }}</td>
+                                    <td class="text-end">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($purchase->discount_amount, 2) }}</td>
+                                    <td class="text-end fw-bold">
+                                        {{ setting('currency_symbol', '$') }}{{ number_format($purchase->net_amount, 2) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('purchases.show', $purchase->id) }}" class="btn btn-sm btn-info"
                                             title="View">

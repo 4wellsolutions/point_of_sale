@@ -1,8 +1,11 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="{{ route('home') }}" class="brand-link">
-        <i class="fas fa-cash-register ms-2 me-2"></i>
-        <span class="brand-text font-weight-light">POS System</span>
+    <a href="{{ route('home') }}" class="brand-link" style="text-align:center; padding:10px 5px;">
+        <span class="brand-text font-weight-bold"
+            style="font-size:16px;">{{ setting('business_name', setting('app_name', 'POS System')) }}</span>
+        @if(setting('business_name') && setting('app_name') && setting('business_name') !== setting('app_name'))
+            <br><small class="text-muted" style="font-size:11px;">{{ setting('app_name') }}</small>
+        @endif
     </a>
 
     <!-- Sidebar -->
@@ -19,19 +22,18 @@
                     </a>
                 </li>
 
-                <!-- ── MASTER DATA ── -->
-                <li class="sidebar-section-header">Master Data</li>
-
-                <!-- Products -->
-                <li class="nav-item has-treeview {{ request()->is('products*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->is('products*') ? 'active' : '' }}">
+                <!-- ── PRODUCTS ── -->
+                <li
+                    class="nav-item has-treeview {{ request()->is('products*') || request()->is('categories*') || request()->is('flavours*') || request()->is('packings*') || request()->is('locations*') || request()->is('types*') ? 'menu-open' : '' }}">
+                    <a href="#"
+                        class="nav-link {{ request()->is('products*') || request()->is('categories*') || request()->is('flavours*') || request()->is('packings*') || request()->is('locations*') || request()->is('types*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-box-open"></i>
                         <p>Products <i class="right fas fa-angle-left"></i></p>
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('products.index') }}"
-                                class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}">
+                                class="nav-link {{ request()->routeIs('products.index') || request()->routeIs('products.show') ? 'active' : '' }}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>All Products</p>
                             </a>
@@ -43,124 +45,39 @@
                                 <p>Add Product</p>
                             </a>
                         </li>
-                    </ul>
-                </li>
-
-                <!-- Categories -->
-                <li class="nav-item has-treeview {{ request()->is('categories*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->is('categories*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-tags"></i>
-                        <p>Categories <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('categories.index') }}"
-                                class="nav-link {{ request()->routeIs('categories.index') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>All Categories</p>
+                                class="nav-link {{ request()->is('categories*') ? 'active' : '' }}">
+                                <i class="fas fa-tags nav-icon"></i>
+                                <p>Categories</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('categories.create') }}"
-                                class="nav-link {{ request()->routeIs('categories.create') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Add Category</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- Flavours -->
-                <li class="nav-item has-treeview {{ request()->is('flavours*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->is('flavours*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-lemon"></i>
-                        <p>Flavours <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('flavours.index') }}"
-                                class="nav-link {{ request()->routeIs('flavours.index') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>All Flavours</p>
+                                class="nav-link {{ request()->is('flavours*') ? 'active' : '' }}">
+                                <i class="fas fa-lemon nav-icon"></i>
+                                <p>Flavours</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('flavours.create') }}"
-                                class="nav-link {{ request()->routeIs('flavours.create') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Add Flavour</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- Packing -->
-                <li class="nav-item has-treeview {{ request()->is('packings*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->is('packings*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-box"></i>
-                        <p>Packing <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('packings.index') }}"
-                                class="nav-link {{ request()->routeIs('packings.index') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>All Packings</p>
+                                class="nav-link {{ request()->is('packings*') ? 'active' : '' }}">
+                                <i class="fas fa-box nav-icon"></i>
+                                <p>Packing</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('packings.create') }}"
-                                class="nav-link {{ request()->routeIs('packings.create') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Add Packing</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- Locations -->
-                <li class="nav-item has-treeview {{ request()->is('locations*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->is('locations*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-map-marker-alt"></i>
-                        <p>Locations <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('locations.index') }}"
-                                class="nav-link {{ request()->routeIs('locations.index') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>All Locations</p>
+                                class="nav-link {{ request()->is('locations*') ? 'active' : '' }}">
+                                <i class="fas fa-map-marker-alt nav-icon"></i>
+                                <p>Locations</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('locations.create') }}"
-                                class="nav-link {{ request()->routeIs('locations.create') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Add Location</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- Types -->
-                <li class="nav-item has-treeview {{ request()->is('types*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->is('types*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-list"></i>
-                        <p>Types <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('types.index') }}"
-                                class="nav-link {{ request()->routeIs('types.index') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>All Types</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('types.create') }}"
-                                class="nav-link {{ request()->routeIs('types.create') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Add Type</p>
+                                class="nav-link {{ request()->is('types*') ? 'active' : '' }}">
+                                <i class="fas fa-list nav-icon"></i>
+                                <p>Types</p>
                             </a>
                         </li>
                     </ul>
@@ -415,6 +332,19 @@
                     </ul>
                 </li>
 
+            </ul>
+        </nav>
+
+        <!-- Settings at bottom -->
+        <nav class="mt-auto mb-3">
+            <ul class="nav nav-pills nav-sidebar flex-column">
+                <li class="nav-item">
+                    <a href="{{ route('settings.index') }}"
+                        class="nav-link {{ request()->is('settings*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-cog"></i>
+                        <p>Settings</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>

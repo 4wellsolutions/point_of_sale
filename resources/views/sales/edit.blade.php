@@ -68,10 +68,10 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $item->product->name ?? '—' }}</td>
                                         <td>{{ $item->location->name ?? '—' }}</td>
-                                        <td class="text-end">${{ number_format($item->purchase_price, 2) }}</td>
-                                        <td class="text-end">${{ number_format($item->sale_price, 2) }}</td>
+                                        <td class="text-end">{{ setting('currency_symbol', '$') }}{{ number_format($item->purchase_price, 2) }}</td>
+                                        <td class="text-end">{{ setting('currency_symbol', '$') }}{{ number_format($item->sale_price, 2) }}</td>
                                         <td class="text-center">{{ $item->quantity }}</td>
-                                        <td class="text-end fw-bold">${{ number_format($item->total_amount, 2) }}</td>
+                                        <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ number_format($item->total_amount, 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -84,12 +84,12 @@
                     <div class="col-md-4 offset-md-8">
                         <table class="table">
                             <tr>
-                                <th>Total Amount ($):</th>
+                                <th>Total Amount ({{ setting('currency_symbol', '$') }}):</th>
                                 <td><input type="number" step="0.01" id="total_amount" class="form-control"
                                         value="{{ $sale->total_amount }}" readonly></td>
                             </tr>
                             <tr>
-                                <th>Discount ($):</th>
+                                <th>Discount ({{ setting('currency_symbol', '$') }}):</th>
                                 <td>
                                     <input type="number" step="0.01" name="discount_amount" id="discount_amount"
                                         class="form-control @error('discount_amount') is-invalid @enderror"
@@ -98,7 +98,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Net Amount ($):</th>
+                                <th>Net Amount ({{ setting('currency_symbol', '$') }}):</th>
                                 <td><input type="number" step="0.01" id="net_amount" class="form-control"
                                         value="{{ $sale->net_amount }}" readonly></td>
                             </tr>

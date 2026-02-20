@@ -7,8 +7,8 @@
 @section('content')
     <!-- Print Button -->
     <div class="mb-4 text-end">
-        <a href="{{route('purchases.pdf',$purchase)}}" target="_blank" class="btn btn-secondary">
-            <i class="fas fa-print"></i> PDF 
+        <a href="{{route('purchases.pdf', $purchase)}}" target="_blank" class="btn btn-secondary">
+            <i class="fas fa-print"></i> PDF
         </a>
     </div>
 
@@ -38,17 +38,17 @@
             <div class="row">
                 <!-- Total Amount -->
                 <div class="col-md-4">
-                    <strong>Total Amount ($):</strong>
+                    <strong>Total Amount ({{ setting('currency_symbol', '$') }}):</strong>
                     <p>{{ number_format($purchase->total_amount, 2) }}</p>
                 </div>
                 <!-- Discount Amount -->
                 <div class="col-md-4">
-                    <strong>Discount ($):</strong>
+                    <strong>Discount ({{ setting('currency_symbol', '$') }}):</strong>
                     <p>{{ number_format($purchase->discount_amount, 2) }}</p>
                 </div>
                 <!-- Net Amount -->
                 <div class="col-md-4">
-                    <strong>Net Amount ($):</strong>
+                    <strong>Net Amount ({{ setting('currency_symbol', '$') }}):</strong>
                     <p>{{ number_format($purchase->net_amount, 2) }}</p>
                 </div>
             </div>
@@ -79,9 +79,9 @@
                             <th>Location</th>
                             <th>Batch No.</th>
                             <th>Quantity</th>
-                            <th>Purchase Price ($)</th>
-                            <th>Sale Price ($)</th>
-                            <th>Total ($)</th>
+                            <th>Purchase Price ({{ setting('currency_symbol', '$') }})</th>
+                            <th>Sale Price ({{ setting('currency_symbol', '$') }})</th>
+                            <th>Total ({{ setting('currency_symbol', '$') }})</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,7 +89,8 @@
                             <tr>
                                 <td>
                                     @if($item->product->image_url)
-                                        <img src="{{ asset($item->product->image_url) }}" alt="{{ $item->product->name }}" class="product-image">
+                                        <img src="{{ asset($item->product->image_url) }}" alt="{{ $item->product->name }}"
+                                            class="product-image">
                                     @else
                                         <img src="{{ asset('images/no-image.png') }}" alt="No Image" class="product-image">
                                     @endif
@@ -143,8 +144,8 @@
                             <tr>
                                 <th>Date</th>
                                 <th class="text-start">Payment Method</th>
-                                <th>Amount ($)</th>
-                                
+                                <th>Amount ({{ setting('currency_symbol', '$') }})</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -191,7 +192,8 @@
         }
 
         /* Table Cell Alignment */
-        table td, table th {
+        table td,
+        table th {
             vertical-align: middle !important;
         }
 
@@ -201,6 +203,7 @@
                 width: 40px;
                 height: 40px;
             }
+
             .card-header h5 {
                 font-size: 1.2em;
             }
@@ -208,9 +211,13 @@
 
         /* Print Styles */
         @media print {
-            .btn, .card-header, .table-responsive {
+
+            .btn,
+            .card-header,
+            .table-responsive {
                 display: none;
             }
+
             .card-body {
                 margin: 0;
             }
@@ -220,22 +227,5 @@
 
 @push('scripts')
     <script>
-        // Toastr Configuration
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "timeOut": "3000",
-        };
-
-        // Example: Display a success message if needed
-        @if(session('success'))
-            toastr.success("{{ session('success') }}");
-        @endif
-
-        // Example: Display error messages
-        @if(session('error'))
-            toastr.error("{{ session('error') }}");
-        @endif
     </script>
 @endpush

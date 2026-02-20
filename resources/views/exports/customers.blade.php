@@ -19,7 +19,7 @@
                     <td>{{ $customer->email ?? '—' }}</td>
                     <td>{{ $customer->phone ?? '—' }}</td>
                     <td>{{ $customer->type->name ?? '—' }}</td>
-                    <td class="text-right">${{ number_format($customer->balance ?? 0, 2) }}</td>
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ number_format($customer->balance ?? 0, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>

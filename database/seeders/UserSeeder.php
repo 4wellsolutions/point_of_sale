@@ -10,15 +10,32 @@ class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
-        User::create([
-            'name' => 'Ahmad',
-            'email' => '4wellsolutions@gmail.com',
-            'password' => Hash::make('asdfasdf'),
-        ]);
+        $users = [
+            [
+                'name' => 'Ahmad (Admin)',
+                'email' => '4wellsolutions@gmail.com',
+                'password' => Hash::make('asdfasdf'),
+            ],
+            [
+                'name' => 'Manager',
+                'email' => 'manager@pos.test',
+                'password' => Hash::make('password'),
+            ],
+            [
+                'name' => 'Cashier',
+                'email' => 'cashier@pos.test',
+                'password' => Hash::make('password'),
+            ],
+        ];
+
+        foreach ($users as $user) {
+            User::updateOrCreate(
+                ['email' => $user['email']],
+                $user
+            );
+        }
     }
 }

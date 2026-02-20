@@ -24,6 +24,7 @@ use App\Http\Controllers\ExpenseTypeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StockAlertController;
+use App\Http\Controllers\SettingController;
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard
@@ -98,6 +99,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/expenses/export/pdf', [ExpenseController::class, 'exportPdf'])->name('expenses.export.pdf');
     Route::get('/expenses/export/csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export.csv');
     Route::resource('expenses', ExpenseController::class);
+
+    // Settings
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
 Route::get('/', function () {

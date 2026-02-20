@@ -22,7 +22,7 @@
                             <th>Customer</th>
                             <th>Quantity Returned</th>
                             <th>Return Reason</th>
-                            <th>Refund Amount ($)</th>
+                            <th>Refund Amount ({{ setting('currency_symbol', '$') }})</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -35,7 +35,7 @@
                                 <td>{{ $return->sale->customer->name ?? 'N/A' }}</td>
                                 <td>{{ $return->qty_returned }}</td>
                                 <td>{{ $return->return_reason ?? 'N/A' }}</td>
-                                <td>${{ number_format($return->refund_amount, 2) }}</td>
+                                <td>{{ setting('currency_symbol', '$') }}{{ number_format($return->refund_amount, 2) }}</td>
                                 <td>
                                     <a href="{{ route('sales-returns.show', $return) }}" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye"></i>
@@ -43,7 +43,8 @@
                                     <a href="{{ route('sales-returns.edit', $return) }}" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('sales-returns.destroy', $return) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this sales return?');">
+                                    <form action="{{ route('sales-returns.destroy', $return) }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('Are you sure you want to delete this sales return?');">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-danger btn-sm" type="submit">

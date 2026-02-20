@@ -15,7 +15,8 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="product_id" class="form-label">Product <span class="text-danger">*</span></label>
-                        <select name="product_id" id="product_id" class="form-control select2-ajax @error('product_id') is-invalid @enderror" required>
+                        <select name="product_id" id="product_id"
+                            class="form-control select2-ajax @error('product_id') is-invalid @enderror" required>
                             @if(old('product_id'))
                                 <!-- Pre-selected option will be appended via JavaScript -->
                             @else
@@ -29,7 +30,8 @@
 
                     <div class="col-md-6">
                         <label for="vendor_id" class="form-label">Vendor <span class="text-danger">*</span></label>
-                        <select name="vendor_id" id="vendor_id" class="form-control select2-ajax @error('vendor_id') is-invalid @enderror" required>
+                        <select name="vendor_id" id="vendor_id"
+                            class="form-control select2-ajax @error('vendor_id') is-invalid @enderror" required>
                             @if(old('vendor_id'))
                                 <!-- Pre-selected option will be appended via JavaScript -->
                             @else
@@ -46,7 +48,9 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="batch_no" class="form-label">Batch No.</label>
-                        <input type="text" name="batch_no" id="batch_no" class="form-control @error('batch_no') is-invalid @enderror" value="{{ old('batch_no', $purchase->batch_no) }}">
+                        <input type="text" name="batch_no" id="batch_no"
+                            class="form-control @error('batch_no') is-invalid @enderror"
+                            value="{{ old('batch_no', $purchase->batch_no) }}">
                         @error('batch_no')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -54,7 +58,9 @@
 
                     <div class="col-md-6">
                         <label for="invoice_no" class="form-label">Invoice No.</label>
-                        <input type="text" name="invoice_no" id="invoice_no" class="form-control @error('invoice_no') is-invalid @enderror" value="{{ old('invoice_no', $purchase->invoice_no) }}">
+                        <input type="text" name="invoice_no" id="invoice_no"
+                            class="form-control @error('invoice_no') is-invalid @enderror"
+                            value="{{ old('invoice_no', $purchase->invoice_no) }}">
                         @error('invoice_no')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -64,8 +70,11 @@
                 <!-- Purchase Date and Expiry Date in a single row -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="purchase_date" class="form-label">Purchase Date <span class="text-danger">*</span></label>
-                        <input type="date" name="purchase_date" id="purchase_date" class="form-control @error('purchase_date') is-invalid @enderror" required value="{{ old('purchase_date', $purchase->purchase_date->format('Y-m-d')) }}">
+                        <label for="purchase_date" class="form-label">Purchase Date <span
+                                class="text-danger">*</span></label>
+                        <input type="date" name="purchase_date" id="purchase_date"
+                            class="form-control @error('purchase_date') is-invalid @enderror" required
+                            value="{{ old('purchase_date', $purchase->purchase_date->format('Y-m-d')) }}">
                         @error('purchase_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -74,7 +83,9 @@
 
                     <div class="col-md-6">
                         <label for="expiry_date" class="form-label">Expiry Date</label>
-                        <input type="date" name="expiry_date" id="expiry_date" class="form-control @error('expiry_date') is-invalid @enderror" value="{{ old('expiry_date', $purchase->expiry_date ? $purchase->expiry_date->format('Y-m-d') : '') }}">
+                        <input type="date" name="expiry_date" id="expiry_date"
+                            class="form-control @error('expiry_date') is-invalid @enderror"
+                            value="{{ old('expiry_date', $purchase->expiry_date ? $purchase->expiry_date->format('Y-m-d') : '') }}">
                         @error('expiry_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -84,16 +95,22 @@
                 <!-- Quantity Received and Cost Price in a single row -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="qty_received" class="form-label">Quantity Received <span class="text-danger">*</span></label>
-                        <input type="number" name="qty_received" id="qty_received" class="form-control @error('qty_received') is-invalid @enderror" required min="1" value="{{ old('qty_received', $purchase->qty_received) }}">
+                        <label for="qty_received" class="form-label">Quantity Received <span
+                                class="text-danger">*</span></label>
+                        <input type="number" name="qty_received" id="qty_received"
+                            class="form-control @error('qty_received') is-invalid @enderror" required min="1"
+                            value="{{ old('qty_received', $purchase->qty_received) }}">
                         @error('qty_received')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label for="cost_price" class="form-label">Cost Price ($) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" name="cost_price" id="cost_price" class="form-control @error('cost_price') is-invalid @enderror" required min="0" value="{{ old('cost_price', $purchase->cost_price) }}">
+                        <label for="cost_price" class="form-label">Cost Price ({{ setting('currency_symbol', '$') }}) <span
+                                class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="cost_price" id="cost_price"
+                            class="form-control @error('cost_price') is-invalid @enderror" required min="0"
+                            value="{{ old('cost_price', $purchase->cost_price) }}">
                         @error('cost_price')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -103,8 +120,11 @@
                 <!-- Sale Price and Total Cost in a single row -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="sale_price" class="form-label">Sale Price ($) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" name="sale_price" id="sale_price" class="form-control @error('sale_price') is-invalid @enderror" required min="0" value="{{ old('sale_price', $purchase->sale_price) }}">
+                        <label for="sale_price" class="form-label">Sale Price ({{ setting('currency_symbol', '$') }}) <span
+                                class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="sale_price" id="sale_price"
+                            class="form-control @error('sale_price') is-invalid @enderror" required min="0"
+                            value="{{ old('sale_price', $purchase->sale_price) }}">
                         @error('sale_price')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -112,7 +132,9 @@
 
                     <div class="col-md-6">
                         <label for="total_cost" class="form-label">Total Cost ($) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" name="total_cost" id="total_cost" class="form-control @error('total_cost') is-invalid @enderror" required min="0" value="{{ old('total_cost', $purchase->total_cost) }}">
+                        <input type="number" step="0.01" name="total_cost" id="total_cost"
+                            class="form-control @error('total_cost') is-invalid @enderror" required min="0"
+                            value="{{ old('total_cost', $purchase->total_cost) }}">
                         @error('total_cost')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -122,7 +144,9 @@
                 <!-- Total Sale in a single row -->
                 <div class="mb-3">
                     <label for="total_sale" class="form-label">Total Sale ($) <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" name="total_sale" id="total_sale" class="form-control @error('total_sale') is-invalid @enderror" required min="0" value="{{ old('total_sale', $purchase->total_sale) }}">
+                    <input type="number" step="0.01" name="total_sale" id="total_sale"
+                        class="form-control @error('total_sale') is-invalid @enderror" required min="0"
+                        value="{{ old('total_sale', $purchase->total_sale) }}">
                     @error('total_sale')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -144,7 +168,7 @@
     <!-- Select2 CSS (if not already included in layouts.app) -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style type="text/css">
-        .select2-selection{
+        .select2-selection {
             height: 38px !important;
         }
     </style>
@@ -155,7 +179,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Initialize AJAX-based Select2 for Products
             $('#product_id').select2({
                 placeholder: 'Select a product',
@@ -175,7 +199,7 @@
                         params.page = params.page || 1;
 
                         return {
-                            results: data.data.map(function(product) {
+                            results: data.data.map(function (product) {
                                 return {
                                     id: product.id,
                                     text: product.name + ' (SKU: ' + (product.sku || 'N/A') + ')'
@@ -187,7 +211,7 @@
                         };
                     },
                     cache: true,
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error('Select2 AJAX Error:', error);
                     }
                 },
@@ -213,7 +237,7 @@
                         params.page = params.page || 1;
 
                         return {
-                            results: data.data.map(function(vendor) {
+                            results: data.data.map(function (vendor) {
                                 return {
                                     id: vendor.id,
                                     text: vendor.name
@@ -225,7 +249,7 @@
                         };
                     },
                     cache: true,
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error('Select2 AJAX Error:', error);
                     }
                 },
@@ -247,7 +271,7 @@
             }
 
             // Attach event listeners to input fields
-            $('#qty_received, #cost_price, #sale_price').on('input', function() {
+            $('#qty_received, #cost_price, #sale_price').on('input', function () {
                 calculateTotals();
             });
 
@@ -269,14 +293,14 @@
                         q: '', // empty query to fetch all (could be optimized)
                         page: 1
                     },
-                    success: function(data) {
+                    success: function (data) {
                         var product = data.data.find(p => p.id == productId);
                         if (product) {
                             var option = new Option(product.name + ' (SKU: ' + (product.sku || 'N/A') + ')', product.id, true, true);
                             $('#product_id').append(option).trigger('change');
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error('Error pre-selecting product:', error);
                     }
                 });
@@ -294,14 +318,14 @@
                         q: '', // empty query to fetch all (could be optimized)
                         page: 1
                     },
-                    success: function(data) {
+                    success: function (data) {
                         var vendor = data.data.find(v => v.id == vendorId);
                         if (vendor) {
                             var option = new Option(vendor.name, vendor.id, true, true);
                             $('#vendor_id').append(option).trigger('change');
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error('Error pre-selecting vendor:', error);
                     }
                 });

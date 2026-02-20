@@ -11,7 +11,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="fas fa-box-open me-2"></i>All Products</h5>
             <div class="d-flex gap-2 export-buttons">
-                <a href="{{ route('products.export.pdf') }}" class="btn btn-sm btn-outline-secondary" title="Export PDF">
+                <a href="{{ route('products.export.pdf') }}" class="btn btn-sm btn-outline-secondary" title="Export PDF" target="_blank">
                     <i class="fas fa-file-pdf me-1"></i>PDF
                 </a>
                 <a href="{{ route('products.export.csv') }}" class="btn btn-sm btn-outline-secondary" title="Export CSV">
@@ -29,12 +29,12 @@
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control form-control-sm" value="{{ request('name') }}"
+                        <input type="text" name="name" class="form-control" value="{{ request('name') }}"
                             placeholder="Search by name...">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Category</label>
-                        <select name="category_id" class="form-select form-select-sm">
+                        <select name="category_id" class="form-select">
                             <option value="">All Categories</option>
                             @foreach($categories ?? [] as $category)
                                 <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -43,17 +43,18 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Flavour</label>
-                        <select name="flavour_id" class="form-select form-select-sm">
+                        <select name="flavour_id" class="form-select">
                             <option value="">All Flavours</option>
                             @foreach($flavours ?? [] as $flavour)
                                 <option value="{{ $flavour->id }}" {{ request('flavour_id') == $flavour->id ? 'selected' : '' }}>
-                                    {{ $flavour->name }}</option>
+                                    {{ $flavour->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Status</label>
-                        <select name="status" class="form-select form-select-sm">
+                        <select name="status" class="form-select">
                             <option value="">All</option>
                             <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                             <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -96,9 +97,11 @@
                                     <td>{{ $product->gst ?? 0 }}%</td>
                                     <td>
                                         @if($product->status == 'active')
-                                            <span class="badge bg-success">Active</span>
+                                            <span class="badge" style="background:#22c55e;color:#fff;padding:5px 12px;font-size:0.8rem;border-radius:4px;">Active</span>
+                                        @elseif($product->status == 'discontinued')
+                                            <span class="badge" style="background:#f59e0b;color:#fff;padding:5px 12px;font-size:0.8rem;border-radius:4px;">Discontinued</span>
                                         @else
-                                            <span class="badge bg-danger">Inactive</span>
+                                            <span class="badge" style="background:#ef4444;color:#fff;padding:5px 12px;font-size:0.8rem;border-radius:4px;">Inactive</span>
                                         @endif
                                     </td>
                                     <td class="text-center action-btns">
