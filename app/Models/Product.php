@@ -31,7 +31,7 @@ class Product extends Model implements AuditableContract
 
     public function purchases()
     {
-        return $this->hasMany(Purchase::class);
+        return $this->hasMany(PurchaseItem::class);
     }
     public function flavour()
     {

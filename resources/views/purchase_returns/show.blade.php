@@ -1,108 +1,225 @@
 @extends('layouts.app')
 
 @section('title', 'Purchase Return Details')
-
 @section('page_title', 'Purchase Return Details')
 
 @section('content')
-    <div class="card mb-4">
-        <!-- Header -->
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title">Purchase Return: {{ $purchaseReturn->invoice_no }}</h3>
-            <div>
+
+    {{-- ===== Header Banner ===== --}}
+    <div class="detail-header mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="detail-icon-wrapper" style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+                    <i class="fas fa-undo-alt"></i>
+                </div>
+                <div>
+                    <h2 class="mb-1" style="font-weight:700; font-size:1.5rem;">Return {{ $purchaseReturn->invoice_no }}
+                    </h2>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="detail-id-badge">{{ $purchaseReturn->purchase->vendor->name ?? 'N/A' }}</span>
+                        <span class="badge bg-warning">{{ $purchaseReturn->return_date }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
                 <a href="{{ route('purchase-returns.edit', $purchaseReturn) }}" class="btn btn-warning btn-sm">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-pen me-1"></i> Edit
                 </a>
-                <a href="{{ route('purchase-returns.index') }}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-arrow-left"></i> Back
+                <a href="{{ route('purchase-returns.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
             </div>
         </div>
+    </div>
 
-        <!-- Body -->
-        <div class="card-body">
-            <!-- Vendor and Purchase Information -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h5>Vendor Information</h5>
-                    <p><strong>Name:</strong> {{ $purchaseReturn->purchase->vendor->name ?? 'N/A' }}</p>
-                    <p><strong>Email:</strong> {{ $purchaseReturn->purchase->vendor->email ?? 'N/A' }}</p>
-                    <p><strong>Phone:</strong> {{ $purchaseReturn->purchase->vendor->phone ?? 'N/A' }}</p>
-                    <p><strong>Address:</strong> {{ $purchaseReturn->purchase->vendor->address ?? 'N/A' }}</p>
+    {{-- ===== Financial Summary ===== --}}
+    <div class="card mb-4">
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-sm-4">
+                    <div class="stat-tile">
+                        <div class="stat-tile-icon" style="background:rgba(59,130,246,.1); color:#3b82f6;">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div>
+                            <div class="stat-tile-value">
+                                {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->total_amount, 2) }}
+                            </div>
+                            <div class="stat-tile-label">Total Amount</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <h5>Original Purchase</h5>
-                    <p><strong>Invoice No:</strong> {{ $purchaseReturn->purchase->invoice_no ?? 'N/A' }}</p>
-                    <p><strong>Purchase Date:</strong> {{ $purchaseReturn->purchase->purchase_date ?? 'N/A' }}</p>
-                    <p><strong>Total Amount:</strong>
-                          {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->purchase->total_amount, 2) ?? 'N/A' }}</p>
-                    <p><strong>Net Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->purchase->net_amount, 2) ?? 'N/A' }}
-                    </p>
+                <div class="col-sm-4">
+                    <div class="stat-tile">
+                        <div class="stat-tile-icon" style="background:rgba(245,158,11,.1); color:#f59e0b;">
+                            <i class="fas fa-percent"></i>
+                        </div>
+                        <div>
+                            <div class="stat-tile-value">
+                                {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->discount_amount, 2) }}
+                            </div>
+                            <div class="stat-tile-label">Discount</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="stat-tile">
+                        <div class="stat-tile-icon" style="background:rgba(239,68,68,.1); color:#ef4444;">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div>
+                            <div class="stat-tile-value">
+                                {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->net_amount, 2) }}
+                            </div>
+                            <div class="stat-tile-label">Net Amount</div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Return Details -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h5>Return Details</h5>
-                    <p><strong>Return Date:</strong> {{ $purchaseReturn->return_date }}</p>
-                    <p><strong>Discount Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->discount_amount, 2) }}</p>
-                    <p><strong>Total Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->total_amount, 2) }}</p>
-                    <p><strong>Net Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->net_amount, 2) }}</p>
+    <div class="row g-4">
+        {{-- ===== Vendor & Original Purchase ===== --}}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="fas fa-store" style="color:var(--primary);"></i>
+                    <h3 class="card-title mb-0">Vendor Information</h3>
                 </div>
-                <div class="col-md-6">
-                    <h5>Financial Summary</h5>
-                    <p><strong>Total Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->total_amount, 2) }}</p>
-                    <p><strong>Discount Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->discount_amount, 2) }}</p>
-                    <p><strong>Net Amount:</strong> {{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->net_amount, 2) }}</p>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-user"></i> Name</span>
+                                <span class="detail-value">{{ $purchaseReturn->purchase->vendor->name ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-envelope"></i> Email</span>
+                                <span class="detail-value">{{ $purchaseReturn->purchase->vendor->email ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-phone"></i> Phone</span>
+                                <span class="detail-value">{{ $purchaseReturn->purchase->vendor->phone ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Address</span>
+                                <span class="detail-value">{{ $purchaseReturn->purchase->vendor->address ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Return Items -->
-            <div class="mb-4">
-                <h5>Returned Items</h5>
-                @if($purchaseReturn->returnItems->count() > 0)
-                    <table class="table table-bordered table-hover">
-                        <thead class="thead-light">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="fas fa-file-invoice" style="color:var(--primary);"></i>
+                    <h3 class="card-title mb-0">Original Purchase</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-hashtag"></i> Invoice No</span>
+                                <span
+                                    class="detail-value font-monospace">{{ $purchaseReturn->purchase->invoice_no ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-calendar"></i> Purchase Date</span>
+                                <span class="detail-value">{{ $purchaseReturn->purchase->purchase_date ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-calculator"></i> Total Amount</span>
+                                <span
+                                    class="detail-value">{{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->purchase->total_amount, 2) }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="detail-row">
+                                <span class="detail-label"><i class="fas fa-money-bill"></i> Net Amount</span>
+                                <span
+                                    class="detail-value">{{ setting('currency_symbol', '$') }}{{ number_format($purchaseReturn->purchase->net_amount, 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Returned Items ===== --}}
+    <div class="card mt-4 mb-4">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="fas fa-list" style="color:var(--primary);"></i>
+            <h3 class="card-title mb-0">Returned Items</h3>
+            <span class="badge bg-info ms-auto">{{ $purchaseReturn->returnItems->count() }}</span>
+        </div>
+        <div class="card-body{{ $purchaseReturn->returnItems->count() ? ' p-0' : '' }}">
+            @if($purchaseReturn->returnItems->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Product</th>
                                 <th>Batch No</th>
                                 <th>Location</th>
-                                <th>Quantity</th>
-                                <th>Unit Price ({{ setting('currency_symbol', '$') }})</th>
-                                <th>Total ({{ setting('currency_symbol', '$') }})</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($purchaseReturn->returnItems as $index => $item)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
-                                    <td>{{ $item->product->name ?? 'N/A' }}</td>
-                                    <td>{{ $item->purchaseItem->batch_no ?? 'N/A' }}</td>
+                                    <td class="fw-medium">{{ $item->product->name ?? 'N/A' }}</td>
+                                    <td><span class="font-monospace">{{ $item->purchaseItem->batch_no ?? 'N/A' }}</span></td>
                                     <td>{{ $item->purchaseItem->location->name ?? 'N/A' }}</td>
-                                    <td>{{ $item->quantity }}</td>
-                                    <td>{{ number_format($item->unit_price, 2) }}</td>
-                                    <td>{{ number_format($item->total_amount, 2) }}</td>
+                                    <td class="text-end">{{ $item->quantity }}</td>
+                                    <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
+                                    <td class="text-end fw-medium">{{ number_format($item->total_amount, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                @else
+                </div>
+            @else
+                <div class="empty-state">
+                    <i class="fas fa-inbox" style="color:var(--text-muted);"></i>
                     <p>No items returned.</p>
-                @endif
-            </div>
+                </div>
+            @endif
+        </div>
+    </div>
 
-            <!-- Payment Methods -->
-            <div class="mb-4">
-                <h5>Payment Methods</h5>
-                @if($purchaseReturn->transactions->count() > 0)
-                    <table class="table table-bordered table-hover">
-                        <thead class="thead-light">
+    {{-- ===== Payment Methods ===== --}}
+    @if($purchaseReturn->transactions->count() > 0)
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-credit-card" style="color:var(--primary);"></i>
+                <h3 class="card-title mb-0">Payment Methods</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Payment Method</th>
-                                <th>Amount ({{ setting('currency_symbol', '$') }})</th>
+                                <th class="text-end">Amount ({{ setting('currency_symbol', '$') }})</th>
                                 <th>Transaction Date</th>
                             </tr>
                         </thead>
@@ -111,57 +228,65 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $transaction->paymentMethod->name ?? 'N/A' }}</td>
-                                    <td>{{ number_format($transaction->amount, 2) }}</td>
-                                    <td>{{ $transaction->transaction_date->format('d M Y, H:i') }}</td>
+                                    <td class="text-end">{{ number_format($transaction->amount, 2) }}</td>
+                                    <td>{{ $transaction->transaction_date->format('d M Y, h:i A') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                @else
-                    <p>No payment methods used.</p>
-                @endif
-            </div>
-
-            <!-- Notes -->
-            @if($purchaseReturn->notes)
-                <div class="mb-4">
-                    <h5>Notes</h5>
-                    <p>{{ $purchaseReturn->notes }}</p>
                 </div>
-            @endif
+            </div>
+        </div>
+    @endif
 
-            <!-- Ledger Entries -->
-            <div class="mb-4">
-                <h5>Ledger Entries</h5>
-                @if($purchaseReturn->ledgerEntries)
-                    <table class="table table-bordered table-hover">
-                        <thead class="thead-light">
+    @if($purchaseReturn->notes)
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-sticky-note" style="color:var(--primary);"></i>
+                <h3 class="card-title mb-0">Notes</h3>
+            </div>
+            <div class="card-body">
+                <div class="notes-block">{{ $purchaseReturn->notes }}</div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== Ledger Entries ===== --}}
+    @if($purchaseReturn->ledgerEntries && $purchaseReturn->ledgerEntries->count() > 0)
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-book" style="color:var(--primary);"></i>
+                <h3 class="card-title mb-0">Ledger Entries</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Date</th>
                                 <th>Description</th>
-                                <th>Debit ($)</th>
-                                <th>Credit ($)</th>
-                                <th>Balance ($)</th>
+                                <th class="text-end">Debit</th>
+                                <th class="text-end">Credit</th>
+                                <th class="text-end">Balance</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($purchaseReturn->ledgerEntries as $ledger)
                                 <tr>
-                                    <td>{{ $loop->index }}</td>
+                                    <td>{{ $loop->index + 1 }}</td>
                                     <td>{{ $ledger->date }}</td>
                                     <td>{{ $ledger->description }}</td>
-                                    <td>{{ number_format($ledger->debit, 2) }}</td>
-                                    <td>{{ number_format($ledger->credit, 2) }}</td>
-                                    <td>{{ number_format($ledger->balance, 2) }}</td>
+                                    <td class="text-end">{{ number_format($ledger->debit, 2) }}</td>
+                                    <td class="text-end">{{ number_format($ledger->credit, 2) }}</td>
+                                    <td class="text-end fw-medium">{{ number_format($ledger->balance, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                @else
-                    <p>No ledger entries available.</p>
-                @endif
+                </div>
             </div>
         </div>
-    </div>
+    @endif
+
 @endsection

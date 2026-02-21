@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class BatchController extends Controller
 {
-    public function locations($batch,$product)
+    public function locations($batch, $product)
     {
         // Validate batch_no format before querying
         if (!is_numeric($batch) && strlen($batch) > 50) {
@@ -30,7 +30,7 @@ class BatchController extends Controller
         }
 
         // Load batchstocks along with location details
-        $batchstocks = BatchStock::where("product_id",$product)->with('location')->get();
+        $batchstocks = BatchStock::where("product_id", $product)->with('location')->get();
         // If there are no batch stocks, return an empty response with a message
         if ($batchstocks->isEmpty()) {
             return response()->json([
@@ -47,12 +47,12 @@ class BatchController extends Controller
             }
 
             return [
-                'id'            => $batchStock->location->id,
-                'name'          => $batchStock->location->name,
-                'product_id'    => $batchStock->product_id,
-                'quantity'      => is_numeric($batchStock->quantity) ? (int) $batchStock->quantity : 0,
-                'purchase_price'=> $batchStock->purchase_price,
-                'sale_price'    => $batchStock->sale_price,
+                'id' => $batchStock->location->id,
+                'name' => $batchStock->location->name,
+                'product_id' => $batchStock->product_id,
+                'quantity' => is_numeric($batchStock->quantity) ? (int) $batchStock->quantity : 0,
+                'purchase_price' => $batchStock->purchase_price,
+                'sale_price' => 0,
             ];
         })->filter()->unique('id')->values();
 

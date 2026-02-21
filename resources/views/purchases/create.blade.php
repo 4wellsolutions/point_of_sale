@@ -88,11 +88,9 @@
                                 <th style="width:12%;">Location <span class="text-danger">*</span></th>
                                 <th style="width:10%;">Batch No <span class="text-danger">*</span></th>
                                 <th style="width:9%;">Qty <span class="text-danger">*</span></th>
-                                <th style="width:11%;" title="Price Per Piece">Cost Price <span class="text-danger">*</span>
+                                <th style="width:13%;" title="Price Per Piece">Cost Price <span class="text-danger">*</span>
                                 </th>
-                                <th style="width:11%;" title="Sale Per Piece">Sale Price <span class="text-danger">*</span>
-                                </th>
-                                <th style="width:10%;">Total</th>
+                                <th style="width:12%;">Total</th>
                                 <th style="width:5%;"></th>
                             </tr>
                         </thead>
@@ -567,51 +565,47 @@
                 @endforeach
 
                 let newRow = `
-                                    <tr data-product-image="${productImage}">
-                                        <td>
-                                            ${imageCellContent}
-                                        </td>
-                                        <td>
-                                            <strong>${productName}</strong>
-                                            <input type="hidden" name="purchase_items[${purchaseItemIndex}][product_id]" value="${productId}">
-                                        </td>
-                                        <td>
-                                            <div class="input-group">
-                                                <input type="date" name="purchase_items[${purchaseItemIndex}][expiry_date]" class="form-control" placeholder="Select Date">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <select name="purchase_items[${purchaseItemIndex}][location_id]" class="form-control location-select" required>
-                                                ${locationOptions}
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <td>
-                                            <input type="text" name="purchase_items[${purchaseItemIndex}][batch_no]" class="form-control" required>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="purchase_items[${purchaseItemIndex}][quantity]" class="form-control qty" required min="1" value="1">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" name="purchase_items[${purchaseItemIndex}][purchase_price]" 
-                                                   class="form-control purchase_price" required>
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" name="purchase_items[${purchaseItemIndex}][sale_price]" 
-                                                   class="form-control sale_price" required>
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" name="purchase_items[${purchaseItemIndex}][total_amount]" class="form-control total_amount" value="0.00" readonly>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-danger btn-sm remove-purchase-item">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `;
+                                        <tr data-product-image="${productImage}">
+                                            <td>
+                                                ${imageCellContent}
+                                            </td>
+                                            <td>
+                                                <strong>${productName}</strong>
+                                                <input type="hidden" name="purchase_items[${purchaseItemIndex}][product_id]" value="${productId}">
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="date" name="purchase_items[${purchaseItemIndex}][expiry_date]" class="form-control" placeholder="Select Date">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select name="purchase_items[${purchaseItemIndex}][location_id]" class="form-control location-select" required>
+                                                    ${locationOptions}
+                                                </select>
+                                                <div class="invalid-feedback"></div>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="purchase_items[${purchaseItemIndex}][batch_no]" class="form-control" required>
+                                                <div class="invalid-feedback"></div>
+                                            </td>
+                                            <td>
+                                                <input type="number" name="purchase_items[${purchaseItemIndex}][quantity]" class="form-control qty" required min="1" value="1">
+                                                <div class="invalid-feedback"></div>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" name="purchase_items[${purchaseItemIndex}][purchase_price]" 
+                                                       class="form-control purchase_price" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" name="purchase_items[${purchaseItemIndex}][total_amount]" class="form-control total_amount" value="0.00" readonly>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger btn-sm remove-purchase-item">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;
                 $('#purchase-items-table tbody').append(newRow);
                 purchaseItemIndex++;
 
@@ -659,26 +653,26 @@
                 });
 
                 let newRow = `
-                                    <div class="row g-2 payment-method-row">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Payment Method</label>
-                                            <select name="payment_methods[${paymentMethodIndex}][payment_method_id]" class="form-select payment-method-select">
-                                                ${options}
-                                            </select>
-                                            <div class="invalid-feedback"></div>
+                                        <div class="row g-2 payment-method-row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Payment Method</label>
+                                                <select name="payment_methods[${paymentMethodIndex}][payment_method_id]" class="form-select payment-method-select">
+                                                    ${options}
+                                                </select>
+                                                <div class="invalid-feedback"></div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
+                                                <input type="number" step="0.01" name="payment_methods[${paymentMethodIndex}][amount]" class="form-control payment-amount" min="0.01" style="display: none;">
+                                                <div class="invalid-feedback"></div>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-danger remove-payment-method">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
-                                            <input type="number" step="0.01" name="payment_methods[${paymentMethodIndex}][amount]" class="form-control payment-amount" min="0.01" style="display: none;">
-                                            <div class="invalid-feedback"></div>
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger remove-payment-method">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
+                                    `;
                 $('#payment-methods-container').append(newRow);
                 paymentMethodIndex++;
                 toggleRemoveAllButton();
