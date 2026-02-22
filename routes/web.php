@@ -191,12 +191,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/expenses/export/csv', [\App\Http\Controllers\ReportController::class, 'expensesCsv'])->name('expenses.csv');
         Route::get('/stock/export/pdf', [\App\Http\Controllers\ReportController::class, 'stockPdf'])->name('stock.pdf');
         Route::get('/stock/export/csv', [\App\Http\Controllers\ReportController::class, 'stockCsv'])->name('stock.csv');
+        Route::get('/payment-methods-balance', [\App\Http\Controllers\ReportController::class, 'paymentMethodsBalance'])->name('payment-methods-balance');
     });
 
     // ── SETTINGS ──
     Route::middleware('module:settings')->group(function () {
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+        Route::get('/activity-log', [SettingController::class, 'activityLog'])->name('activity-log.index');
     });
 });
 

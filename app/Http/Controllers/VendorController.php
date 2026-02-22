@@ -94,6 +94,8 @@ class VendorController extends Controller
             'address' => 'nullable|string|max:255',
             'whatsapp' => 'nullable|string|max:20',
             'type_id' => 'nullable|exists:types,id',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'opening_balance_type' => 'nullable|in:debit,credit',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -152,6 +154,8 @@ class VendorController extends Controller
             'address' => 'nullable|string|max:255',
             'whatsapp' => 'nullable|string|max:20',
             'type_id' => 'nullable|exists:types,id',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'opening_balance_type' => 'nullable|in:debit,credit',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -255,6 +259,22 @@ class VendorController extends Controller
      */
     public function destroy(Vendor $vendor)
     {
+        // Block deletion if vendor has related data
+        $purchaseCount = $vendor->purchases()->count();
+        $transactionCount = \App\Models\Transaction::where('vendor_id', $vendor->id)->count();
+        $ledgerCount = $vendor->ledgerEntries()->count();
+
+        if ($purchaseCount || $transactionCount || $ledgerCount) {
+            $details = collect([
+                $purchaseCount ? "{$purchaseCount} purchase(s)" : null,
+                $transactionCount ? "{$transactionCount} transaction(s)" : null,
+                $ledgerCount ? "{$ledgerCount} ledger entry/entries" : null,
+            ])->filter()->implode(', ');
+
+            return redirect()->route('vendors.index')
+                ->with('error', "Cannot delete \"{$vendor->name}\" — they have {$details}. Remove those records first.");
+        }
+
         // Delete image if exists
         if ($vendor->image) {
             Storage::disk('public')->delete($vendor->image);

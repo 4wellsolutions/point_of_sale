@@ -18,6 +18,8 @@ class Vendor extends Model implements AuditableContract
         'address',
         'whatsapp',
         'type_id',
+        'opening_balance',
+        'opening_balance_type',
         'image',
     ];
     protected $dates = ['deleted_at'];

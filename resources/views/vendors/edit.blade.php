@@ -121,6 +121,23 @@
                     @enderror
                 </div>
 
+                <!-- Opening Balance -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Opening Balance <small class="text-muted">(optional)</small></label>
+                        <input type="number" step="0.01" min="0" class="form-control"
+                               name="opening_balance" value="{{ old('opening_balance', $vendor->opening_balance) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Balance Type</label>
+                        <select class="form-select" name="opening_balance_type">
+                            <option value="credit" {{ old('opening_balance_type', $vendor->opening_balance_type) === 'credit' ? 'selected' : '' }}>Credit (We owe vendor)</option>
+                            <option value="debit"  {{ old('opening_balance_type', $vendor->opening_balance_type) === 'debit'  ? 'selected' : '' }}>Debit (Vendor owes us)</option>
+                        </select>
+                    </div>
+                </div>
+
+
                 <!-- Image Upload Field -->
                 <div class="mb-3">
                     <label for="image" class="form-label">Vendor Image</label>

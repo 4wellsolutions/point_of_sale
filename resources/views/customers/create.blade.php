@@ -81,7 +81,7 @@
                     </div>
 
                     <!-- Area Field (Optional) -->
-                    <div class="col-12 col-md-4 col-lg-6 mb-3">
+                    <div class="col-12 col-md-4 col-lg-4 mb-3">
                         <label for="area_id" class="form-label">Area <small class="text-muted">(optional)</small></label>
                         <select class="form-select" id="area_id" name="area_id">
                             <option value="">— No Area —</option>
@@ -95,6 +95,31 @@
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
+
+                    <!-- Opening Balance -->
+                    <div class="col-12 col-md-4 col-lg-4 mb-3">
+                        <label for="opening_balance" class="form-label">
+                            Opening Balance <small class="text-muted">(optional)</small>
+                        </label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="opening_balance"
+                            name="opening_balance" value="{{ old('opening_balance', 0) }}">
+                        @error('opening_balance')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="col-12 col-md-4 col-lg-4 mb-3">
+                        <label class="form-label">Balance Type</label>
+                        <select class="form-select" name="opening_balance_type">
+                            <option value="debit" {{ old('opening_balance_type', 'debit') === 'debit' ? 'selected' : '' }}>
+                                Debit (Customer owes us)
+                            </option>
+                            <option value="credit" {{ old('opening_balance_type', 'debit') === 'credit' ? 'selected' : '' }}>
+                                Credit (We owe customer)
+                            </option>
+                        </select>
+                    </div>
+
 
                     <!-- Image Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">

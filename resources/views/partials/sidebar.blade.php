@@ -399,6 +399,20 @@
                                 <p>Stock Report</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.payment-methods-balance') }}"
+                                class="nav-link {{ request()->routeIs('reports.payment-methods-balance') ? 'active' : '' }}">
+                                <i class="fas fa-wallet nav-icon"></i>
+                                <p>Business Balance</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('activity-log.index') }}"
+                                class="nav-link {{ request()->is('activity-log*') ? 'active' : '' }}">
+                                <i class="fas fa-history nav-icon"></i>
+                                <p>Activity Log</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
@@ -438,13 +452,7 @@
                         </ul>
                     </li>
 
-                    <li class="nav-item">
-                        <a href="{{ route('activity-log.index') }}"
-                            class="nav-link {{ request()->is('activity-log*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-history"></i>
-                            <p>Activity Log</p>
-                        </a>
-                    </li>
+
                 @endif
 
             </ul>
@@ -456,7 +464,7 @@
                 @if(auth()->user()->hasModule('settings'))
                     <li class="nav-item">
                         <a href="{{ route('settings.index') }}"
-                            class="nav-link {{ request()->is('settings*') ? 'active' : '' }}">
+                            class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>Settings</p>
                         </a>

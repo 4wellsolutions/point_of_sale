@@ -21,15 +21,8 @@
                 <!-- Name Field -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                    <input 
-                        type="text" 
-                        class="form-control @error('name') is-invalid @enderror" 
-                        id="name" 
-                        name="name" 
-                        value="{{ old('name') }}" 
-                        placeholder="Enter Vendor Name" 
-                        required
-                    >
+                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
+                        value="{{ old('name') }}" placeholder="Enter Vendor Name" required>
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -38,14 +31,8 @@
                 <!-- Email Field -->
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
-                    <input 
-                        type="email" 
-                        class="form-control @error('email') is-invalid @enderror" 
-                        id="email" 
-                        name="email" 
-                        value="{{ old('email') }}" 
-                        placeholder="Enter Email"
-                    >
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email"
+                        value="{{ old('email') }}" placeholder="Enter Email">
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -54,14 +41,8 @@
                 <!-- Phone Field -->
                 <div class="mb-3">
                     <label for="phone" class="form-label">Phone</label>
-                    <input 
-                        type="text" 
-                        class="form-control @error('phone') is-invalid @enderror" 
-                        id="phone" 
-                        name="phone" 
-                        value="{{ old('phone') }}" 
-                        placeholder="Enter Phone Number"
-                    >
+                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone"
+                        value="{{ old('phone') }}" placeholder="Enter Phone Number">
                     @error('phone')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -70,14 +51,8 @@
                 <!-- WhatsApp Field -->
                 <div class="mb-3">
                     <label for="whatsapp" class="form-label">WhatsApp</label>
-                    <input 
-                        type="text" 
-                        class="form-control @error('whatsapp') is-invalid @enderror" 
-                        id="whatsapp" 
-                        name="whatsapp" 
-                        value="{{ old('whatsapp') }}" 
-                        placeholder="Enter WhatsApp Number"
-                    >
+                    <input type="text" class="form-control @error('whatsapp') is-invalid @enderror" id="whatsapp"
+                        name="whatsapp" value="{{ old('whatsapp') }}" placeholder="Enter WhatsApp Number">
                     @error('whatsapp')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -86,12 +61,8 @@
                 <!-- Address Field -->
                 <div class="mb-3">
                     <label for="address" class="form-label">Address</label>
-                    <textarea 
-                        class="form-control @error('address') is-invalid @enderror" 
-                        id="address" 
-                        name="address" 
-                        rows="3" 
-                        placeholder="Enter Address">{{ old('address') }}</textarea>
+                    <textarea class="form-control @error('address') is-invalid @enderror" id="address" name="address"
+                        rows="3" placeholder="Enter Address">{{ old('address') }}</textarea>
                     @error('address')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -100,17 +71,10 @@
                 <!-- Type Dropdown -->
                 <div class="mb-3">
                     <label for="type_id" class="form-label">Type</label>
-                    <select 
-                        class="form-select @error('type_id') is-invalid @enderror" 
-                        id="type_id" 
-                        name="type_id"
-                    >
+                    <select class="form-select @error('type_id') is-invalid @enderror" id="type_id" name="type_id">
                         <option value="">Select Type</option>
                         @foreach($types as $type)
-                            <option 
-                                value="{{ $type->id }}" 
-                                {{ (old('type_id') == $type->id) ? 'selected' : '' }}
-                            >
+                            <option value="{{ $type->id }}" {{ (old('type_id') == $type->id) ? 'selected' : '' }}>
                                 {{ $type->name }}
                             </option>
                         @endforeach
@@ -120,16 +84,33 @@
                     @enderror
                 </div>
 
+                <!-- Opening Balance -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Opening Balance <small class="text-muted">(optional)</small></label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="opening_balance"
+                            value="{{ old('opening_balance', 0) }}">
+                        @error('opening_balance')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Balance Type</label>
+                        <select class="form-select" name="opening_balance_type">
+                            <option value="credit" {{ old('opening_balance_type', 'credit') === 'credit' ? 'selected' : '' }}>
+                                Credit (We owe vendor)</option>
+                            <option value="debit" {{ old('opening_balance_type', 'credit') === 'debit' ? 'selected' : '' }}>
+                                Debit (Vendor owes us)</option>
+                        </select>
+                    </div>
+                </div>
+
+
                 <!-- Image Upload Field -->
                 <div class="mb-3">
                     <label for="image" class="form-label">Vendor Image</label>
-                    <input 
-                        class="form-control @error('image') is-invalid @enderror" 
-                        type="file" 
-                        id="image" 
-                        name="image"
-                        accept="image/*"
-                    >
+                    <input class="form-control @error('image') is-invalid @enderror" type="file" id="image" name="image"
+                        accept="image/*">
                     @error('image')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -156,14 +137,14 @@
 @push('scripts')
     <script>
         // Optional: Image Preview Script
-        document.getElementById('image').addEventListener('change', function(event) {
+        document.getElementById('image').addEventListener('change', function (event) {
             const preview = document.getElementById('imagePreview');
             const previewImage = preview.querySelector('img');
             const file = event.target.files[0];
 
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     previewImage.src = e.target.result;
                     preview.style.display = 'block';
                 }

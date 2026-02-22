@@ -87,6 +87,8 @@ class CustomerController extends Controller
             'whatsapp' => 'nullable|string|max:20',
             'type_id' => 'nullable|exists:types,id',
             'area_id' => 'nullable|exists:areas,id',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'opening_balance_type' => 'nullable|in:debit,credit',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -233,9 +235,32 @@ class CustomerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Customer $customer)
     {
-        //
+        // Block deletion if customer has related data
+        $salesCount = $customer->sales()->count();
+        $transactionCount = \App\Models\Transaction::where('customer_id', $customer->id)->count();
+        $ledgerCount = $customer->ledgerEntries()->count();
+
+        if ($salesCount || $transactionCount || $ledgerCount) {
+            $details = collect([
+                $salesCount ? "{$salesCount} sale(s)" : null,
+                $transactionCount ? "{$transactionCount} transaction(s)" : null,
+                $ledgerCount ? "{$ledgerCount} ledger entry/entries" : null,
+            ])->filter()->implode(', ');
+
+            return redirect()->route('customers.index')
+                ->with('error', "Cannot delete \"{$customer->name}\" — they have {$details}. Remove those records first.");
+        }
+
+        // Delete image if exists
+        if ($customer->image) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($customer->image);
+        }
+
+        $customer->delete();
+
+        return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
     }
 
     public function exportPdf(Request $request)

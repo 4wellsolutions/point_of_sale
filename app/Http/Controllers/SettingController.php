@@ -43,4 +43,32 @@ class SettingController extends Controller
 
         return redirect()->route('settings.index')->with('success', 'Settings updated successfully.');
     }
+
+    public function activityLog(\Illuminate\Http\Request $request)
+    {
+        $query = \OwenIt\Auditing\Models\Audit::with('user')
+            ->latest();
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+        if ($request->filled('event')) {
+            $query->where('event', $request->event);
+        }
+        if ($request->filled('model')) {
+            $query->where('auditable_type', 'like', '%' . $request->model . '%');
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $logs = $query->paginate(50)->withQueryString();
+        $users = \App\Models\User::orderBy('name')->get();
+
+        return view('settings.activity-log', compact('logs', 'users'));
+    }
 }
+

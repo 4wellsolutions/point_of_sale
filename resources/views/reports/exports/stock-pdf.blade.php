@@ -1,6 +1,5 @@
 @extends('exports.layout')
-@section('report-title', 'Stock Report')
-@section('report-body')
+@section('content')
     <table class="data-table">
         <thead>
             <tr>

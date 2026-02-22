@@ -1,9 +1,5 @@
 @extends('exports.layout')
-@section('report-title', 'Expenses Report')
-@section('report-filters')
-    @foreach($filters as $k => $v)<span><strong>{{ $k }}:</strong> {{ $v }}</span> @endforeach
-@endsection
-@section('report-body')
+@section('content')
     <table class="data-table">
         <thead>
             <tr>

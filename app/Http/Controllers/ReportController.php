@@ -362,4 +362,74 @@ class ReportController extends Controller
             fclose($f);
         }, 200, $headers);
     }
+
+    /**
+     * Payment Methods Balance Report
+     * Shows total balance per payment method and overall business balance.
+     */
+    public function paymentMethodsBalance(Request $request)
+    {
+        // Total received per payment method (sale transactions)
+        $received = DB::table('transactions')
+            ->join('payment_methods', 'payment_methods.id', '=', 'transactions.payment_method_id')
+            ->whereNull('transactions.deleted_at')
+            ->whereIn('transactions.transaction_type', ['receipt', 'sale_payment', 'debit'])
+            ->when($request->filled('date_from'), fn($q) => $q->whereDate('transactions.transaction_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn($q) => $q->whereDate('transactions.transaction_date', '<=', $request->date_to))
+            ->groupBy('payment_methods.id', 'payment_methods.name')
+            ->select('payment_methods.id', 'payment_methods.name', DB::raw('SUM(transactions.amount) as total'))
+            ->pluck('total', 'payment_methods.id');
+
+        // Total paid per payment method (purchase/expense transactions)
+        $paid = DB::table('transactions')
+            ->join('payment_methods', 'payment_methods.id', '=', 'transactions.payment_method_id')
+            ->whereNull('transactions.deleted_at')
+            ->whereIn('transactions.transaction_type', ['payment', 'purchase_payment', 'credit'])
+            ->when($request->filled('date_from'), fn($q) => $q->whereDate('transactions.transaction_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn($q) => $q->whereDate('transactions.transaction_date', '<=', $request->date_to))
+            ->groupBy('payment_methods.id', 'payment_methods.name')
+            ->select('payment_methods.id', 'payment_methods.name', DB::raw('SUM(transactions.amount) as total'))
+            ->pluck('total', 'payment_methods.id');
+
+        // All payment methods
+        $methods = DB::table('payment_methods')->whereNull('deleted_at')->orderBy('name')->get();
+
+        // Build rows
+        $rows = $methods->map(function ($m) use ($received, $paid) {
+            $in = $received[$m->id] ?? 0;
+            $out = $paid[$m->id] ?? 0;
+            return (object) [
+                'id' => $m->id,
+                'name' => $m->name,
+                'received' => $in,
+                'paid' => $out,
+                'balance' => $in - $out,
+            ];
+        });
+
+        // Overall totals
+        $totalReceived = $rows->sum('received');
+        $totalPaid = $rows->sum('paid');
+        $netBalance = $totalReceived - $totalPaid;
+
+        // Customer opening balances
+        $custDebit = \App\Models\Customer::where('opening_balance_type', 'debit')->sum('opening_balance');
+        $custCredit = \App\Models\Customer::where('opening_balance_type', 'credit')->sum('opening_balance');
+
+        // Vendor opening balances
+        $vendCredit = \App\Models\Vendor::where('opening_balance_type', 'credit')->sum('opening_balance');
+        $vendDebit = \App\Models\Vendor::where('opening_balance_type', 'debit')->sum('opening_balance');
+
+        return view('reports.payment-methods-balance', compact(
+            'rows',
+            'totalReceived',
+            'totalPaid',
+            'netBalance',
+            'custDebit',
+            'custCredit',
+            'vendCredit',
+            'vendDebit'
+        ));
+    }
 }
+

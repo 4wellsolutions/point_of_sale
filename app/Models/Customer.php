@@ -19,6 +19,8 @@ class Customer extends Model implements AuditableContract
         'whatsapp',
         'type_id',
         'area_id',
+        'opening_balance',
+        'opening_balance_type',
         'image',
     ];
     protected $dates = ['deleted_at'];

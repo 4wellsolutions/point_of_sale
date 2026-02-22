@@ -1,9 +1,5 @@
 @extends('exports.layout')
-@section('report-title', 'Sales Report')
-@section('report-filters')
-    @foreach($filters as $k => $v)<span><strong>{{ $k }}:</strong> {{ $v }}</span> @endforeach
-@endsection
-@section('report-body')
+@section('content')
     <table class="data-table">
         <thead>
             <tr>
@@ -26,7 +22,8 @@
                     <td class="text-right">{{ setting('currency_symbol') }}{{ number_format($r->total_amount, 2) }}</td>
                     <td class="text-right">{{ setting('currency_symbol') }}{{ number_format($r->discount_amount, 2) }}</td>
                     <td class="text-right">
-                        <strong>{{ setting('currency_symbol') }}{{ number_format($r->net_amount, 2) }}</strong></td>
+                        <strong>{{ setting('currency_symbol') }}{{ number_format($r->net_amount, 2) }}</strong>
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -36,7 +33,8 @@
                 <th class="text-right">{{ setting('currency_symbol') }}{{ number_format($records->sum('total_amount'), 2) }}
                 </th>
                 <th class="text-right">
-                    {{ setting('currency_symbol') }}{{ number_format($records->sum('discount_amount'), 2) }}</th>
+                    {{ setting('currency_symbol') }}{{ number_format($records->sum('discount_amount'), 2) }}
+                </th>
                 <th class="text-right">{{ setting('currency_symbol') }}{{ number_format($records->sum('net_amount'), 2) }}
                 </th>
             </tr>
