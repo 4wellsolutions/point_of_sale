@@ -118,20 +118,12 @@ class PurchaseController extends Controller
      */
     public function generateInvoiceNo()
     {
-        // Get the latest invoice number
-        $latestPurchase = Purchase::orderBy('id', 'desc')->first();
+        // Include soft-deleted rows — the unique index ignores deleted_at
+        $maxNumeric = Purchase::withTrashed()
+            ->selectRaw('MAX(CAST(invoice_no AS UNSIGNED)) as max_no')
+            ->value('max_no');
 
-        if (!$latestPurchase) {
-            $newInvoiceNo = '000001';
-        } else {
-            // Extract the numeric part and increment
-            $latestInvoiceNo = $latestPurchase->invoice_no;
-            $numericPart = intval($latestInvoiceNo);
-            $newNumericPart = $numericPart + 1;
-            $newInvoiceNo = str_pad($newNumericPart, 6, '0', STR_PAD_LEFT);
-
-        }
-        return $newInvoiceNo;
+        return str_pad(($maxNumeric ?? 0) + 1, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -144,7 +136,7 @@ class PurchaseController extends Controller
         $rules = [
             // Purchase Information
             'vendor_id' => 'required|exists:vendors,id',
-            'invoice_no' => 'required|unique:purchases,invoice_no',
+            'invoice_no' => 'nullable', // generated server-side; ignored from form
             'purchase_date' => 'required|date',
             'expiry_date' => 'nullable|date|after_or_equal:purchase_date',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -255,14 +247,22 @@ class PurchaseController extends Controller
         }
 
         // 6. Proceed to store the purchase and related data
+        $maxAttempts = 5;
+        $attempt = 0;
+
+        retry:
+        $attempt++;
         DB::beginTransaction();
 
         try {
 
+            // Always generate a fresh invoice number inside the transaction
+            $invoice_no = $this->generateInvoiceNo();
+
             // Create the purchase
             $purchase = Purchase::create([
                 'vendor_id' => $request->vendor_id,
-                'invoice_no' => $request->invoice_no,
+                'invoice_no' => $invoice_no,
                 'purchase_date' => $request->purchase_date,
                 'discount_amount' => $request->discount_amount,
                 'total_amount' => $request->total_amount,
@@ -421,14 +421,26 @@ class PurchaseController extends Controller
                 'redirect' => route('purchases.index')
             ], 200);
 
-        } catch (\Exception $e) {
-            // 11. Rollback the transaction on error
+        } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
 
-            // Log the error for debugging
+            // Retry on duplicate invoice_no (race condition)
+            if ($e->errorInfo[1] === 1062 && $attempt < $maxAttempts) {
+                goto retry;
+            }
+
             \Log::error('Purchase Store Error: ' . $e->getMessage());
 
-            // Return error response
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while saving the purchase. Please try again later.',
+                'error' => $e->getMessage(),
+            ], 500);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Purchase Store Error: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred while saving the purchase. Please try again later.',
@@ -531,9 +543,11 @@ class PurchaseController extends Controller
                         ->first();
 
                     if ($batchStock) {
-                        $batchStock->decrement('quantity', $item->quantity);
-                        if ($batchStock->quantity <= 0) {
+                        $newQty = $batchStock->quantity - $item->quantity;
+                        if ($newQty <= 0) {
                             $batchStock->delete();
+                        } else {
+                            $batchStock->update(['quantity' => $newQty]);
                         }
                     }
 
@@ -742,10 +756,11 @@ class PurchaseController extends Controller
                         ->first();
 
                     if ($batchStock) {
-                        $batchStock->decrement('quantity', $item->quantity);
-                        // Delete batch stock if quantity reaches zero
-                        if ($batchStock->quantity <= 0) {
+                        $newQty = $batchStock->quantity - $item->quantity;
+                        if ($newQty <= 0) {
                             $batchStock->delete();
+                        } else {
+                            $batchStock->update(['quantity' => $newQty]);
                         }
                     }
 

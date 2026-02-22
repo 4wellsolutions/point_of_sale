@@ -165,9 +165,128 @@ class SalesReturnController extends Controller
             'refund_amount' => 'required|numeric|min:0',
         ]);
 
-        $salesReturn->update($request->all());
+        $oldSale = Sale::with('saleItems')->find($salesReturn->sale_id);
+        $newSale = Sale::with('saleItems')->findOrFail($request->sale_id);
 
-        return redirect()->route('sales-returns.index')->with('success', 'Sales return updated successfully.');
+        DB::beginTransaction();
+        try {
+            // ── 1. REVERSE OLD STOCK RESTORATION ──
+            if ($oldSale) {
+                $remainingQty = $salesReturn->qty_returned;
+                foreach ($oldSale->saleItems as $item) {
+                    if ($remainingQty <= 0)
+                        break;
+                    $qtyToReverse = min($item->quantity, $remainingQty);
+
+                    $batch = Batch::where('product_id', $item->product_id)
+                        ->where('batch_no', $item->batch_no)->first();
+
+                    if ($batch) {
+                        $batchStock = BatchStock::where('batch_id', $batch->id)
+                            ->where('location_id', $item->location_id)->first();
+
+                        if ($batchStock) {
+                            $newQty = $batchStock->quantity - $qtyToReverse;
+                            if ($newQty <= 0) {
+                                $batchStock->delete();
+                            } else {
+                                $batchStock->update(['quantity' => $newQty]);
+                            }
+                        }
+                    }
+                    $remainingQty -= $qtyToReverse;
+                }
+            }
+
+            // ── 2. REVERSE OLD LEDGER ENTRY ──
+            $oldCustomer = Customer::find($oldSale?->customer_id);
+            if ($oldCustomer) {
+                $newBalance = $this->calculateNewBalance($oldCustomer->id, $salesReturn->refund_amount, 'debit');
+                $ledger = new LedgerEntry([
+                    'transaction_id' => null,
+                    'date' => now(),
+                    'description' => 'Reversal: Sales Return - Invoice #' . $oldSale->invoice_no,
+                    'debit' => $salesReturn->refund_amount,
+                    'credit' => 0,
+                    'balance' => $newBalance,
+                    'user_id' => auth()->id(),
+                ]);
+                $ledger->ledgerable()->associate($oldCustomer);
+                $ledger->save();
+            }
+
+            // ── 3. UPDATE RECORD ──
+            $salesReturn->update([
+                'sale_id' => $request->sale_id,
+                'qty_returned' => $request->qty_returned,
+                'return_reason' => $request->return_reason,
+                'refund_amount' => $request->refund_amount,
+            ]);
+
+            // ── 4. APPLY NEW STOCK RESTORATION ──
+            $remainingQty = $request->qty_returned;
+            foreach ($newSale->saleItems as $item) {
+                if ($remainingQty <= 0)
+                    break;
+                $qtyToReturn = min($item->quantity, $remainingQty);
+
+                $batch = Batch::where('product_id', $item->product_id)
+                    ->where('batch_no', $item->batch_no)->first();
+
+                if ($batch) {
+                    $batchStock = BatchStock::where('batch_id', $batch->id)
+                        ->where('location_id', $item->location_id)->first();
+
+                    if ($batchStock) {
+                        $batchStock->increment('quantity', $qtyToReturn);
+                    } else {
+                        BatchStock::create([
+                            'batch_id' => $batch->id,
+                            'product_id' => $item->product_id,
+                            'location_id' => $item->location_id,
+                            'quantity' => $qtyToReturn,
+                            'purchase_price' => $item->purchase_price,
+                            'sale_price' => $item->sale_price,
+                        ]);
+                    }
+
+                    InventoryTransaction::create([
+                        'product_id' => $item->product_id,
+                        'location_id' => $item->location_id,
+                        'batch_id' => $batch->id,
+                        'quantity' => $qtyToReturn,
+                        'user_id' => auth()->id(),
+                        'transactionable_id' => $salesReturn->id,
+                        'transactionable_type' => SalesReturn::class,
+                    ]);
+                }
+                $remainingQty -= $qtyToReturn;
+            }
+
+            // ── 5. APPLY NEW LEDGER ENTRY ──
+            $newCustomer = Customer::find($newSale->customer_id);
+            if ($newCustomer) {
+                $newBalance = $this->calculateNewBalance($newCustomer->id, $request->refund_amount, 'credit');
+                $ledger = new LedgerEntry([
+                    'transaction_id' => null,
+                    'date' => now(),
+                    'description' => 'Sales Return (updated) - Invoice #' . $newSale->invoice_no,
+                    'debit' => 0,
+                    'credit' => $request->refund_amount,
+                    'balance' => $newBalance,
+                    'user_id' => auth()->id(),
+                ]);
+                $ledger->ledgerable()->associate($newCustomer);
+                $ledger->save();
+            }
+
+            DB::commit();
+            return redirect()->route('sales-returns.index')->with('success', 'Sales return updated with full stock and ledger effects.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Sales Return Update Error: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Error updating sales return: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -199,9 +318,11 @@ class SalesReturnController extends Controller
                             ->first();
 
                         if ($batchStock) {
-                            $batchStock->decrement('quantity', $qtyToReverse);
-                            if ($batchStock->quantity <= 0) {
+                            $newQty = $batchStock->quantity - $qtyToReverse;
+                            if ($newQty <= 0) {
                                 $batchStock->delete();
+                            } else {
+                                $batchStock->update(['quantity' => $newQty]);
                             }
                         }
                     }

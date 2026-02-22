@@ -44,20 +44,11 @@ class PurchaseReturnController extends Controller
      */
     public function generateReturnNo()
     {
-        // Get the latest return number
-        $latestReturn = PurchaseReturn::orderBy('id', 'desc')->first();
-        if (!$latestReturn) {
-            $newReturnNo = '000001';
-        } else {
-            // Extract the numeric part and increment
-            $latestReturnNo = $latestReturn->invoice_no;
-            $numericPart = intval($latestReturnNo);
-            $newNumericPart = $numericPart + 1;
-            $newReturnNo = str_pad($newNumericPart, 6, '0', STR_PAD_LEFT);
+        $maxNumeric = PurchaseReturn::withTrashed()
+            ->selectRaw('MAX(CAST(invoice_no AS UNSIGNED)) as max_no')
+            ->value('max_no');
 
-        }
-
-        return $newReturnNo;
+        return str_pad(($maxNumeric ?? 0) + 1, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -227,12 +218,11 @@ class PurchaseReturnController extends Controller
                             ->first();
 
                         if ($batchStock && $batchStock->quantity > 0) {
-                            // Decrement the batch stock quantity based on the return quantity
-                            $batchStock->decrement('quantity', $item['quantity']);
-
-                            // Delete the batch stock if quantity becomes zero or negative
-                            if ($batchStock->quantity <= 0) {
+                            $newQty = $batchStock->quantity - $item['quantity'];
+                            if ($newQty <= 0) {
                                 $batchStock->delete();
+                            } else {
+                                $batchStock->update(['quantity' => $newQty]);
                             }
                         }
                     }
@@ -693,44 +683,83 @@ class PurchaseReturnController extends Controller
      */
     public function destroy(PurchaseReturn $purchaseReturn)
     {
-        // Wrap operations in a transaction to ensure data integrity
-        DB::beginTransaction();
+        $purchaseReturn->load(['returnItems', 'transactions']);
 
+        DB::beginTransaction();
         try {
-            // Reverse inventory changes
+            // 1. Reverse inventory: put stock back that was removed by the return
             foreach ($purchaseReturn->returnItems as $item) {
                 $batch = Batch::where('product_id', $item->product_id)
                     ->where('batch_no', $item->batch_no)
                     ->first();
 
                 if ($batch) {
-                    // Increment the stock back
-                    $batch->increment('total_qty_received', $item->quantity);
-                }
+                    $batchStock = BatchStock::where('batch_id', $batch->id)
+                        ->where('location_id', $item->location_id ?? $batch->location_id)
+                        ->first();
 
-                // Log the inventory transaction as a reverse of the return
-                InventoryTransaction::create([
-                    'product_id' => $item->product_id,
-                    'batch_id' => $batch->id,
-                    'qty_change' => $item->quantity,
-                    'transaction_type' => 'purchase_return_delete',
-                    'transaction_reference_id' => $purchaseReturn->id,
-                    'user_id' => auth()->id(),
-                ]);
+                    if ($batchStock) {
+                        $batchStock->increment('quantity', $item->quantity);
+                    } else {
+                        BatchStock::create([
+                            'batch_id' => $batch->id,
+                            'product_id' => $item->product_id,
+                            'quantity' => $item->quantity,
+                            'purchase_price' => $item->unit_price,
+                            'sale_price' => 0,
+                            'location_id' => $item->location_id ?? $batch->location_id,
+                        ]);
+                    }
+
+                    InventoryTransaction::create([
+                        'product_id' => $item->product_id,
+                        'location_id' => $item->location_id ?? null,
+                        'batch_id' => $batch->id,
+                        'quantity' => $item->quantity,   // positive = stock back in
+                        'user_id' => auth()->id(),
+                        'transactionable_id' => $purchaseReturn->id,
+                        'transactionable_type' => get_class($purchaseReturn),
+                    ]);
+                }
             }
 
-            // Optionally, delete related payments and ledger entries
-            // This depends on your application's logic
+            // 2. Reverse vendor ledger entries tied to this return
+            $oldLedgers = LedgerEntry::where('ledgerable_id', $purchaseReturn->vendor_id)
+                ->where('ledgerable_type', Vendor::class)
+                ->where('description', 'LIKE', '%' . $purchaseReturn->invoice_no . '%')
+                ->get();
 
-            // Delete the purchase return record
+            foreach ($oldLedgers as $ledger) {
+                $reversalLedger = new LedgerEntry([
+                    'transaction_id' => $ledger->transaction_id,
+                    'date' => now(),
+                    'description' => 'Reversal: ' . $ledger->description,
+                    'debit' => $ledger->credit,   // flip
+                    'credit' => $ledger->debit,    // flip
+                    'balance' => $this->calculateNewBalance(
+                        $purchaseReturn->vendor_id,
+                        $ledger->credit ?: $ledger->debit,
+                        $ledger->credit > 0 ? 'debit' : 'credit'
+                    ),
+                    'user_id' => auth()->id(),
+                ]);
+                $vendor = Vendor::find($purchaseReturn->vendor_id);
+                $reversalLedger->ledgerable()->associate($vendor);
+                $reversalLedger->save();
+            }
+
+            // 3. Delete payment transactions linked to this return
+            foreach ($purchaseReturn->transactions as $transaction) {
+                $transaction->delete();
+            }
+
+            // 4. Delete the return record
             $purchaseReturn->delete();
 
             DB::commit();
-
-            return redirect()->route('purchase_returns.index')->with('success', 'Purchase return deleted successfully.');
+            return redirect()->route('purchase-returns.index')->with('success', 'Purchase return deleted and all effects reversed.');
         } catch (\Exception $e) {
             DB::rollback();
-            // Log the error or handle it as needed
             \Log::error('Purchase Return Delete Error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'An error occurred while deleting the purchase return.']);
         }

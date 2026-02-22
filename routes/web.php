@@ -15,6 +15,8 @@ use App\Http\Controllers\StockLossDamageController;
 use App\Http\Controllers\SalesReturnController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LocationController;
@@ -110,11 +112,31 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('payment_methods', PaymentMethodController::class);
     });
 
-    // ── TRANSACTIONS ──
+    // ── TRANSACTIONS (legacy) ──
     Route::middleware('module:transactions')->group(function () {
         Route::get('/transactions/export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
         Route::get('/transactions/export/csv', [TransactionController::class, 'exportCsv'])->name('transactions.export.csv');
         Route::resource('transactions', TransactionController::class);
+    });
+
+    // ── RECEIPTS (customer receipts) ──
+    Route::middleware('module:transactions')->group(function () {
+        Route::get('/receipts/export/pdf', [ReceiptController::class, 'exportPdf'])->name('receipts.export.pdf');
+        Route::get('/receipts/export/csv', [ReceiptController::class, 'exportCsv'])->name('receipts.export.csv');
+        Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
+        Route::get('/receipts/create', [ReceiptController::class, 'create'])->name('receipts.create');
+        Route::post('/receipts', [ReceiptController::class, 'store'])->name('receipts.store');
+        Route::delete('/receipts/{id}', [ReceiptController::class, 'destroy'])->name('receipts.destroy');
+    });
+
+    // ── PAYMENTS (vendor payments) ──
+    Route::middleware('module:transactions')->group(function () {
+        Route::get('/payments/export/pdf', [PaymentController::class, 'exportPdf'])->name('payments.export.pdf');
+        Route::get('/payments/export/csv', [PaymentController::class, 'exportCsv'])->name('payments.export.csv');
+        Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+        Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+        Route::delete('/payments/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     });
 
     // ── LEDGER ──

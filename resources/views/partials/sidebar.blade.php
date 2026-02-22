@@ -250,29 +250,25 @@
                     </li>
                 @endif
 
-                <!-- Transactions -->
+                <!-- Receipts -->
                 @if(auth()->user()->hasModule('transactions'))
-                    <li class="nav-item has-treeview {{ request()->is('transactions*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('transactions*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-exchange-alt"></i>
-                            <p>Transactions <i class="right fas fa-angle-left"></i></p>
+                    <li class="nav-item {{ request()->is('receipts*') ? 'active' : '' }}">
+                        <a href="{{ route('receipts.index') }}"
+                            class="nav-link {{ request()->is('receipts*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-hand-holding-usd"></i>
+                            <p>Receipts</p>
                         </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{{ route('transactions.index') }}"
-                                    class="nav-link {{ request()->routeIs('transactions.index') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>All Transactions</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('transactions.create') }}"
-                                    class="nav-link {{ request()->routeIs('transactions.create') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>New Transaction</p>
-                                </a>
-                            </li>
-                        </ul>
+                    </li>
+                @endif
+
+                <!-- Payments -->
+                @if(auth()->user()->hasModule('transactions'))
+                    <li class="nav-item {{ request()->is('payments*') ? 'active' : '' }}">
+                        <a href="{{ route('payments.index') }}"
+                            class="nav-link {{ request()->is('payments*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-money-check-alt"></i>
+                            <p>Payments</p>
+                        </a>
                     </li>
                 @endif
 
