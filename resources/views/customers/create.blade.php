@@ -80,16 +80,33 @@
                         @enderror
                     </div>
 
+                    <!-- Area Field (Optional) -->
+                    <div class="col-12 col-md-4 col-lg-6 mb-3">
+                        <label for="area_id" class="form-label">Area <small class="text-muted">(optional)</small></label>
+                        <select class="form-select" id="area_id" name="area_id">
+                            <option value="">— No Area —</option>
+                            @foreach($areas as $area)
+                                <option value="{{ $area->id }}" {{ old('area_id') == $area->id ? 'selected' : '' }}>
+                                    {{ $area->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('area_id')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+
                     <!-- Image Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="image" class="form-label">Image</label>
                         <input class="form-control" type="file" id="image" name="image" accept="image/*">
-                        
+
                         <!-- Image Preview Container -->
                         <div id="imagePreviewContainer" class="mt-3" style="display: none;">
-                            <img id="imagePreview" src="#" alt="Image Preview" class="img-fluid" style="max-width: 150px; max-height: 150px; object-fit: contain;">
+                            <img id="imagePreview" src="#" alt="Image Preview" class="img-fluid"
+                                style="max-width: 150px; max-height: 150px; object-fit: contain;">
                         </div>
-                        
+
                         @error('image')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -103,23 +120,37 @@
     </div>
 
     @push('scripts')
+        <style>
+            .select2-container .select2-selection--single {
+                height: 38px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 38px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 38px !important;
+            }
+        </style>
         <script>
-            // Show image preview when a file is selected
-            $('#image').change(function() {
-                var file = this.files[0];
-                
-                // Check if the selected file is an image
-                if (file && file.type.startsWith('image/')) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('#imagePreview').attr('src', e.target.result);
-                        $('#imagePreviewContainer').show();  // Show the image preview container
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    alert('Please upload a valid image file.');
-                    $('#imagePreviewContainer').hide();
-                }
+            $(function () {
+                $('#area_id').select2({ placeholder: '— No Area —', allowClear: true, width: '100%' });
+
+                $('#image').change(function () {
+                    var file = this.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            $('#imagePreview').attr('src', e.target.result);
+                            $('#imagePreviewContainer').show();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        alert('Please upload a valid image file.');
+                        $('#imagePreviewContainer').hide();
+                    }
+                });
             });
         </script>
     @endpush

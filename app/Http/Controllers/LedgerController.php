@@ -5,7 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\LedgerEntry;
 use App\Models\Customer;
 use App\Models\Vendor;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 
 class LedgerController extends Controller
@@ -80,9 +80,9 @@ class LedgerController extends Controller
         // Validate required fields
         $request->validate([
             'ledgerable_type' => 'required|in:customer,vendor',
-            'ledgerable_id' => 'required_if:ledgerable_type,customer|required_if:ledgerable_type,vendor',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date', // Ensure end date is not before start date
+            'ledgerable_id' => 'required',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
         // Initialize query

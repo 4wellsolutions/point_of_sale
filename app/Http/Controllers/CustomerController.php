@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\Type;
+use App\Models\Area;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -70,7 +71,8 @@ class CustomerController extends Controller
     public function create()
     {
         $types = Type::all();
-        return view('customers.create', compact('types'));
+        $areas = Area::orderBy('name')->get();
+        return view('customers.create', compact('types', 'areas'));
     }
 
 
@@ -84,6 +86,7 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:255',
             'whatsapp' => 'nullable|string|max:20',
             'type_id' => 'nullable|exists:types,id',
+            'area_id' => 'nullable|exists:areas,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -129,7 +132,8 @@ class CustomerController extends Controller
     public function edit(Customer $customer)
     {
         $types = Type::orderBy('name')->get();
-        return view('customers.edit', compact('customer', 'types'));
+        $areas = Area::orderBy('name')->get();
+        return view('customers.edit', compact('customer', 'types', 'areas'));
     }
 
     /**
@@ -149,6 +153,7 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:255',
             'whatsapp' => 'nullable|string|max:20',
             'type_id' => 'nullable|exists:types,id',
+            'area_id' => 'nullable|exists:areas,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 

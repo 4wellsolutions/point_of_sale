@@ -24,6 +24,10 @@
                 <a href="{{ route('sales.pdf', $sale) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-file-pdf me-1"></i> PDF
                 </a>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#multiPrintModal">
+                    <i class="fas fa-print me-1"></i> Multi-Print
+                </button>
                 <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
@@ -42,7 +46,8 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($sale->total_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ number_format($sale->total_amount, 2) }}
+                            </div>
                             <div class="stat-tile-label">Total Amount</div>
                         </div>
                     </div>
@@ -54,7 +59,8 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($sale->discount_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ number_format($sale->discount_amount, 2) }}
+                            </div>
                             <div class="stat-tile-label">Discount</div>
                         </div>
                     </div>
@@ -66,7 +72,8 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($sale->net_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ number_format($sale->net_amount, 2) }}
+                            </div>
                             <div class="stat-tile-label">Net Amount</div>
                         </div>
                     </div>
@@ -225,7 +232,8 @@
                             <tr>
                                 <th colspan="2">Remaining Balance:</th>
                                 <th class="text-end">
-                                    {{ number_format($sale->net_amount - $sale->transactions->sum('amount'), 2) }}</th>
+                                    {{ number_format($sale->net_amount - $sale->transactions->sum('amount'), 2) }}
+                                </th>
                             </tr>
                         </tfoot>
                     </table>
@@ -235,3 +243,93 @@
     @endif
 
 @endsection
+
+{{-- ═══════════════════════════════════════════
+MULTI-PRINT MODAL
+═══════════════════════════════════════════ --}}
+<div class="modal fade" id="multiPrintModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-print me-2"></i>Multi-Print Invoice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Select how many copies to print per A4 sheet:</p>
+                <div class="row g-3" id="copyOptions">
+                    @foreach([1 => ['fa-file-alt', '1 Copy Full Page'], 2 => ['fa-columns', '2 Copies Side by Side'], 3 => ['fa-th-large', '3 Copies'], 4 => ['fa-th', '4 Copies (2×2)']] as $num => [$icon, $label])
+                        <div class="col-6">
+                            <div class="border rounded-3 p-3 text-center copy-option cursor-pointer {{ $num == 1 ? 'border-primary bg-primary bg-opacity-10' : '' }}"
+                                style="cursor:pointer;" data-copies="{{ $num }}">
+                                <i class="fas {{ $icon }} fa-2x mb-2 {{ $num == 1 ? 'text-primary' : 'text-muted' }}"></i>
+                                <div class="small fw-semibold">{{ $label }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <input type="hidden" id="selectedCopies" value="1">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="doPrint">
+                    <i class="fas fa-print me-1"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+    <script>
+        (function () {
+            // Copy option selection
+            document.querySelectorAll('.copy-option').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    document.querySelectorAll('.copy-option').forEach(function (o) {
+                        o.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+                        o.querySelector('i').classList.remove('text-primary');
+                        o.querySelector('i').classList.add('text-muted');
+                    });
+                    el.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+                    el.querySelector('i').classList.remove('text-muted');
+                    el.querySelector('i').classList.add('text-primary');
+                    document.getElementById('selectedCopies').value = el.dataset.copies;
+                });
+            });
+
+            document.getElementById('doPrint').addEventListener('click', function () {
+                var copies = parseInt(document.getElementById('selectedCopies').value, 10);
+                var pdfUrl = '{{ route('sales.pdf', $sale) }}';
+
+                // Build a print page that tiles the PDF URL in iframes
+                var cols = copies >= 4 ? 2 : (copies === 2 || copies === 3 ? 2 : 1);
+                var rows = Math.ceil(copies / cols);
+                var cellW = Math.floor(100 / cols);
+                var cellH = Math.floor(100 / rows);
+
+                var html = '<!DOCTYPE html><html><head><title>Print</title><style>';
+                html += 'html,body{margin:0;padding:0;width:100%;height:100%;}';
+                html += '.wrap{display:grid;grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr);width:100%;height:100vh;gap:4px;}';
+                html += 'iframe{width:100%;height:100%;border:none;}';
+                html += '@media print{html,body{width:210mm;height:297mm;}.wrap{width:210mm;height:297mm;}}';
+                html += '</style></head><body><div class="wrap">';
+
+                for (var i = 0; i < copies; i++) {
+                    html += '<iframe src="' + pdfUrl + '"></iframe>';
+                }
+                html += '</div><script>'
+                    + 'var iframes=document.querySelectorAll("iframe"),loaded=0;'
+                    + 'iframes.forEach(function(f){f.onload=function(){loaded++;if(loaded===iframes.length){window.print();}}});'
+                    + '<\/script></body></html>';
+
+                var win = window.open('', '_blank');
+                win.document.write(html);
+                win.document.close();
+
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('multiPrintModal')).hide();
+            });
+        })();
+    </script>
+@endpush

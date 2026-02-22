@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Expense;
 use App\Models\Transaction;
 use App\Models\BatchStock;
+use App\Models\LedgerEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -36,6 +37,28 @@ class DashboardController extends Controller
 		$totalCustomers = Customer::count();
 		$totalVendors = Vendor::count();
 		$totalProducts = Product::where('status', 'active')->count();
+
+		// Total Receivable: sum of latest positive balances across all customers
+		$totalReceivable = LedgerEntry::where('ledgerable_type', Customer::class)
+			->whereIn('id', function ($sub) {
+				$sub->selectRaw('MAX(id)')
+					->from('ledger_entries')
+					->where('ledgerable_type', '\\App\\Models\\Customer')
+					->groupBy('ledgerable_id');
+			})
+			->where('balance', '>', 0)
+			->sum('balance');
+
+		// Total Payable: sum of latest positive balances across all vendors
+		$totalPayable = LedgerEntry::where('ledgerable_type', Vendor::class)
+			->whereIn('id', function ($sub) {
+				$sub->selectRaw('MAX(id)')
+					->from('ledger_entries')
+					->where('ledgerable_type', '\\App\\Models\\Vendor')
+					->groupBy('ledgerable_id');
+			})
+			->where('balance', '>', 0)
+			->sum('balance');
 
 		// Low Stock Products
 		$lowStockProducts = Product::where('status', 'active')
@@ -103,6 +126,8 @@ class DashboardController extends Controller
 			'totalCustomers',
 			'totalVendors',
 			'totalProducts',
+			'totalReceivable',
+			'totalPayable',
 			'lowStockProducts',
 			'recentSales',
 			'recentPurchases',

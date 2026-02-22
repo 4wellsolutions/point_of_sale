@@ -42,7 +42,8 @@
                             <option value="">All Categories</option>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->name }}</option>
+                                    {{ $cat->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -55,10 +56,14 @@
                             <option value="out" {{ request('stock_status') == 'out' ? 'selected' : '' }}>Out of Stock</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex gap-2">
+                    <div class="col-md-3 d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
                         <a href="{{ route('reports.stock') }}" class="btn btn-outline-secondary"><i
                                 class="fas fa-times me-1"></i>Reset</a>
+                        <a href="{{ route('reports.stock.pdf') }}" target="_blank" class="btn btn-danger btn-sm"><i
+                                class="fas fa-file-pdf me-1"></i>PDF</a>
+                        <a href="{{ route('reports.stock.csv') }}" class="btn btn-success btn-sm"><i
+                                class="fas fa-file-excel me-1"></i>Excel</a>
                     </div>
                 </div>
             </form>
@@ -79,7 +84,7 @@
                         <th>SKU</th>
                         <th>Category</th>
                         <th class="text-center">Current Stock</th>
-                        <th class="text-center">Alert Qty</th>
+                        <th class="text-center">Reorder Level</th>
                         <th class="text-center">Status</th>
                     </tr>
                 </thead>
@@ -87,7 +92,7 @@
                     @forelse($products as $product)
                         @php
                             $stock = $product->total_stock ?? 0;
-                            $alertQty = $product->alert_quantity ?? 0;
+                            $alertQty = $product->reorder_level ?? 0;
                             if ($stock <= 0) {
                                 $statusClass = 'bg-danger';
                                 $statusLabel = 'Out of Stock';

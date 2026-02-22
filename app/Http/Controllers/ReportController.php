@@ -22,7 +22,7 @@ class ReportController extends Controller
      */
     public function sales(Request $request)
     {
-        $query = Sale::with(['customer', 'user']);
+        $query = Sale::with(['customer']);
 
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->customer_id);
@@ -50,7 +50,7 @@ class ReportController extends Controller
      */
     public function purchases(Request $request)
     {
-        $query = Purchase::with(['vendor', 'user']);
+        $query = Purchase::with(['vendor']);
 
         if ($request->filled('vendor_id')) {
             $query->where('vendor_id', $request->vendor_id);
@@ -134,7 +134,7 @@ class ReportController extends Controller
      */
     public function expenses(Request $request)
     {
-        $query = Expense::with(['expenseType', 'user']);
+        $query = Expense::with(['expenseType']);
 
         if ($request->filled('expense_type_id')) {
             $query->where('expense_type_id', $request->expense_type_id);
@@ -160,31 +160,47 @@ class ReportController extends Controller
      */
     public function stock(Request $request)
     {
-        $query = Product::with(['category', 'batches.batchStocks'])
-            ->withSum('batches as total_stock', 'quantity');
+        // Subquery: sum batch_stocks.quantity through batches → products
+        $stockSubquery = DB::raw('(SELECT COALESCE(SUM(bs.quantity), 0)
+            FROM batch_stocks bs
+            INNER JOIN batches b ON b.id = bs.batch_id
+            WHERE b.product_id = products.id
+            AND b.deleted_at IS NULL) as total_stock');
+
+        $query = Product::with(['category'])
+            ->select('products.*', $stockSubquery)
+            ->where('products.status', 'active');
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
         if ($request->filled('stock_status')) {
             if ($request->stock_status === 'low') {
-                $query->havingRaw('total_stock <= alert_quantity AND total_stock > 0');
+                $query->havingRaw('total_stock <= products.reorder_level AND total_stock > 0');
             } elseif ($request->stock_status === 'out') {
-                $query->havingRaw('total_stock <= 0 OR total_stock IS NULL');
+                $query->havingRaw('total_stock <= 0');
             } elseif ($request->stock_status === 'in') {
-                $query->havingRaw('total_stock > alert_quantity');
+                $query->havingRaw('total_stock > products.reorder_level');
             }
         }
 
         $products = $query->orderBy('name')->paginate(50)->appends($request->query());
         $categories = Category::orderBy('name')->get();
 
-        $totalProducts = Product::count();
-        $lowStockCount = Product::withSum('batches as total_stock', 'quantity')
-            ->havingRaw('total_stock <= alert_quantity AND total_stock > 0')
+        $totalProducts = Product::where('status', 'active')->count();
+
+        $stockSql = '(SELECT COALESCE(SUM(bs.quantity),0)
+            FROM batch_stocks bs
+            INNER JOIN batches b ON b.id = bs.batch_id
+            WHERE b.product_id = products.id AND b.deleted_at IS NULL)';
+
+        $lowStockCount = Product::where('status', 'active')
+            ->whereRaw("$stockSql <= products.reorder_level")
+            ->whereRaw("$stockSql > 0")
             ->count();
-        $outOfStockCount = Product::withSum('batches as total_stock', 'quantity')
-            ->havingRaw('total_stock <= 0 OR total_stock IS NULL')
+
+        $outOfStockCount = Product::where('status', 'active')
+            ->whereRaw("$stockSql <= 0")
             ->count();
 
         return view('reports.stock', compact(
@@ -194,5 +210,156 @@ class ReportController extends Controller
             'lowStockCount',
             'outOfStockCount'
         ));
+    }
+
+    /* ─────────────────────────────────────────────
+       EXPORT HELPERS — shared query builder
+       ───────────────────────────────────────────── */
+
+    private function buildSalesQuery(Request $request)
+    {
+        $q = Sale::with(['customer']);
+        if ($request->filled('customer_id'))
+            $q->where('customer_id', $request->customer_id);
+        if ($request->filled('date_from'))
+            $q->whereDate('sale_date', '>=', $request->date_from);
+        if ($request->filled('date_to'))
+            $q->whereDate('sale_date', '<=', $request->date_to);
+        return $q;
+    }
+
+    private function buildPurchasesQuery(Request $request)
+    {
+        $q = Purchase::with(['vendor']);
+        if ($request->filled('vendor_id'))
+            $q->where('vendor_id', $request->vendor_id);
+        if ($request->filled('date_from'))
+            $q->whereDate('purchase_date', '>=', $request->date_from);
+        if ($request->filled('date_to'))
+            $q->whereDate('purchase_date', '<=', $request->date_to);
+        return $q;
+    }
+
+    private function buildExpensesQuery(Request $request)
+    {
+        $q = Expense::with(['expenseType']);
+        if ($request->filled('expense_type_id'))
+            $q->where('expense_type_id', $request->expense_type_id);
+        if ($request->filled('date_from'))
+            $q->whereDate('date', '>=', $request->date_from);
+        if ($request->filled('date_to'))
+            $q->whereDate('date', '<=', $request->date_to);
+        return $q;
+    }
+
+    /* ─────────────────────────────────────────────
+       SALES EXPORTS
+       ───────────────────────────────────────────── */
+    public function salesPdf(Request $request)
+    {
+        $records = $this->buildSalesQuery($request)->latest('id')->get();
+        $filters = array_filter(['Customer' => Customer::find($request->customer_id)?->name, 'From' => $request->date_from, 'To' => $request->date_to]);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.sales-pdf', compact('records', 'filters'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->stream('sales-report.pdf');
+    }
+
+    public function salesCsv(Request $request)
+    {
+        $records = $this->buildSalesQuery($request)->latest('id')->get();
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="sales-report.csv"'];
+        return response()->stream(function () use ($records) {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, ['#', 'Invoice No', 'Customer', 'Date', 'Total Amount', 'Discount', 'Net Amount']);
+            foreach ($records as $i => $r) {
+                fputcsv($f, [$i + 1, $r->invoice_no, $r->customer->name ?? '—', $r->sale_date, $r->total_amount, $r->discount_amount, $r->net_amount]);
+            }
+            fclose($f);
+        }, 200, $headers);
+    }
+
+    /* ─────────────────────────────────────────────
+       PURCHASES EXPORTS
+       ───────────────────────────────────────────── */
+    public function purchasesPdf(Request $request)
+    {
+        $records = $this->buildPurchasesQuery($request)->latest('id')->get();
+        $filters = array_filter(['Vendor' => Vendor::find($request->vendor_id)?->name, 'From' => $request->date_from, 'To' => $request->date_to]);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.purchases-pdf', compact('records', 'filters'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->stream('purchases-report.pdf');
+    }
+
+    public function purchasesCsv(Request $request)
+    {
+        $records = $this->buildPurchasesQuery($request)->latest('id')->get();
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="purchases-report.csv"'];
+        return response()->stream(function () use ($records) {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, ['#', 'Invoice No', 'Vendor', 'Date', 'Total Amount', 'Discount', 'Net Amount']);
+            foreach ($records as $i => $r) {
+                fputcsv($f, [$i + 1, $r->invoice_no, $r->vendor->name ?? '—', $r->purchase_date, $r->total_amount, $r->discount_amount, $r->net_amount]);
+            }
+            fclose($f);
+        }, 200, $headers);
+    }
+
+    /* ─────────────────────────────────────────────
+       EXPENSES EXPORTS
+       ───────────────────────────────────────────── */
+    public function expensesPdf(Request $request)
+    {
+        $records = $this->buildExpensesQuery($request)->latest('id')->get();
+        $filters = array_filter(['Type' => \App\Models\ExpenseType::find($request->expense_type_id)?->name, 'From' => $request->date_from, 'To' => $request->date_to]);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.expenses-pdf', compact('records', 'filters'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->stream('expenses-report.pdf');
+    }
+
+    public function expensesCsv(Request $request)
+    {
+        $records = $this->buildExpensesQuery($request)->latest('id')->get();
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="expenses-report.csv"'];
+        return response()->stream(function () use ($records) {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, ['#', 'Date', 'Type', 'Amount', 'Description']);
+            foreach ($records as $i => $r) {
+                fputcsv($f, [$i + 1, $r->date, $r->expenseType->name ?? '—', $r->amount, $r->description ?? '']);
+            }
+            fclose($f);
+        }, 200, $headers);
+    }
+
+    /* ─────────────────────────────────────────────
+       STOCK EXPORTS
+       ───────────────────────────────────────────── */
+    public function stockPdf(Request $request)
+    {
+        $stockSql = '(SELECT COALESCE(SUM(bs.quantity),0) FROM batch_stocks bs INNER JOIN batches b ON b.id = bs.batch_id WHERE b.product_id = products.id AND b.deleted_at IS NULL) as total_stock';
+        $records = Product::with(['category'])->where('status', 'active')
+            ->selectRaw('products.*, ' . $stockSql)
+            ->orderBy('name')->get();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.stock-pdf', compact('records'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->stream('stock-report.pdf');
+    }
+
+    public function stockCsv(Request $request)
+    {
+        $stockSql = '(SELECT COALESCE(SUM(bs.quantity),0) FROM batch_stocks bs INNER JOIN batches b ON b.id = bs.batch_id WHERE b.product_id = products.id AND b.deleted_at IS NULL) as total_stock';
+        $records = Product::with(['category'])->where('status', 'active')
+            ->selectRaw('products.*, ' . $stockSql)
+            ->orderBy('name')->get();
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="stock-report.csv"'];
+        return response()->stream(function () use ($records) {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, ['#', 'Product', 'SKU', 'Category', 'Stock Qty', 'Reorder Level', 'Status']);
+            foreach ($records as $i => $r) {
+                $qty = $r->total_stock ?? 0;
+                $status = $qty <= 0 ? 'Out of Stock' : ($qty <= $r->reorder_level ? 'Low Stock' : 'In Stock');
+                fputcsv($f, [$i + 1, $r->name, $r->sku, $r->category->name ?? '—', $qty, $r->reorder_level, $status]);
+            }
+            fclose($f);
+        }, 200, $headers);
     }
 }

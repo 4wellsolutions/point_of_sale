@@ -169,22 +169,19 @@ class SalesController extends Controller
                 ]);
             }
 
-            // 7. Create Ledger Entry for the Purchase (Debit)
+            // 7. Create Ledger Entry for the Sale (DEBIT — customer owes us)
+            $saleAmount = $request->net_amount + ($request->discount_amount ?? 0);
+            $customer = Customer::find($sale->customer_id);
             $saleLedger = new LedgerEntry([
                 'transaction_id' => null,
-                'date' => now(),
+                'date' => $sale->sale_date,
                 'description' => 'Sale Invoice #' . $sale->invoice_no,
-                'debit' => 0,
-                'credit' => $request->net_amount + $request->discount_amount,
-                'balance' => $this->calculateNewBalance($sale->customer_id, $request->net_amount + $request->discount_amount, 'credit'),
+                'debit' => $saleAmount,   // customer now owes us
+                'credit' => 0,
+                'balance' => $this->calculateNewBalance($sale->customer_id, $saleAmount, 'debit'),
                 'user_id' => auth()->id(),
             ]);
-
-            // Now set the polymorphic relation to the vendor
-            $customer = Customer::find($sale->customer_id);
             $saleLedger->ledgerable()->associate($customer);
-
-            // Save the ledger entry
             $saleLedger->save();
 
             // Create payment methods if provided
@@ -203,22 +200,17 @@ class SalesController extends Controller
                         'transaction_date' => $sale->sale_date,
                     ]);
 
-                    // Create Ledger Entry for the Payment (Credit)
+                    // Create Ledger Entry for the Payment (CREDIT — customer reduces their debt)
                     $paymentLedger = new LedgerEntry([
                         'transaction_id' => $transaction->id,
-                        'date' => now(),
+                        'date' => $sale->sale_date,
                         'description' => 'Payment for Sales Invoice #' . $sale->invoice_no,
-                        'debit' => $payment['amount'],
-                        'credit' => 0,
+                        'debit' => 0,
+                        'credit' => $payment['amount'],   // reduces what customer owes
                         'balance' => $this->calculateNewBalance($sale->customer_id, $payment['amount'], 'credit'),
                         'user_id' => auth()->id(),
                     ]);
-
-                    // Associate the ledger with the Vendor (polymorphic relationship)
-                    $customer = Customer::find($sale->customer_id);
                     $paymentLedger->ledgerable()->associate($customer);
-
-                    // Save the payment ledger entry
                     $paymentLedger->save();
 
                 }
@@ -341,13 +333,15 @@ class SalesController extends Controller
             $difference = $newNetAmount - $oldNetAmount;
             if (abs($difference) > 0.001) {
                 $customer = Customer::find($sale->customer_id);
+                // $difference > 0 means customer owes MORE (debit)
+                // $difference < 0 means customer owes LESS (credit — discount increased)
                 $adjustmentLedger = new LedgerEntry([
                     'transaction_id' => null,
                     'date' => now(),
                     'description' => 'Sale Adjustment - Invoice #' . $sale->invoice_no,
-                    'debit' => $difference < 0 ? abs($difference) : 0,
-                    'credit' => $difference > 0 ? $difference : 0,
-                    'balance' => $this->calculateNewBalance($sale->customer_id, abs($difference), $difference > 0 ? 'credit' : 'debit'),
+                    'debit' => $difference > 0 ? $difference : 0,
+                    'credit' => $difference < 0 ? abs($difference) : 0,
+                    'balance' => $this->calculateNewBalance($sale->customer_id, abs($difference), $difference > 0 ? 'debit' : 'credit'),
                     'user_id' => auth()->id(),
                 ]);
                 $adjustmentLedger->ledgerable()->associate($customer);
@@ -494,5 +488,14 @@ class SalesController extends Controller
             fclose($file);
         };
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Minimal HTML invoice view — used by multi-print iframes.
+     */
+    public function printView(\App\Models\Sale $sale)
+    {
+        $sale->load(['customer', 'saleItems.product', 'saleItems.location', 'transactions.paymentMethod']);
+        return view('sales.print-view', compact('sale'));
     }
 }

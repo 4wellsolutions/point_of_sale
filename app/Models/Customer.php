@@ -18,6 +18,7 @@ class Customer extends Model implements AuditableContract
         'address',
         'whatsapp',
         'type_id',
+        'area_id',
         'image',
     ];
     protected $dates = ['deleted_at'];
@@ -25,6 +26,10 @@ class Customer extends Model implements AuditableContract
     public function type()
     {
         return $this->belongsTo(Type::class);
+    }
+    public function area()
+    {
+        return $this->belongsTo(\App\Models\Area::class);
     }
     public function sales()
     {

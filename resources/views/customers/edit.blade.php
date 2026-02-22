@@ -23,7 +23,8 @@
                     <!-- Name Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="name" class="form-label">Name *</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $customer->name) }}" required>
+                        <input type="text" class="form-control" id="name" name="name"
+                            value="{{ old('name', $customer->name) }}" required>
                         @error('name')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -32,7 +33,8 @@
                     <!-- Email Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $customer->email) }}">
+                        <input type="email" class="form-control" id="email" name="email"
+                            value="{{ old('email', $customer->email) }}">
                         @error('email')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -41,7 +43,8 @@
                     <!-- Phone Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="phone" class="form-label">Phone</label>
-                        <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone', $customer->phone) }}">
+                        <input type="text" class="form-control" id="phone" name="phone"
+                            value="{{ old('phone', $customer->phone) }}">
                         @error('phone')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -50,7 +53,8 @@
                     <!-- WhatsApp Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="whatsapp" class="form-label">WhatsApp</label>
-                        <input type="text" class="form-control" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $customer->whatsapp) }}">
+                        <input type="text" class="form-control" id="whatsapp" name="whatsapp"
+                            value="{{ old('whatsapp', $customer->whatsapp) }}">
                         @error('whatsapp')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -59,7 +63,8 @@
                     <!-- Address Field -->
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="address" class="form-label">Address</label>
-                        <textarea class="form-control" id="address" name="address">{{ old('address', $customer->address) }}</textarea>
+                        <textarea class="form-control" id="address"
+                            name="address">{{ old('address', $customer->address) }}</textarea>
                         @error('address')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -72,11 +77,27 @@
                             <option value="">Select Type</option>
                             @foreach($types as $type)
                                 <option value="{{ $type->id }}" {{ old('type_id', $customer->type_id) == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}
-                                </option>
+                                            {{ $type->name }}
+                                        </option>
                             @endforeach
+                            </select>
+                            @error('type_id')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <!-- Area Field (Optional) -->
+                        <div class="col-12 col-md-4 col-lg-6 mb-3">
+                            <label for="area_id" class="form-label">Area <small class="text-muted">(optional)</small></label>
+                            <select class="form-select" id="area_id" name="area_id">
+                                <option value="">— No Area —</option>
+                                @foreach($areas as $area)
+                                            <option value="{{ $area->id }}" {{ old('area_id', $customer->area_id) == $area->id ? 'selected' : '' }}>
+                                        {{ $area->name }}
+                                    </option>
+                                @endforeach
                         </select>
-                        @error('type_id')
+                        @error('area_id')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
@@ -85,12 +106,13 @@
                     <div class="col-12 col-md-4 col-lg-6 mb-3">
                         <label for="image" class="form-label">Image</label>
                         <input class="form-control" type="file" id="image" name="image" accept="image/*">
-                        
+
                         <!-- Image Preview Container -->
                         <div id="imagePreviewContainer" class="mt-3" style="display: none;">
-                            <img id="imagePreview" src="#" alt="Image Preview" class="img-fluid" style="max-width: 150px; max-height: 150px; object-fit: contain;">
+                            <img id="imagePreview" src="#" alt="Image Preview" class="img-fluid"
+                                style="max-width: 150px; max-height: 150px; object-fit: contain;">
                         </div>
-                        
+
                         @error('image')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
@@ -98,7 +120,8 @@
                         <!-- Show current image -->
                         @if($customer->image)
                             <div class="mt-2">
-                                <img src="{{ asset('storage/'.$customer->image) }}" alt="Current Image" class="img-fluid" style="max-width: 150px; max-height: 150px; object-fit: contain;">
+                                <img src="{{ asset('storage/' . $customer->image) }}" alt="Current Image" class="img-fluid"
+                                    style="max-width: 150px; max-height: 150px; object-fit: contain;">
                             </div>
                         @endif
                     </div>
@@ -111,17 +134,22 @@
     </div>
 
     @push('scripts')
-        <script>
-            // Show image preview when a file is selected
-            $('#image').change(function() {
+    <style>
+        .select2-container .select2-selection--single { height: 38px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 38px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 38px !important; }
+    </style>
+    <script>
+        $(function () {
+            $('#area_id').select2({ placeholder: '— No Area —', allowClear: true, width: '100%' });
+
+            $('#image').change(function () {
                 var file = this.files[0];
-                
-                // Check if the selected file is an image
                 if (file && file.type.startsWith('image/')) {
                     var reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         $('#imagePreview').attr('src', e.target.result);
-                        $('#imagePreviewContainer').show();  // Show the image preview container
+                        $('#imagePreviewContainer').show();
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -129,6 +157,7 @@
                     $('#imagePreviewContainer').hide();
                 }
             });
-        </script>
+        });
+    </script>
     @endpush
 @endsection

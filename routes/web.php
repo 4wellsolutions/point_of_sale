@@ -78,6 +78,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('customers', CustomerController::class);
     });
 
+    // ── AREAS ──
+    Route::get('/areas', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.index');
+    Route::post('/areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store');
+    Route::put('/areas/{area}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update');
+    Route::delete('/areas/{area}', [\App\Http\Controllers\AreaController::class, 'destroy'])->name('areas.destroy');
+
     // ── VENDORS ──
     Route::middleware('module:vendors')->group(function () {
         Route::get('/vendors/search', [VendorController::class, 'search'])->name('vendors.search');
@@ -104,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sales/export/csv', [SalesController::class, 'exportCsv'])->name('sales.export.csv');
         Route::resource('sales', SalesController::class);
         Route::get('/sales/{sale}/pdf', [SalesController::class, 'generatePdf'])->name('sales.pdf');
+        Route::get('/sales/{sale}/print-view', [SalesController::class, 'printView'])->name('sales.print-view');
         Route::resource('sales-returns', SalesReturnController::class);
     });
 
@@ -174,6 +181,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profit-loss', [\App\Http\Controllers\ReportController::class, 'profitLoss'])->name('profit-loss');
         Route::get('/expenses', [\App\Http\Controllers\ReportController::class, 'expenses'])->name('expenses');
         Route::get('/stock', [\App\Http\Controllers\ReportController::class, 'stock'])->name('stock');
+
+        // Exports
+        Route::get('/sales/export/pdf', [\App\Http\Controllers\ReportController::class, 'salesPdf'])->name('sales.pdf');
+        Route::get('/sales/export/csv', [\App\Http\Controllers\ReportController::class, 'salesCsv'])->name('sales.csv');
+        Route::get('/purchases/export/pdf', [\App\Http\Controllers\ReportController::class, 'purchasesPdf'])->name('purchases.pdf');
+        Route::get('/purchases/export/csv', [\App\Http\Controllers\ReportController::class, 'purchasesCsv'])->name('purchases.csv');
+        Route::get('/expenses/export/pdf', [\App\Http\Controllers\ReportController::class, 'expensesPdf'])->name('expenses.pdf');
+        Route::get('/expenses/export/csv', [\App\Http\Controllers\ReportController::class, 'expensesCsv'])->name('expenses.csv');
+        Route::get('/stock/export/pdf', [\App\Http\Controllers\ReportController::class, 'stockPdf'])->name('stock.pdf');
+        Route::get('/stock/export/csv', [\App\Http\Controllers\ReportController::class, 'stockCsv'])->name('stock.csv');
     });
 
     // ── SETTINGS ──

@@ -94,6 +94,46 @@
         </div>
     </div>
 
+    {{-- Receivable / Payable Row --}}
+    <div class="row mb-4">
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{{ route('ledgers.index', ['ledgerable_type' => 'customer']) }}" class="text-decoration-none">
+                <div class="card border-start border-success border-4 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                            <i class="fas fa-hand-holding-usd text-success fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Total Receivable</div>
+                            <h3 class="mb-0 text-success fw-bold">
+                                {{ setting('currency_symbol', 'Rs.') }} {{ number_format($totalReceivable, 2) }}
+                            </h3>
+                            <small class="text-muted">Outstanding from customers</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{{ route('ledgers.index', ['ledgerable_type' => 'vendor']) }}" class="text-decoration-none">
+                <div class="card border-start border-danger border-4 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                            <i class="fas fa-money-check-alt text-danger fa-2x"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Total Payable</div>
+                            <h3 class="mb-0 text-danger fw-bold">
+                                {{ setting('currency_symbol', 'Rs.') }} {{ number_format($totalPayable, 2) }}
+                            </h3>
+                            <small class="text-muted">Outstanding to vendors</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="row mb-4">
         <div class="col-lg-8 mb-3">

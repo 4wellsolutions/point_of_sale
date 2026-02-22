@@ -35,7 +35,8 @@
                             <option value="">All Types</option>
                             @foreach($expenseTypes as $et)
                                 <option value="{{ $et->id }}" {{ request('expense_type_id') == $et->id ? 'selected' : '' }}>
-                                    {{ $et->name }}</option>
+                                    {{ $et->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -47,10 +48,14 @@
                         <label class="form-label">To Date</label>
                         <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
                     </div>
-                    <div class="col-md-3 d-flex gap-2">
+                    <div class="col-md-3 d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
                         <a href="{{ route('reports.expenses') }}" class="btn btn-outline-secondary"><i
                                 class="fas fa-times me-1"></i>Reset</a>
+                        <a href="{{ route('reports.expenses.pdf') }}?{{ http_build_query(request()->query()) }}"
+                            target="_blank" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf me-1"></i>PDF</a>
+                        <a href="{{ route('reports.expenses.csv') }}?{{ http_build_query(request()->query()) }}"
+                            class="btn btn-success btn-sm"><i class="fas fa-file-excel me-1"></i>Excel</a>
                     </div>
                 </div>
             </form>
@@ -85,7 +90,7 @@
                             <td class="text-end">
                                 <strong>{{ setting('currency_symbol') }}{{ number_format($expense->amount ?? 0, 2) }}</strong>
                             </td>
-                            <td><small>{{ $expense->user->name ?? '—' }}</small></td>
+                            <td><small>—</small></td>
                         </tr>
                     @empty
                         <tr>
