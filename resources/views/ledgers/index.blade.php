@@ -22,10 +22,13 @@
                     <!-- Ledger Type Filter -->
                     <div class="col-md-3">
                         <label for="ledgerable_type" class="form-label">Ledger Type</label>
-                        <select name="ledgerable_type" id="ledgerable_type" class="form-control @error('ledgerable_type') is-invalid @enderror" required>
+                        <select name="ledgerable_type" id="ledgerable_type"
+                            class="form-control @error('ledgerable_type') is-invalid @enderror" required>
                             <option value="">Select Type</option>
-                            <option value="customer" {{ request('ledgerable_type') == 'customer' ? 'selected' : '' }}>Customer</option>
-                            <option value="vendor" {{ request('ledgerable_type') == 'vendor' ? 'selected' : '' }}>Vendor</option>
+                            <option value="customer" {{ request('ledgerable_type') == 'customer' ? 'selected' : '' }}>Customer
+                            </option>
+                            <option value="vendor" {{ request('ledgerable_type') == 'vendor' ? 'selected' : '' }}>Vendor
+                            </option>
                         </select>
                         @error('ledgerable_type')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -33,17 +36,19 @@
                     </div>
 
                     <!-- Select Customer or Vendor (AJAX Search) -->
-                    <div class="col-md-3" id="ledgerable_select_container" style="display: {{ request('ledgerable_type') ? 'block' : 'none' }};">
+                    <div class="col-md-3" id="ledgerable_select_container"
+                        style="display: {{ request('ledgerable_type') ? 'block' : 'none' }};">
                         <label for="ledgerable_id" class="form-label">Select <span id="ledgerable_label">
-                            @if(request('ledgerable_type') == 'customer')
-                                Customer
-                            @elseif(request('ledgerable_type') == 'vendor')
-                                Vendor
-                            @else
-                                Customer/Vendor
-                            @endif
-                        </span> <span class="text-danger">*</span></label>
-                        <select name="ledgerable_id" id="ledgerable_id" class="form-control @error('ledgerable_id') is-invalid @enderror" style="width: 100%;">
+                                @if(request('ledgerable_type') == 'customer')
+                                    Customer
+                                @elseif(request('ledgerable_type') == 'vendor')
+                                    Vendor
+                                @else
+                                    Customer/Vendor
+                                @endif
+                            </span> <span class="text-danger">*</span></label>
+                        <select name="ledgerable_id" id="ledgerable_id"
+                            class="form-control @error('ledgerable_id') is-invalid @enderror" style="width: 100%;">
                             @if(request('ledgerable_id'))
                                 @php
                                     $ledgerableType = request('ledgerable_type') === 'customer' ? 'App\Models\Customer' : 'App\Models\Vendor';
@@ -62,12 +67,16 @@
                     <!-- Transaction Type Filter -->
                     <div class="col-md-2">
                         <label for="transaction_type" class="form-label">Transaction Type</label>
-                        <select name="transaction_type" id="transaction_type" class="form-control @error('transaction_type') is-invalid @enderror">
+                        <select name="transaction_type" id="transaction_type"
+                            class="form-control @error('transaction_type') is-invalid @enderror">
                             <option value="">All</option>
                             <option value="sale" {{ request('transaction_type') == 'sale' ? 'selected' : '' }}>Sale</option>
-                            <option value="purchase" {{ request('transaction_type') == 'purchase' ? 'selected' : '' }}>Purchase</option>
-                            <option value="return" {{ request('transaction_type') == 'return' ? 'selected' : '' }}>Return</option>
-                            <option value="payment" {{ request('transaction_type') == 'payment' ? 'selected' : '' }}>Payment</option>
+                            <option value="purchase" {{ request('transaction_type') == 'purchase' ? 'selected' : '' }}>
+                                Purchase</option>
+                            <option value="return" {{ request('transaction_type') == 'return' ? 'selected' : '' }}>Return
+                            </option>
+                            <option value="payment" {{ request('transaction_type') == 'payment' ? 'selected' : '' }}>Payment
+                            </option>
                         </select>
                         @error('transaction_type')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -77,7 +86,8 @@
                     <!-- Date Range Filters -->
                     <div class="col-md-2">
                         <label for="start_date" class="form-label">Start Date</label>
-                        <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}" class="form-control @error('start_date') is-invalid @enderror">
+                        <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
+                            class="form-control @error('start_date') is-invalid @enderror">
                         @error('start_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -85,7 +95,8 @@
 
                     <div class="col-md-2">
                         <label for="end_date" class="form-label">End Date</label>
-                        <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}" class="form-control @error('end_date') is-invalid @enderror">
+                        <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}"
+                            class="form-control @error('end_date') is-invalid @enderror">
                         @error('end_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -116,19 +127,21 @@
 @endsection
 
 @push("styles")
-<style type="text/css">
+    <style type="text/css">
         /* Select2 Styling */
         .select2-container .select2-selection--single {
             height: 38px !important;
             padding: 0.25rem !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 38px !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 38px !important;
         }
-</style>
+    </style>
 @endpush
 
 @push('scripts')
@@ -214,12 +227,15 @@
                 const endDate = $('#end_date').val();
                 const transactionType = $('#transaction_type').val();
 
-                // Validate filters
-                if ((ledgerableType === 'customer' || ledgerableType === 'vendor') && startDate && endDate) {
+                // Validate filters — only customer/vendor selection is required
+                if ((ledgerableType === 'customer' || ledgerableType === 'vendor') && ledgerableId) {
                     // Build the query string
-                    let queryString = `?ledgerable_type=${ledgerableType}&start_date=${startDate}&end_date=${endDate}`;
-                    if (ledgerableId) {
-                        queryString += `&ledgerable_id=${ledgerableId}`;
+                    let queryString = `?ledgerable_type=${ledgerableType}&ledgerable_id=${ledgerableId}`;
+                    if (startDate) {
+                        queryString += `&start_date=${startDate}`;
+                    }
+                    if (endDate) {
+                        queryString += `&end_date=${endDate}`;
                     }
                     if (transactionType) {
                         queryString += `&transaction_type=${transactionType}`;
@@ -229,7 +245,7 @@
                     const url = `{{ route('ledgers.pdf', '') }}${queryString}`;
                     window.open(url, '_blank');
                 } else {
-                    alert('Please select a customer or vendor and specify the date range before downloading the PDF.');
+                    alert('Please select a customer or vendor before downloading the PDF.');
                 }
             });
         });

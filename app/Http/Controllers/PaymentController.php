@@ -30,7 +30,7 @@ class PaymentController extends Controller
             $query->whereDate('transaction_date', '<=', $request->to_date);
 
         $payments = $query->latest('transaction_date')->paginate(20);
-        $paymentMethods = PaymentMethod::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::orderBy('method_name')->get();
         $vendors = Vendor::orderBy('name')->get();
 
         return view('payments.index', compact('payments', 'paymentMethods', 'vendors'));
@@ -38,7 +38,7 @@ class PaymentController extends Controller
 
     public function create()
     {
-        $paymentMethods = PaymentMethod::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::orderBy('method_name')->get();
         $vendors = Vendor::orderBy('name')->get();
         return view('payments.create', compact('paymentMethods', 'vendors'));
     }
@@ -91,6 +91,83 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('payments.index')->with('success', 'Payment recorded successfully.');
+    }
+
+    public function edit($id)
+    {
+        $payment = \App\Models\Transaction::findOrFail($id);
+        $paymentMethods = PaymentMethod::orderBy('method_name')->get();
+        $currentParty = $payment->transactionable;
+        return view('payments.edit', compact('payment', 'paymentMethods', 'currentParty'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $payment = \App\Models\Transaction::findOrFail($id);
+
+        $request->validate([
+            'vendor_id' => 'required|exists:vendors,id',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'amount' => 'required|numeric|min:0.01',
+            'transaction_date' => 'required|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Reverse old ledger entry
+            $oldLedger = LedgerEntry::where('transaction_id', $payment->id)->latest('id')->first();
+            $lastBalance = $oldLedger ? $oldLedger->balance : 0;
+
+            if ($oldLedger) {
+                LedgerEntry::create([
+                    'ledgerable_id' => $payment->transactionable_id,
+                    'ledgerable_type' => $payment->transactionable_type,
+                    'transaction_id' => $payment->id,
+                    'date' => now(),
+                    'description' => 'Reversal: Payment #' . $payment->id . ' before edit',
+                    'debit' => $payment->amount,
+                    'credit' => 0,
+                    'balance' => $lastBalance + $payment->amount,
+                    'user_id' => Auth::id(),
+                ]);
+            }
+
+            // Update the transaction
+            $payment->update([
+                'payment_method_id' => $request->payment_method_id,
+                'vendor_id' => $request->vendor_id,
+                'amount' => $request->amount,
+                'transaction_date' => $request->transaction_date,
+                'transactionable_id' => $request->vendor_id,
+                'transactionable_type' => Vendor::class,
+            ]);
+
+            // Apply new ledger entry
+            $newLastLedger = LedgerEntry::where('ledgerable_id', $request->vendor_id)
+                ->where('ledgerable_type', Vendor::class)
+                ->latest('id')->first();
+            $newLastBalance = $newLastLedger ? $newLastLedger->balance : 0;
+
+            LedgerEntry::create([
+                'ledgerable_id' => $request->vendor_id,
+                'ledgerable_type' => Vendor::class,
+                'transaction_id' => $payment->id,
+                'date' => $request->transaction_date,
+                'description' => 'Payment to vendor (edited)',
+                'debit' => 0,
+                'credit' => $request->amount,
+                'balance' => $newLastBalance - $request->amount,
+                'user_id' => Auth::id(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error updating payment: ' . $e->getMessage()])->withInput();
+        }
+
+        return redirect()->route('payments.index')->with('success', 'Payment updated successfully.');
     }
 
     public function destroy($id)
@@ -169,7 +246,7 @@ class PaymentController extends Controller
                     $i + 1,
                     $p->transaction_date,
                     $p->transactionable->name ?? 'N/A',
-                    $p->paymentMethod->name ?? '',
+                    $p->paymentMethod->method_name ?? '',
                     $p->amount,
                 ]);
             }

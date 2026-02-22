@@ -30,7 +30,7 @@ class ReceiptController extends Controller
             $query->whereDate('transaction_date', '<=', $request->to_date);
 
         $receipts = $query->latest('transaction_date')->paginate(20);
-        $paymentMethods = PaymentMethod::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::orderBy('method_name')->get();
         $customers = Customer::orderBy('name')->get();
 
         return view('receipts.index', compact('receipts', 'paymentMethods', 'customers'));
@@ -38,9 +38,8 @@ class ReceiptController extends Controller
 
     public function create()
     {
-        $paymentMethods = PaymentMethod::orderBy('name')->get();
-        $customers = Customer::orderBy('name')->get();
-        return view('receipts.create', compact('paymentMethods', 'customers'));
+        $paymentMethods = PaymentMethod::orderBy('method_name')->get();
+        return view('receipts.create', compact('paymentMethods'));
     }
 
     public function store(Request $request)
@@ -92,6 +91,84 @@ class ReceiptController extends Controller
         }
 
         return redirect()->route('receipts.index')->with('success', 'Receipt recorded successfully.');
+    }
+
+    public function edit($id)
+    {
+        $receipt = \App\Models\Transaction::findOrFail($id);
+        $paymentMethods = PaymentMethod::orderBy('method_name')->get();
+        // Pre-select current customer for Select2
+        $currentParty = $receipt->transactionable;
+        return view('receipts.edit', compact('receipt', 'paymentMethods', 'currentParty'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $receipt = \App\Models\Transaction::findOrFail($id);
+
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'amount' => 'required|numeric|min:0.01',
+            'transaction_date' => 'required|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Reverse old ledger entry
+            $oldLedger = LedgerEntry::where('transaction_id', $receipt->id)->latest('id')->first();
+            $lastBalance = $oldLedger ? $oldLedger->balance : 0;
+
+            if ($oldLedger) {
+                LedgerEntry::create([
+                    'ledgerable_id' => $receipt->transactionable_id,
+                    'ledgerable_type' => $receipt->transactionable_type,
+                    'transaction_id' => $receipt->id,
+                    'date' => now(),
+                    'description' => 'Reversal: Receipt #' . $receipt->id . ' before edit',
+                    'debit' => $receipt->amount,
+                    'credit' => 0,
+                    'balance' => $lastBalance + $receipt->amount,
+                    'user_id' => Auth::id(),
+                ]);
+            }
+
+            // Update the transaction
+            $receipt->update([
+                'payment_method_id' => $request->payment_method_id,
+                'customer_id' => $request->customer_id,
+                'amount' => $request->amount,
+                'transaction_date' => $request->transaction_date,
+                'transactionable_id' => $request->customer_id,
+                'transactionable_type' => Customer::class,
+            ]);
+
+            // Apply new ledger entry
+            $newLastLedger = LedgerEntry::where('ledgerable_id', $request->customer_id)
+                ->where('ledgerable_type', Customer::class)
+                ->latest('id')->first();
+            $newLastBalance = $newLastLedger ? $newLastLedger->balance : 0;
+
+            LedgerEntry::create([
+                'ledgerable_id' => $request->customer_id,
+                'ledgerable_type' => Customer::class,
+                'transaction_id' => $receipt->id,
+                'date' => $request->transaction_date,
+                'description' => 'Receipt from customer (edited)',
+                'debit' => 0,
+                'credit' => $request->amount,
+                'balance' => $newLastBalance - $request->amount,
+                'user_id' => Auth::id(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Error updating receipt: ' . $e->getMessage()])->withInput();
+        }
+
+        return redirect()->route('receipts.index')->with('success', 'Receipt updated successfully.');
     }
 
     public function destroy($id)
@@ -170,7 +247,7 @@ class ReceiptController extends Controller
                     $i + 1,
                     $r->transaction_date,
                     $r->transactionable->name ?? 'N/A',
-                    $r->paymentMethod->name ?? '',
+                    $r->paymentMethod->method_name ?? '',
                     $r->amount,
                 ]);
             }

@@ -126,6 +126,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
         Route::get('/receipts/create', [ReceiptController::class, 'create'])->name('receipts.create');
         Route::post('/receipts', [ReceiptController::class, 'store'])->name('receipts.store');
+        Route::get('/receipts/{id}/edit', [ReceiptController::class, 'edit'])->name('receipts.edit');
+        Route::put('/receipts/{id}', [ReceiptController::class, 'update'])->name('receipts.update');
         Route::delete('/receipts/{id}', [ReceiptController::class, 'destroy'])->name('receipts.destroy');
     });
 
@@ -136,6 +138,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
         Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+        Route::get('/payments/{id}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
+        Route::put('/payments/{id}', [PaymentController::class, 'update'])->name('payments.update');
         Route::delete('/payments/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     });
 

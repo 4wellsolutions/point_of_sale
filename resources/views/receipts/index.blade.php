@@ -29,7 +29,8 @@
                             <option value="">All Customers</option>
                             @foreach($customers as $c)
                                 <option value="{{ $c->id }}" {{ request('customer_id') == $c->id ? 'selected' : '' }}>
-                                    {{ $c->name }}</option>
+                                    {{ $c->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -38,7 +39,7 @@
                         <select name="payment_method_id" class="form-select form-select-sm">
                             <option value="">All Methods</option>
                             @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}" {{ request('payment_method_id') == $method->id ? 'selected' : '' }}>{{ $method->name }}</option>
+                                <option value="{{ $method->id }}" {{ request('payment_method_id') == $method->id ? 'selected' : '' }}>{{ $method->method_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -82,13 +83,13 @@
                                     <td>{{ $loop->iteration + ($receipts->currentPage() - 1) * $receipts->perPage() }}</td>
                                     <td>{{ \Carbon\Carbon::parse($receipt->transaction_date)->format('d M Y') }}</td>
                                     <td>{{ $receipt->transactionable->name ?? '—' }}</td>
-                                    <td>{{ $receipt->paymentMethod->name ?? '—' }}</td>
+                                    <td>{{ $receipt->paymentMethod->method_name ?? '—' }}</td>
                                     <td class="text-end fw-bold text-success">
                                         {{ setting('currency_symbol', 'Rs.') }} {{ number_format($receipt->amount, 2) }}
                                     </td>
                                     <td class="text-center action-btns">
-                                        <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ $receipt->id }})"
-                                            title="Delete"><i class="fas fa-trash"></i></button>
+                                        <a href="{{ route('receipts.edit', $receipt->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                        <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ $receipt->id }})" title="Delete"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                             @endforeach

@@ -38,7 +38,7 @@
                         <select name="payment_method_id" class="form-select form-select-sm">
                             <option value="">All Methods</option>
                             @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}" {{ request('payment_method_id') == $method->id ? 'selected' : '' }}>{{ $method->name }}</option>
+                                <option value="{{ $method->id }}" {{ request('payment_method_id') == $method->id ? 'selected' : '' }}>{{ $method->method_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -82,11 +82,13 @@
                                     <td>{{ $loop->iteration + ($payments->currentPage() - 1) * $payments->perPage() }}</td>
                                     <td>{{ \Carbon\Carbon::parse($payment->transaction_date)->format('d M Y') }}</td>
                                     <td>{{ $payment->transactionable->name ?? '—' }}</td>
-                                    <td>{{ $payment->paymentMethod->name ?? '—' }}</td>
+                                    <td>{{ $payment->paymentMethod->method_name ?? '—' }}</td>
                                     <td class="text-end fw-bold text-danger">
                                         {{ setting('currency_symbol', 'Rs.') }} {{ number_format($payment->amount, 2) }}
                                     </td>
                                     <td class="text-center action-btns">
+                                        <a href="{{ route('payments.edit', $payment->id) }}" class="btn btn-sm btn-warning"
+                                            title="Edit"><i class="fas fa-edit"></i></a>
                                         <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ $payment->id }})"
                                             title="Delete"><i class="fas fa-trash"></i></button>
                                     </td>
