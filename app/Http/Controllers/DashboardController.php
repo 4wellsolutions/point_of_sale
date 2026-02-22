@@ -38,31 +38,51 @@ class DashboardController extends Controller
 		$totalVendors = Vendor::count();
 		$totalProducts = Product::where('status', 'active')->count();
 
-		// Total Receivable: sum of latest positive balances across all customers
-		$totalReceivable = LedgerEntry::where('ledgerable_type', Customer::class)
-			->whereIn('id', function ($sub) {
+		// Total Receivable: sum of latest ledger balance per customer (where positive = they owe us)
+		// + opening balances of type 'debit' for customers with no ledger entries yet
+		$customerClass = Customer::class;
+		$totalReceivable = LedgerEntry::where('ledgerable_type', $customerClass)
+			->whereIn('id', function ($sub) use ($customerClass) {
 				$sub->selectRaw('MAX(id)')
 					->from('ledger_entries')
-					->where('ledgerable_type', '\\App\\Models\\Customer')
+					->where('ledgerable_type', $customerClass)
 					->groupBy('ledgerable_id');
 			})
 			->where('balance', '>', 0)
 			->sum('balance');
 
-		// Total Payable: sum of latest positive balances across all vendors
-		$totalPayable = LedgerEntry::where('ledgerable_type', Vendor::class)
-			->whereIn('id', function ($sub) {
+		// Add customer opening balances (debit = receivable) for customers with NO ledger entries
+		$custWithLedger = LedgerEntry::where('ledgerable_type', $customerClass)
+			->distinct()->pluck('ledgerable_id');
+		$totalReceivable += Customer::where('opening_balance_type', 'debit')
+			->where('opening_balance', '>', 0)
+			->whereNotIn('id', $custWithLedger)
+			->sum('opening_balance');
+
+		// Total Payable: sum of latest ledger balance per vendor (where positive = we owe them)
+		// + opening balances of type 'credit' for vendors with no ledger entries yet
+		$vendorClass = Vendor::class;
+		$totalPayable = LedgerEntry::where('ledgerable_type', $vendorClass)
+			->whereIn('id', function ($sub) use ($vendorClass) {
 				$sub->selectRaw('MAX(id)')
 					->from('ledger_entries')
-					->where('ledgerable_type', '\\App\\Models\\Vendor')
+					->where('ledgerable_type', $vendorClass)
 					->groupBy('ledgerable_id');
 			})
 			->where('balance', '>', 0)
 			->sum('balance');
+
+		// Add vendor opening balances (credit = payable) for vendors with NO ledger entries
+		$vendWithLedger = LedgerEntry::where('ledgerable_type', $vendorClass)
+			->distinct()->pluck('ledgerable_id');
+		$totalPayable += Vendor::where('opening_balance_type', 'credit')
+			->where('opening_balance', '>', 0)
+			->whereNotIn('id', $vendWithLedger)
+			->sum('opening_balance');
 
 		// Low Stock Products
 		$lowStockProducts = Product::where('status', 'active')
-			->whereColumn('reorder_level', '>', DB::raw('0'))
+			->where('reorder_level', '>', 0)
 			->get()
 			->filter(function ($product) {
 				$currentStock = BatchStock::where('product_id', $product->id)->sum('quantity');

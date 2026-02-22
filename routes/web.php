@@ -10,6 +10,7 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\FlavourController;
 use App\Http\Controllers\PackingController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\StockLossDamageController;
 use App\Http\Controllers\SalesReturnController;
@@ -106,6 +107,10 @@ Route::middleware(['auth'])->group(function () {
 
     // ── SALES ──
     Route::middleware('module:sales')->group(function () {
+        // Bookings (Order Booking)
+        Route::get('/bookings/product/{id}', [BookingController::class, 'getProductDetails'])->name('bookings.product');
+        Route::resource('bookings', BookingController::class);
+
         Route::get('/sales/export/pdf', [SalesController::class, 'exportPdf'])->name('sales.export.pdf');
         Route::get('/sales/export/csv', [SalesController::class, 'exportCsv'])->name('sales.export.csv');
         Route::resource('sales', SalesController::class);

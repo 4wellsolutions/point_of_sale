@@ -376,8 +376,8 @@ class ReportController extends Controller
             ->whereIn('transactions.transaction_type', ['receipt', 'sale_payment', 'debit'])
             ->when($request->filled('date_from'), fn($q) => $q->whereDate('transactions.transaction_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn($q) => $q->whereDate('transactions.transaction_date', '<=', $request->date_to))
-            ->groupBy('payment_methods.id', 'payment_methods.name')
-            ->select('payment_methods.id', 'payment_methods.name', DB::raw('SUM(transactions.amount) as total'))
+            ->groupBy('payment_methods.id', 'payment_methods.method_name')
+            ->select('payment_methods.id', 'payment_methods.method_name', DB::raw('SUM(transactions.amount) as total'))
             ->pluck('total', 'payment_methods.id');
 
         // Total paid per payment method (purchase/expense transactions)
@@ -387,12 +387,12 @@ class ReportController extends Controller
             ->whereIn('transactions.transaction_type', ['payment', 'purchase_payment', 'credit'])
             ->when($request->filled('date_from'), fn($q) => $q->whereDate('transactions.transaction_date', '>=', $request->date_from))
             ->when($request->filled('date_to'), fn($q) => $q->whereDate('transactions.transaction_date', '<=', $request->date_to))
-            ->groupBy('payment_methods.id', 'payment_methods.name')
-            ->select('payment_methods.id', 'payment_methods.name', DB::raw('SUM(transactions.amount) as total'))
+            ->groupBy('payment_methods.id', 'payment_methods.method_name')
+            ->select('payment_methods.id', 'payment_methods.method_name', DB::raw('SUM(transactions.amount) as total'))
             ->pluck('total', 'payment_methods.id');
 
         // All payment methods
-        $methods = DB::table('payment_methods')->whereNull('deleted_at')->orderBy('name')->get();
+        $methods = DB::table('payment_methods')->whereNull('deleted_at')->orderBy('method_name')->get();
 
         // Build rows
         $rows = $methods->map(function ($m) use ($received, $paid) {
@@ -400,7 +400,7 @@ class ReportController extends Controller
             $out = $paid[$m->id] ?? 0;
             return (object) [
                 'id' => $m->id,
-                'name' => $m->name,
+                'name' => $m->method_name,
                 'received' => $in,
                 'paid' => $out,
                 'balance' => $in - $out,

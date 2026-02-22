@@ -187,13 +187,20 @@
                 <!-- Sales -->
                 @if(auth()->user()->hasModule('sales'))
                     <li
-                        class="nav-item has-treeview {{ request()->is('sales*') || request()->is('sales-returns*') ? 'menu-open' : '' }}">
+                        class="nav-item has-treeview {{ request()->is('sales*') || request()->is('sales-returns*') || request()->is('bookings*') ? 'menu-open' : '' }}">
                         <a href="#"
-                            class="nav-link {{ request()->is('sales*') || request()->is('sales-returns*') ? 'active' : '' }}">
+                            class="nav-link {{ request()->is('sales*') || request()->is('sales-returns*') || request()->is('bookings*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-cash-register"></i>
                             <p>Sales <i class="right fas fa-angle-left"></i></p>
                         </a>
                         <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{{ route('bookings.index') }}"
+                                    class="nav-link {{ request()->routeIs('bookings.*') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Order Bookings</p>
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a href="{{ route('sales.index') }}"
                                     class="nav-link {{ request()->routeIs('sales.index') ? 'active' : '' }}">
