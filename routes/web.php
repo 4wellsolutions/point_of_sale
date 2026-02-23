@@ -109,6 +109,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('module:sales')->group(function () {
         // Bookings (Order Booking)
         Route::get('/bookings/product/{id}', [BookingController::class, 'getProductDetails'])->name('bookings.product');
+        Route::post('/bookings/{booking}/convert', [BookingController::class, 'convertToSale'])->name('bookings.convert');
         Route::resource('bookings', BookingController::class);
 
         Route::get('/sales/export/pdf', [SalesController::class, 'exportPdf'])->name('sales.export.pdf');
@@ -177,6 +178,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/inventory/export/csv', [InventoryTransactionController::class, 'exportCsv'])->name('inventory.export.csv');
         Route::resource('stock-loss-damage', StockLossDamageController::class);
         Route::get('/stock-loss-damage-batches', [StockLossDamageController::class, 'getBatches'])->name('stock-loss-damage.batches');
+        Route::resource('stock_adjustments', \App\Http\Controllers\StockAdjustmentController::class);
     });
 
     // ── REPORTS ──

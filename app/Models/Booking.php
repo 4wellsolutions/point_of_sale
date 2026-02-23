@@ -18,11 +18,17 @@ class Booking extends Model implements AuditableContract
         'user_id',
         'booking_date',
         'status',
+        'sale_id',
         'total_amount',
         'discount_amount',
         'net_amount',
         'notes',
     ];
+
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class);
+    }
 
     protected $casts = [
         'booking_date' => 'date',

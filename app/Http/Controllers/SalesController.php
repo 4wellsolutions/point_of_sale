@@ -297,62 +297,231 @@ class SalesController extends Controller
      */
     public function edit(string $id)
     {
-        $sale = Sale::with(['customer', 'saleItems.product', 'saleItems.location'])->findOrFail($id);
+        $sale = Sale::with(['customer', 'saleItems.product', 'saleItems.location', 'transactions.paymentMethod'])->findOrFail($id);
         $paymentMethods = PaymentMethod::all();
-        return view('sales.edit', compact('sale', 'paymentMethods'));
+        $locations = \App\Models\Location::all();
+        return view('sales.edit', compact('sale', 'paymentMethods', 'locations'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified sale — full multi-item edit with stock & ledger reversal.
      */
     public function update(Request $request, string $id)
     {
-        $sale = Sale::findOrFail($id);
+        $sale = Sale::with(['saleItems', 'transactions'])->findOrFail($id);
 
-        $validated = $request->validate([
+        // ── 1. Validate ──
+        $rules = [
             'customer_id' => 'required|exists:customers,id',
             'sale_date' => 'required|date',
             'discount_amount' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+            'total_amount' => 'required|numeric|min:0',
+            'net_amount' => 'required|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'sale_items' => 'required|array|min:1',
+            'sale_items.*.product_id' => 'required|exists:products,id',
+            'sale_items.*.batch_no' => 'required|string',
+            'sale_items.*.location_id' => 'required|exists:locations,id',
+            'sale_items.*.purchase_price' => 'required|numeric|min:0',
+            'sale_items.*.sale_price' => 'required|numeric|min:0',
+            'sale_items.*.quantity' => 'required|integer|min:1',
+            'sale_items.*.total_amount' => 'required|numeric|min:0',
+            'payment_methods' => 'nullable|array',
+            'payment_methods.*.payment_method_id' => 'required_with:payment_methods.*.amount|exists:payment_methods,id',
+            'payment_methods.*.amount' => 'required_with:payment_methods.*.payment_method_id|numeric|min:0.01',
+        ];
 
-        $oldNetAmount = $sale->net_amount;
-        $newNetAmount = $sale->total_amount - ($validated['discount_amount'] ?? 0);
+        $validator = \Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'There were some errors with your submission.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
         \DB::beginTransaction();
         try {
-            $sale->update([
-                'customer_id' => $validated['customer_id'],
-                'sale_date' => $validated['sale_date'],
-                'discount_amount' => $validated['discount_amount'] ?? 0,
-                'net_amount' => $newNetAmount,
-                'notes' => $validated['notes'] ?? null,
-            ]);
+            // ── 2. REVERSE OLD STOCK & DELETE OLD ITEMS ──
+            foreach ($sale->saleItems as $item) {
+                $batch = Batch::where('product_id', $item->product_id)
+                    ->where('batch_no', $item->batch_no)
+                    ->first();
 
-            // If net amount changed, create an adjustment ledger entry
-            $difference = $newNetAmount - $oldNetAmount;
-            if (abs($difference) > 0.001) {
-                $customer = Customer::find($sale->customer_id);
-                // $difference > 0 means customer owes MORE (debit)
-                // $difference < 0 means customer owes LESS (credit — discount increased)
-                $adjustmentLedger = new LedgerEntry([
-                    'transaction_id' => null,
+                if ($batch) {
+                    $batchStock = BatchStock::where('batch_id', $batch->id)
+                        ->where('location_id', $item->location_id)
+                        ->first();
+
+                    if ($batchStock) {
+                        $batchStock->increment('quantity', $item->quantity);
+                    } else {
+                        BatchStock::create([
+                            'batch_id' => $batch->id,
+                            'product_id' => $item->product_id,
+                            'location_id' => $item->location_id,
+                            'quantity' => $item->quantity,
+                            'purchase_price' => $item->purchase_price,
+                            'sale_price' => $item->sale_price,
+                        ]);
+                    }
+
+                    InventoryTransaction::create([
+                        'product_id' => $item->product_id,
+                        'location_id' => $item->location_id,
+                        'batch_id' => $batch->id,
+                        'quantity' => $item->quantity, // positive = stock returned
+                        'user_id' => auth()->id(),
+                        'transactionable_id' => $sale->id,
+                        'transactionable_type' => Sale::class,
+                    ]);
+                }
+
+                $item->delete();
+            }
+
+            // ── 3. REVERSE OLD LEDGER ENTRIES ──
+            $oldLedgers = LedgerEntry::where('ledgerable_id', $sale->customer_id)
+                ->where('ledgerable_type', Customer::class)
+                ->where('description', 'LIKE', '%Invoice #' . $sale->invoice_no . '%')
+                ->get();
+
+            $customer = Customer::find($sale->customer_id);
+            foreach ($oldLedgers as $ledger) {
+                $reversalLedger = new LedgerEntry([
+                    'transaction_id' => $ledger->transaction_id,
                     'date' => now(),
-                    'description' => 'Sale Adjustment - Invoice #' . $sale->invoice_no,
-                    'debit' => $difference > 0 ? $difference : 0,
-                    'credit' => $difference < 0 ? abs($difference) : 0,
-                    'balance' => $this->calculateNewBalance($sale->customer_id, abs($difference), $difference > 0 ? 'debit' : 'credit'),
+                    'description' => 'Reversal: ' . $ledger->description,
+                    'debit' => $ledger->credit,
+                    'credit' => $ledger->debit,
+                    'balance' => $this->calculateNewBalance(
+                        $sale->customer_id,
+                        $ledger->debit ?: $ledger->credit,
+                        $ledger->debit > 0 ? 'credit' : 'debit'
+                    ),
                     'user_id' => auth()->id(),
                 ]);
-                $adjustmentLedger->ledgerable()->associate($customer);
-                $adjustmentLedger->save();
+                $reversalLedger->ledgerable()->associate($customer);
+                $reversalLedger->save();
+            }
+
+            // ── 4. DELETE OLD TRANSACTIONS ──
+            foreach ($sale->transactions as $transaction) {
+                $transaction->delete();
+            }
+
+            // ── 5. UPDATE SALE HEADER ──
+            $sale->update([
+                'customer_id' => $request->customer_id,
+                'sale_date' => $request->sale_date,
+                'discount_amount' => $request->discount_amount ?? 0,
+                'total_amount' => $request->total_amount,
+                'net_amount' => $request->net_amount,
+                'notes' => $request->notes,
+            ]);
+
+            // ── 6. CREATE NEW ITEMS ──
+            foreach ($request->sale_items as $itemData) {
+                $itemTotal = $itemData['quantity'] * $itemData['sale_price'];
+
+                $batch = Batch::where('product_id', $itemData['product_id'])
+                    ->where('batch_no', $itemData['batch_no'])
+                    ->first();
+
+                if (!$batch) {
+                    throw new \Exception("Batch '{$itemData['batch_no']}' not found.");
+                }
+
+                $batchStock = BatchStock::where('batch_id', $batch->id)
+                    ->where('location_id', $itemData['location_id'])
+                    ->first();
+
+                if (!$batchStock || $batchStock->quantity < $itemData['quantity']) {
+                    throw new \Exception("Insufficient stock in the selected location.");
+                }
+
+                $batchStock->decrement('quantity', $itemData['quantity']);
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $itemData['product_id'],
+                    'batch_id' => $batch->id,
+                    'batch_no' => $itemData['batch_no'],
+                    'location_id' => $itemData['location_id'],
+                    'purchase_price' => $itemData['purchase_price'],
+                    'sale_price' => $itemData['sale_price'],
+                    'quantity' => $itemData['quantity'],
+                    'total_amount' => $itemTotal,
+                ]);
+
+                InventoryTransaction::create([
+                    'product_id' => $itemData['product_id'],
+                    'location_id' => $itemData['location_id'],
+                    'batch_id' => $batch->id,
+                    'quantity' => $itemData['quantity'],
+                    'user_id' => auth()->id(),
+                    'transactionable_id' => $sale->id,
+                    'transactionable_type' => Sale::class,
+                ]);
+            }
+
+            // ── 7. NEW LEDGER ENTRY (debit) ──
+            $customer = Customer::find($request->customer_id);
+            $saleLedger = new LedgerEntry([
+                'transaction_id' => null,
+                'date' => now(),
+                'description' => 'Sale Invoice #' . $sale->invoice_no,
+                'debit' => $request->net_amount,
+                'credit' => 0,
+                'balance' => $this->calculateNewBalance($request->customer_id, $request->net_amount, 'debit'),
+                'user_id' => auth()->id(),
+            ]);
+            $saleLedger->ledgerable()->associate($customer);
+            $saleLedger->save();
+
+            // ── 8. NEW PAYMENT ENTRIES ──
+            if (is_array($request->payment_methods) && count($request->payment_methods) > 0) {
+                foreach ($request->payment_methods as $payment) {
+                    $transaction = Transaction::create([
+                        'payment_method_id' => $payment['payment_method_id'],
+                        'customer_id' => $request->customer_id,
+                        'vendor_id' => null,
+                        'amount' => $payment['amount'],
+                        'transactionable_id' => $sale->id,
+                        'transactionable_type' => Sale::class,
+                        'transaction_type' => 'credit',
+                        'transaction_date' => now(),
+                    ]);
+
+                    $paymentLedger = new LedgerEntry([
+                        'transaction_id' => $transaction->id,
+                        'date' => now(),
+                        'description' => 'Payment for Sale Invoice #' . $sale->invoice_no,
+                        'debit' => 0,
+                        'credit' => $payment['amount'],
+                        'balance' => $this->calculateNewBalance($request->customer_id, $payment['amount'], 'credit'),
+                        'user_id' => auth()->id(),
+                    ]);
+                    $paymentLedger->ledgerable()->associate($customer);
+                    $paymentLedger->save();
+                }
             }
 
             \DB::commit();
-            return redirect()->route('sales.index')->with('success', 'Sale updated successfully.');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sale updated successfully.',
+                'redirect' => route('sales.index'),
+            ]);
+
         } catch (\Exception $e) {
             \DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Error updating sale: ' . $e->getMessage()]);
+            \Log::error('Sale Update Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating sale: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

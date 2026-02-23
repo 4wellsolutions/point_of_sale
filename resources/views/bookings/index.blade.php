@@ -46,6 +46,7 @@
                             <option value="">All Statuses</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="converted" {{ request('status') == 'converted' ? 'selected' : '' }}>Converted</option>
                             <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                          </select>
                     </div>
@@ -85,13 +86,14 @@
                                     <td>{{ \Carbon\Carbon::parse($booking->booking_date)->format('d M Y') }}</td>
                                     <td>
                                         @php
-                                            $color = match ($booking->status) {
-                                                'completed' => 'success',
-                                                'cancelled' => 'danger',
-                                                default => 'warning'
-                                            };
-                                        @endphp
-                                        <span class="badge bg-{{ $color }}">{{ ucfirst($booking->status) }}</span>
+                                        $color = match ($booking->status) {
+                                            'completed'  => 'success',
+                                            'cancelled'  => 'danger',
+                                            'converted'  => 'info',
+                                            default      => 'warning'
+                                        };
+                                    @endphp
+                                    <span class="badge bg-{{ $color }}">{{ ucfirst($booking->status) }}</span>
                                     </td>
                                     <td class="text-end">
                                         {{ setting('currency_symbol', '$') }}{{ number_format($booking->total_amount, 2) }}</td>
@@ -103,13 +105,21 @@
                                         <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-info" title="View/Print">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @if($booking->status !== 'converted')
                                         <a href="{{ route('bookings.edit', $booking->id) }}" class="btn btn-sm btn-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ $booking->id }})"
-                                            title="Delete">
+                                        <button class="btn btn-sm btn-success" onclick="convertToSale({{ $booking->id }})" title="Convert to Sale">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="confirmDelete({{ $booking->id }})" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        @else
+                                        <a href="{{ route('sales.show', $booking->sale_id) }}" class="btn btn-sm btn-outline-info" title="View Sale">
+                                            <i class="fas fa-file-invoice"></i>
+                                        </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -158,6 +168,26 @@
         const form = document.getElementById('deleteForm');
         form.action = `/bookings/${id}`;
         new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    function convertToSale(id) {
+        if (!confirm('Convert this booking to a sale? Stock will be deducted automatically.')) return;
+        $.ajax({
+            type: 'POST',
+            url: `/bookings/${id}/convert`,
+            data: { _token: '{{ csrf_token() }}' },
+            success: function (resp) {
+                if (resp.success) {
+                    toastr.success(resp.message);
+                    window.location.href = resp.redirect;
+                } else {
+                    toastr.error(resp.message);
+                }
+            },
+            error: function (xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Conversion failed.');
+            }
+        });
     }
 </script>
 @endpush
