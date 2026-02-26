@@ -354,12 +354,12 @@
 
                 // Auto-populate the sale price (will be 0, admin sets it)
                 let salePrice = selectedOption.data('sale-price') || 0;
-                row.find('.sale_price').val(parseFloat(salePrice).toFixed(2));
+                row.find('.sale_price').val(parseFloat(salePrice).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 // Populate the visible cost price and hidden purchase_price field
                 let purchasePrice = selectedOption.data('purchase-price') || 0;
-                row.find('.cost_price_display').val(parseFloat(purchasePrice).toFixed(2));
-                row.find('.purchase_price_hidden').val(parseFloat(purchasePrice).toFixed(2));
+                row.find('.cost_price_display').val(parseFloat(purchasePrice).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+                row.find('.purchase_price_hidden').val(parseFloat(purchasePrice).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 // Check below-cost warning
                 checkBelowCost(row);
@@ -379,7 +379,7 @@
                 let qty = parseFloat(row.find('.sale-qty').val()) || 0;
                 let salePrice = parseFloat(row.find('.sale_price').val()) || 0;
                 let itemTotal = qty * salePrice;
-                row.find('.item-total').val(itemTotal.toFixed(2));
+                row.find('.item-total').val(itemTotal.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 updateTotals();
             }
 
@@ -429,8 +429,8 @@
                 let discount = parseFloat($('#discount_amount').val()) || 0;
                 let netAmount = totalAmount - discount;
 
-                $('#total_amount').val(totalAmount.toFixed(2));
-                $('#net_amount').val(netAmount.toFixed(2));
+                $('#total_amount').val(totalAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+                $('#net_amount').val(netAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 updatePaymentTotals();
             }
@@ -522,7 +522,7 @@
                 $('.payment-amount:visible').each(function () {
                     totalPayment += parseFloat($(this).val()) || 0;
                 });
-                $('#total_payment_amount').val(totalPayment.toFixed(2));
+                $('#total_payment_amount').val(totalPayment.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 // Remove error shadow if exists
                 $('#payment-methods-container-wrapper').removeClass('error-shadow');

@@ -86,7 +86,7 @@
                                     <td>{{ $vendor->phone ?? '—' }}</td>
                                     <td><span class="badge bg-info">{{ $vendor->type->name ?? '—' }}</span></td>
                                     <td class="fw-bold">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($vendor->balance ?? 0, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($vendor->balance ?? 0, 2) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('vendors.edit', $vendor->id) }}" class="btn btn-sm btn-warning"
                                             title="Edit"><i class="fas fa-edit"></i></a>

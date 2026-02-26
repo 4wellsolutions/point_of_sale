@@ -72,7 +72,7 @@
                                 </div>
                                 <div>
                                     <div class="stat-tile-value">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($expense->amount, 2) }}</div>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($expense->amount, 2) }}</div>
                                     <div class="stat-tile-label">Amount</div>
                                 </div>
                             </div>

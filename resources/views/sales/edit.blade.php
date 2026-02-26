@@ -376,8 +376,8 @@
                 let total = 0;
                 $('.row_total').each(function () { total += parseFloat($(this).val()) || 0; });
                 let disc = parseFloat($('#discount_amount').val()) || 0;
-                $('#total_amount').val(total.toFixed(2));
-                $('#net_amount').val(Math.max(0, total - disc).toFixed(2));
+                $('#total_amount').val(total.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+                $('#net_amount').val(Math.max(0, total - disc).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 updatePaymentTotals();
             }
 
@@ -400,7 +400,7 @@
                     ? `<img src="${productImage}" class="img-thumbnail product-thumb" style="width:50px;height:50px;cursor:pointer;" data-image_url="${productImage}">`
                     : '<span class="text-muted small">N/A</span>';
 
-                let rowTotal = ((qty || 1) * (salePrice || 0)).toFixed(2);
+                let rowTotal = ((qty || 1) * (salePrice || 0)).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
 
                 let row = `
                 <tr>
@@ -491,7 +491,7 @@
                 let cost = parseFloat(opt.data('cost')) || 0;
                 let row = $(this).closest('tr');
                 row.find('.avail-qty').val(qty);
-                row.find('.cost-price').val(cost.toFixed(2));
+                row.find('.cost-price').val(cost.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 checkBelowCost(row);
                 updateRowTotal(row);
             });
@@ -505,7 +505,7 @@
             function updateRowTotal(row) {
                 let qty = parseFloat(row.find('.qty').val()) || 0;
                 let price = parseFloat(row.find('.sale-price').val()) || 0;
-                row.find('.row_total').val((qty * price).toFixed(2));
+                row.find('.row_total').val((qty * price).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 updateTotals();
             }
 
@@ -615,7 +615,7 @@
                 let total = 0;
                 $('.pm-amount:visible').each(function () { total += parseFloat($(this).val()) || 0; });
                 let net = parseFloat($('#net_amount').val()) || 0;
-                $('#total_payment_amount').val(total.toFixed(2));
+                $('#total_payment_amount').val(total.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 let warn = total > 0 && Math.abs(total - net) > 0.01;
                 $('#payment-methods-container-wrapper').toggleClass('error-shadow', warn);
             }

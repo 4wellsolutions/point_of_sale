@@ -17,7 +17,7 @@
                     <td>{{ \Carbon\Carbon::parse($expense->date)->format('d M Y') }}</td>
                     <td>{{ $expense->expenseType->name ?? '—' }}</td>
                     <td>{{ $expense->description }}</td>
-                    <td class="text-right fw-bold">{{ setting('currency_symbol', '$') }}{{ number_format($expense->amount, 2) }}
+                    <td class="text-right fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($expense->amount, 2) }}
                     </td>
                 </tr>
             @endforeach
@@ -27,6 +27,6 @@
     <div class="summary">
         <p><strong>Total Expenses:</strong> {{ $expenses->count() }}</p>
         <p><strong>Total Amount:</strong>
-            {{ setting('currency_symbol', '$') }}{{ number_format($expenses->sum('amount'), 2) }}</p>
+            {{ setting('currency_symbol', '$') }}{{ format_number($expenses->sum('amount'), 2) }}</p>
     </div>
 @endsection

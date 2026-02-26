@@ -50,7 +50,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($booking->total_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($booking->total_amount, 2) }}
                             </div>
                             <div class="stat-tile-label">Total Amount</div>
                         </div>
@@ -63,7 +63,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($booking->discount_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($booking->discount_amount, 2) }}
                             </div>
                             <div class="stat-tile-label">Discount</div>
                         </div>
@@ -76,7 +76,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($booking->net_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($booking->net_amount, 2) }}
                             </div>
                             <div class="stat-tile-label">Net Amount</div>
                         </div>
@@ -176,23 +176,23 @@
                                 </td>
                                 <td class="fw-medium">{{ $item->product->name ?? 'Unknown Product' }}</td>
                                 <td class="text-end">{{ $item->quantity }}</td>
-                                <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
-                                <td class="text-end fw-medium">{{ number_format($item->subtotal, 2) }}</td>
+                                <td class="text-end">{{ format_number($item->unit_price, 2) }}</td>
+                                <td class="text-end fw-medium">{{ format_number($item->subtotal, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="4" class="text-end">Total Amount:</th>
-                            <th class="text-end">{{ number_format($booking->total_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($booking->total_amount, 2) }}</th>
                         </tr>
                         <tr>
                             <th colspan="4" class="text-end">Discount:</th>
-                            <th class="text-end">{{ number_format($booking->discount_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($booking->discount_amount, 2) }}</th>
                         </tr>
                         <tr>
                             <th colspan="4" class="text-end">Net Amount:</th>
-                            <th class="text-end">{{ number_format($booking->net_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($booking->net_amount, 2) }}</th>
                         </tr>
                     </tfoot>
                 </table>

@@ -326,7 +326,7 @@
             const returnQuantity = parseFloat(row.find('.return-quantity').val()) || 0;
             const unitPrice = parseFloat(row.find('.return-unit-price').val()) || 0;
             const totalAmount = returnQuantity * unitPrice;
-            row.find('.total-amount').text(totalAmount.toFixed(2));
+            row.find('.total-amount').text(totalAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
             calculateTotals();
         });
 
@@ -346,13 +346,13 @@
             $('.total-amount').each(function() {
                 totalAmount += parseFloat($(this).text()) || 0;
             });
-            $('#totalAmount').text(totalAmount.toFixed(2));
-            $('#total_amount').val(totalAmount.toFixed(2)); // Update hidden input
+            $('#totalAmount').text(totalAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+            $('#total_amount').val(totalAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')); // Update hidden input
 
             const discountAmount = parseFloat($('#discount_amount').val()) || 0;
             const netAmount = totalAmount - discountAmount;
-            $('#netAmount').text(netAmount.toFixed(2));
-            $('#net_amount').val(netAmount.toFixed(2)); // Update hidden input
+            $('#netAmount').text(netAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+            $('#net_amount').val(netAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')); // Update hidden input
 
             // Optionally, validate that netAmount equals sum of payment amounts
             let totalPayments = 0;

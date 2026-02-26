@@ -170,8 +170,8 @@
                     <td>{{ $item->batch_no ?? '—' }}</td>
                     <td>{{ $item->location->name ?? '—' }}</td>
                     <td style="text-align:right">{{ $item->quantity }}</td>
-                    <td style="text-align:right">{{ number_format($item->sale_price, 2) }}</td>
-                    <td style="text-align:right">{{ number_format($item->total_amount, 2) }}</td>
+                    <td style="text-align:right">{{ format_number($item->sale_price, 2) }}</td>
+                    <td style="text-align:right">{{ format_number($item->total_amount, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -183,15 +183,15 @@
     <table class="totals">
         <tr>
             <td>Sub Total:</td>
-            <td>{{ setting('currency_symbol', '') }}{{ number_format($sale->total_amount, 2) }}</td>
+            <td>{{ setting('currency_symbol', '') }}{{ format_number($sale->total_amount, 2) }}</td>
         </tr>
         <tr>
             <td>Discount:</td>
-            <td>{{ setting('currency_symbol', '') }}{{ number_format($sale->discount_amount, 2) }}</td>
+            <td>{{ setting('currency_symbol', '') }}{{ format_number($sale->discount_amount, 2) }}</td>
         </tr>
         <tr style="font-size:13px;">
             <td><strong>Net Amount:</strong></td>
-            <td><strong>{{ setting('currency_symbol', '') }}{{ number_format($sale->net_amount, 2) }}</strong></td>
+            <td><strong>{{ setting('currency_symbol', '') }}{{ format_number($sale->net_amount, 2) }}</strong></td>
         </tr>
     </table>
 
@@ -208,7 +208,7 @@
                 @foreach($sale->transactions as $t)
                     <tr>
                         <td>{{ $t->paymentMethod->method_name }}</td>
-                        <td style="text-align:right">{{ number_format($t->amount, 2) }}</td>
+                        <td style="text-align:right">{{ format_number($t->amount, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>

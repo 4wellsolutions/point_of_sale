@@ -55,18 +55,18 @@
                             &nbsp;<em style="color:#64748b;">({{ $ledger->transaction->paymentMethod->method_name }})</em>
                         @endif
                     </td>
-                    <td class="text-right">{{ $symbol }} {{ number_format($ledger->debit, 2) }}</td>
-                    <td class="text-right">{{ $symbol }} {{ number_format($ledger->credit, 2) }}</td>
-                    <td class="text-right fw-bold">{{ $symbol }} {{ number_format($ledger->balance, 2) }}</td>
+                    <td class="text-right">{{ $symbol }} {{ format_number($ledger->debit, 2) }}</td>
+                    <td class="text-right">{{ $symbol }} {{ format_number($ledger->credit, 2) }}</td>
+                    <td class="text-right fw-bold">{{ $symbol }} {{ format_number($ledger->balance, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr style="background:#1e293b; color:#fff;">
                 <td colspan="2" class="fw-bold">Totals</td>
-                <td class="text-right fw-bold">{{ $symbol }} {{ number_format($ledgers->sum('debit'), 2) }}</td>
-                <td class="text-right fw-bold">{{ $symbol }} {{ number_format($ledgers->sum('credit'), 2) }}</td>
-                <td class="text-right fw-bold">{{ $symbol }} {{ number_format($ledgers->last()->balance ?? 0, 2) }}</td>
+                <td class="text-right fw-bold">{{ $symbol }} {{ format_number($ledgers->sum('debit'), 2) }}</td>
+                <td class="text-right fw-bold">{{ $symbol }} {{ format_number($ledgers->sum('credit'), 2) }}</td>
+                <td class="text-right fw-bold">{{ $symbol }} {{ format_number($ledgers->last()->balance ?? 0, 2) }}</td>
             </tr>
         </tfoot>
     </table>
@@ -75,10 +75,10 @@
     <div class="summary" style="margin-top:16px;">
         <div class="summary-header">Summary</div>
         <div class="summary-body">
-            <p><span>Total Debit:</span> <span>{{ $symbol }} {{ number_format($ledgers->sum('debit'), 2) }}</span></p>
-            <p><span>Total Credit:</span> <span>{{ $symbol }} {{ number_format($ledgers->sum('credit'), 2) }}</span></p>
+            <p><span>Total Debit:</span> <span>{{ $symbol }} {{ format_number($ledgers->sum('debit'), 2) }}</span></p>
+            <p><span>Total Credit:</span> <span>{{ $symbol }} {{ format_number($ledgers->sum('credit'), 2) }}</span></p>
             <p><span>Closing Balance:</span><span>{{ $symbol }}
-                    {{ number_format($ledgers->last()->balance ?? 0, 2) }}</span></p>
+                    {{ format_number($ledgers->last()->balance ?? 0, 2) }}</span></p>
         </div>
     </div>
 

@@ -97,7 +97,7 @@
                                         class="fas {{ $stockAdjustment->adjustment_type == 'addition' ? 'fa-plus-circle' : 'fa-minus-circle' }}"></i>
                                 </div>
                                 <div>
-                                    <div class="stat-tile-value">{{ number_format($stockAdjustment->quantity) }}</div>
+                                    <div class="stat-tile-value">{{ format_number($stockAdjustment->quantity) }}</div>
                                     <div class="stat-tile-label">Quantity
                                         {{ ucfirst($stockAdjustment->adjustment_type ?? 'Adjusted') }}</div>
                                 </div>

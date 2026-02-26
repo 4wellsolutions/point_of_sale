@@ -24,8 +24,8 @@
                     <td><strong>{{ $r->name }}</strong></td>
                     <td>{{ $r->sku }}</td>
                     <td>{{ $r->category->name ?? '—' }}</td>
-                    <td class="text-right">{{ number_format($qty) }}</td>
-                    <td class="text-right">{{ number_format($r->reorder_level) }}</td>
+                    <td class="text-right">{{ format_number($qty) }}</td>
+                    <td class="text-right">{{ format_number($r->reorder_level) }}</td>
                     <td><span style="color:{{ $color }};font-weight:700;">{{ $status }}</span></td>
                 </tr>
             @endforeach

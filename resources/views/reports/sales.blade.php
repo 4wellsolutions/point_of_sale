@@ -11,21 +11,21 @@
         <div class="col-md-4">
             <div class="kpi-card kpi-sales">
                 <div class="kpi-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                <div class="kpi-value">{{ number_format($totalCount) }}</div>
+                <div class="kpi-value">{{ format_number($totalCount) }}</div>
                 <div class="kpi-label">Total Invoices</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="kpi-card kpi-revenue">
                 <div class="kpi-icon"><i class="fas fa-coins"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format($totalAmount, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalAmount, 2) }}</div>
                 <div class="kpi-label">Total Sales Amount</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="kpi-card kpi-expenses">
                 <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format($totalDiscount, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalDiscount, 2) }}</div>
                 <div class="kpi-label">Total Discount Given</div>
             </div>
         </div>
@@ -93,11 +93,11 @@
                             <td><small class="text-muted">{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</small>
                             </td>
                             <td class="text-end">
-                                {{ setting('currency_symbol') }}{{ number_format($sale->total_amount ?? 0, 2) }}</td>
+                                {{ setting('currency_symbol') }}{{ format_number($sale->total_amount ?? 0, 2) }}</td>
                             <td class="text-end">
-                                {{ setting('currency_symbol') }}{{ number_format($sale->discount_amount ?? 0, 2) }}</td>
+                                {{ setting('currency_symbol') }}{{ format_number($sale->discount_amount ?? 0, 2) }}</td>
                             <td class="text-end">
-                                <strong>{{ setting('currency_symbol') }}{{ number_format($sale->net_amount ?? 0, 2) }}</strong>
+                                <strong>{{ setting('currency_symbol') }}{{ format_number($sale->net_amount ?? 0, 2) }}</strong>
                             </td>
                             <td><small>{{ $sale->user->name ?? '—' }}</small></td>
                         </tr>

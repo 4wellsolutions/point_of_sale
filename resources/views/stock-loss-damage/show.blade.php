@@ -108,7 +108,7 @@
                                     <i class="fas fa-minus-circle"></i>
                                 </div>
                                 <div>
-                                    <div class="stat-tile-value">{{ number_format($stockAdjustment->quantity) }}</div>
+                                    <div class="stat-tile-value">{{ format_number($stockAdjustment->quantity) }}</div>
                                     <div class="stat-tile-label">Quantity Affected</div>
                                 </div>
                             </div>

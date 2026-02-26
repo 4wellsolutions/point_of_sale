@@ -11,21 +11,21 @@
         <div class="col-md-4">
             <div class="kpi-card kpi-products">
                 <div class="kpi-icon"><i class="fas fa-boxes"></i></div>
-                <div class="kpi-value">{{ number_format($totalProducts) }}</div>
+                <div class="kpi-value">{{ format_number($totalProducts) }}</div>
                 <div class="kpi-label">Total Products</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="kpi-card kpi-expenses">
                 <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="kpi-value">{{ number_format($lowStockCount) }}</div>
+                <div class="kpi-value">{{ format_number($lowStockCount) }}</div>
                 <div class="kpi-label">Low Stock Items</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="kpi-card" style="background: linear-gradient(135deg, #ef4444, #dc2626)">
                 <div class="kpi-icon"><i class="fas fa-times-circle"></i></div>
-                <div class="kpi-value">{{ number_format($outOfStockCount) }}</div>
+                <div class="kpi-value">{{ format_number($outOfStockCount) }}</div>
                 <div class="kpi-label">Out of Stock</div>
             </div>
         </div>
@@ -109,8 +109,8 @@
                             <td><strong>{{ $product->name }}</strong></td>
                             <td><code>{{ $product->sku }}</code></td>
                             <td>{{ $product->category->name ?? '—' }}</td>
-                            <td class="text-center"><strong>{{ number_format($stock) }}</strong></td>
-                            <td class="text-center">{{ number_format($alertQty) }}</td>
+                            <td class="text-center"><strong>{{ format_number($stock) }}</strong></td>
+                            <td class="text-center">{{ format_number($alertQty) }}</td>
                             <td class="text-center"><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
                         </tr>
                     @empty

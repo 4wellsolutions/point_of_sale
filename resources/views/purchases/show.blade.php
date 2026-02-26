@@ -43,7 +43,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($purchase->total_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->total_amount, 2) }}</div>
                             <div class="stat-tile-label">Total Amount</div>
                         </div>
                     </div>
@@ -55,7 +55,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($purchase->discount_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->discount_amount, 2) }}
                             </div>
                             <div class="stat-tile-label">Discount</div>
                         </div>
@@ -68,7 +68,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ number_format($purchase->net_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount, 2) }}</div>
                             <div class="stat-tile-label">Net Amount</div>
                         </div>
                     </div>
@@ -170,23 +170,23 @@
                                     @endif
                                 </td>
                                 <td class="text-end">{{ $item->quantity }}</td>
-                                <td class="text-end">{{ number_format($item->purchase_price, 2) }}</td>
-                                <td class="text-end fw-medium">{{ number_format($item->total_amount, 2) }}</td>
+                                <td class="text-end">{{ format_number($item->purchase_price, 2) }}</td>
+                                <td class="text-end fw-medium">{{ format_number($item->total_amount, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="7" class="text-end">Total:</th>
-                            <th class="text-end">{{ number_format($purchase->total_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($purchase->total_amount, 2) }}</th>
                         </tr>
                         <tr>
                             <th colspan="7" class="text-end">Discount:</th>
-                            <th class="text-end">{{ number_format($purchase->discount_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($purchase->discount_amount, 2) }}</th>
                         </tr>
                         <tr>
                             <th colspan="7" class="text-end">Net Amount:</th>
-                            <th class="text-end">{{ number_format($purchase->net_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($purchase->net_amount, 2) }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -216,19 +216,19 @@
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('d M Y') }}</td>
                                     <td>{{ $transaction->paymentMethod->method_name }}</td>
-                                    <td class="text-end">{{ number_format($transaction->amount, 2) }}</td>
+                                    <td class="text-end">{{ format_number($transaction->amount, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr>
                                 <th colspan="2">Total Payment:</th>
-                                <th class="text-end">{{ number_format($purchase->transactions->sum('amount'), 2) }}</th>
+                                <th class="text-end">{{ format_number($purchase->transactions->sum('amount'), 2) }}</th>
                             </tr>
                             <tr>
                                 <th colspan="2">Remaining Balance:</th>
                                 <th class="text-end">
-                                    {{ number_format($purchase->net_amount - $purchase->transactions->sum('amount'), 2) }}</th>
+                                    {{ format_number($purchase->net_amount - $purchase->transactions->sum('amount'), 2) }}</th>
                             </tr>
                         </tfoot>
                     </table>

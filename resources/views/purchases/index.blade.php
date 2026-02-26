@@ -89,11 +89,11 @@
                                     <td><strong>{{ $purchase->vendor->name ?? '—' }}</strong></td>
                                     <td>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</td>
                                     <td class="text-end">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($purchase->total_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->total_amount, 2) }}</td>
                                     <td class="text-end">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($purchase->discount_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->discount_amount, 2) }}</td>
                                     <td class="text-end fw-bold">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($purchase->net_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount, 2) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('purchases.show', $purchase->id) }}" class="btn btn-sm btn-info"
                                             title="View">

@@ -34,8 +34,8 @@
                                 <td>{{ $return->purchase->invoice_no }}</td>
                                 <td>{{ $return->vendor->name }}</td>
                                 <td>{{ $return->return_date }}</td>
-                                <td>{{ number_format($return->total_amount, 2) }}</td>
-                                <td>{{ number_format($return->net_amount, 2) }}</td>
+                                <td>{{ format_number($return->total_amount, 2) }}</td>
+                                <td>{{ format_number($return->net_amount, 2) }}</td>
                                 <td>
                                     <a href="{{ route('purchase-returns.show', $return->id) }}" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye"></i> View

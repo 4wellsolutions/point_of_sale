@@ -35,7 +35,7 @@
                                 <td>{{ $return->sale->customer->name ?? 'N/A' }}</td>
                                 <td>{{ $return->qty_returned }}</td>
                                 <td>{{ $return->return_reason ?? 'N/A' }}</td>
-                                <td>{{ setting('currency_symbol', '$') }}{{ number_format($return->refund_amount, 2) }}</td>
+                                <td>{{ setting('currency_symbol', '$') }}{{ format_number($return->refund_amount, 2) }}</td>
                                 <td>
                                     <a href="{{ route('sales-returns.show', $return) }}" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye"></i>

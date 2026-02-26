@@ -34,14 +34,14 @@
         <div class="col-md-3">
             <div class="kpi-card kpi-sales">
                 <div class="kpi-icon"><i class="fas fa-arrow-up"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format($salesRevenue, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($salesRevenue, 2) }}</div>
                 <div class="kpi-label">Sales Revenue</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="kpi-card kpi-purchases">
                 <div class="kpi-icon"><i class="fas fa-arrow-down"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format($cogs, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($cogs, 2) }}</div>
                 <div class="kpi-label">Cost of Goods Sold</div>
             </div>
         </div>
@@ -49,7 +49,7 @@
             <div class="kpi-card"
                 style="background: linear-gradient(135deg, {{ $grossProfit >= 0 ? '#10b981, #059669' : '#ef4444, #dc2626' }})">
                 <div class="kpi-icon"><i class="fas fa-balance-scale"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format(abs($grossProfit), 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number(abs($grossProfit), 2) }}</div>
                 <div class="kpi-label">Gross {{ $grossProfit >= 0 ? 'Profit' : 'Loss' }}</div>
             </div>
         </div>
@@ -57,7 +57,7 @@
             <div class="kpi-card"
                 style="background: linear-gradient(135deg, {{ $netProfit >= 0 ? '#10b981, #059669' : '#ef4444, #dc2626' }})">
                 <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format(abs($netProfit), 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number(abs($netProfit), 2) }}</div>
                 <div class="kpi-label">Net {{ $netProfit >= 0 ? 'Profit' : 'Loss' }}</div>
             </div>
         </div>
@@ -80,7 +80,7 @@
                     <tr>
                         <td class="ps-4">Sales Revenue</td>
                         <td class="text-end">
-                            <strong>{{ setting('currency_symbol') }}{{ number_format($salesRevenue, 2) }}</strong></td>
+                            <strong>{{ setting('currency_symbol') }}{{ format_number($salesRevenue, 2) }}</strong></td>
                     </tr>
 
                     <tr class="table-light">
@@ -89,13 +89,13 @@
                     </tr>
                     <tr>
                         <td class="ps-4">Purchase Cost of Sold Items</td>
-                        <td class="text-end text-danger">{{ setting('currency_symbol') }}{{ number_format($cogs, 2) }}</td>
+                        <td class="text-end text-danger">{{ setting('currency_symbol') }}{{ format_number($cogs, 2) }}</td>
                     </tr>
 
                     <tr class="{{ $grossProfit >= 0 ? 'table-success' : 'table-danger' }}">
                         <td><strong>Gross {{ $grossProfit >= 0 ? 'Profit' : 'Loss' }}</strong></td>
                         <td class="text-end">
-                            <strong>{{ setting('currency_symbol') }}{{ number_format(abs($grossProfit), 2) }}</strong></td>
+                            <strong>{{ setting('currency_symbol') }}{{ format_number(abs($grossProfit), 2) }}</strong></td>
                     </tr>
 
                     <tr class="table-light">
@@ -105,7 +105,7 @@
                     @forelse($expensesByType as $exp)
                         <tr>
                             <td class="ps-4">{{ $exp->expenseType->name ?? 'Unknown' }}</td>
-                            <td class="text-end text-danger">{{ setting('currency_symbol') }}{{ number_format($exp->total, 2) }}
+                            <td class="text-end text-danger">{{ setting('currency_symbol') }}{{ format_number($exp->total, 2) }}
                             </td>
                         </tr>
                     @empty
@@ -116,14 +116,14 @@
                     <tr>
                         <td class="ps-4"><strong>Total Expenses</strong></td>
                         <td class="text-end text-danger">
-                            <strong>{{ setting('currency_symbol') }}{{ number_format($totalExpenses, 2) }}</strong></td>
+                            <strong>{{ setting('currency_symbol') }}{{ format_number($totalExpenses, 2) }}</strong></td>
                     </tr>
 
                     <tr class="{{ $netProfit >= 0 ? 'table-success' : 'table-danger' }}" style="font-size: 1.1rem;">
                         <td><strong><i class="fas fa-chart-line me-2"></i>Net
                                 {{ $netProfit >= 0 ? 'Profit' : 'Loss' }}</strong></td>
                         <td class="text-end">
-                            <strong>{{ setting('currency_symbol') }}{{ number_format(abs($netProfit), 2) }}</strong></td>
+                            <strong>{{ setting('currency_symbol') }}{{ format_number(abs($netProfit), 2) }}</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -139,7 +139,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <p><strong>Total Purchases (this period):</strong>
-                        {{ setting('currency_symbol') }}{{ number_format($totalPurchases, 2) }}</p>
+                        {{ setting('currency_symbol') }}{{ format_number($totalPurchases, 2) }}</p>
                     <small class="text-muted">Note: Total purchases is shown for reference — COGS (cost of goods actually
                         sold) is used for profit calculation.</small>
                 </div>

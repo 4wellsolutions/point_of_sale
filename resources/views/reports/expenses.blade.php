@@ -11,14 +11,14 @@
         <div class="col-md-6">
             <div class="kpi-card kpi-expenses">
                 <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
-                <div class="kpi-value">{{ number_format($totalCount) }}</div>
+                <div class="kpi-value">{{ format_number($totalCount) }}</div>
                 <div class="kpi-label">Total Expense Entries</div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="kpi-card" style="background: linear-gradient(135deg, #ef4444, #dc2626)">
                 <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ number_format($totalAmount, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalAmount, 2) }}</div>
                 <div class="kpi-label">Total Expense Amount</div>
             </div>
         </div>
@@ -88,7 +88,7 @@
                             <td><span class="badge bg-info">{{ $expense->expenseType->name ?? '—' }}</span></td>
                             <td>{{ Str::limit($expense->description ?? '—', 60) }}</td>
                             <td class="text-end">
-                                <strong>{{ setting('currency_symbol') }}{{ number_format($expense->amount ?? 0, 2) }}</strong>
+                                <strong>{{ setting('currency_symbol') }}{{ format_number($expense->amount ?? 0, 2) }}</strong>
                             </td>
                             <td><small>—</small></td>
                         </tr>

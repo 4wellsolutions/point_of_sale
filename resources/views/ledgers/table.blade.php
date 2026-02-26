@@ -25,9 +25,9 @@
                 </td>
                 <td>{{ $ledger->ledgerable->name }}</td>
                 <td>{{ $ledger->description }} {{ isset($ledger->transaction) ? '('.$ledger->transaction->paymentMethod->method_name.')' : '' }} </td>
-                <td>{{ number_format($ledger->debit, 2) }}</td>
-                <td>{{ number_format($ledger->credit, 2) }}</td>
-                <td>{{ number_format($ledger->balance, 2) }}</td>
+                <td>{{ format_number($ledger->debit, 2) }}</td>
+                <td>{{ format_number($ledger->credit, 2) }}</td>
+                <td>{{ format_number($ledger->balance, 2) }}</td>
             </tr>
         @empty
             <tr>

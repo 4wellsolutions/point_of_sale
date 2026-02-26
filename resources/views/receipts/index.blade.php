@@ -85,7 +85,7 @@
                                     <td>{{ $receipt->transactionable->name ?? '—' }}</td>
                                     <td>{{ $receipt->paymentMethod->method_name ?? '—' }}</td>
                                     <td class="text-end fw-bold text-success">
-                                        {{ setting('currency_symbol', 'Rs.') }} {{ number_format($receipt->amount, 2) }}
+                                        {{ setting('currency_symbol', 'Rs.') }} {{ format_number($receipt->amount, 2) }}
                                     </td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('receipts.edit', $receipt->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
@@ -98,7 +98,7 @@
                             <tr class="table-light fw-bold">
                                 <td colspan="4" class="text-end">Total:</td>
                                 <td class="text-end text-success">
-                                    {{ setting('currency_symbol', 'Rs.') }} {{ number_format($receipts->sum('amount'), 2) }}
+                                    {{ setting('currency_symbol', 'Rs.') }} {{ format_number($receipts->sum('amount'), 2) }}
                                 </td>
                                 <td></td>
                             </tr>

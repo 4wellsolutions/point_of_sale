@@ -81,20 +81,20 @@
                     <td>{{ \Carbon\Carbon::parse($transaction->created_at)->format('d-m-Y') }}</td>
                     <td>{{ $transaction->product->name }}</td>
                     <td>{{ class_basename($transaction->transactionable_type) }}</td>
-                    <td class="right">{{ number_format($transaction->quantity) }}</td>
+                    <td class="right">{{ format_number($transaction->quantity) }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="3"><strong>Total Transactions:</strong></td>
-                <td class="right"><strong>{{ number_format($transactions->sum('quantity')) }}</strong></td>
+                <td class="right"><strong>{{ format_number($transactions->sum('quantity')) }}</strong></td>
             </tr>
         </tfoot>
     </table>
 
     <div style="margin-top: 20px;">
-        <p><strong>Total Quantity Change:</strong> {{ number_format($transactions->sum('qty_change')) }}</p>
+        <p><strong>Total Quantity Change:</strong> {{ format_number($transactions->sum('qty_change')) }}</p>
         <p><strong>Total Transactions:</strong> {{ count($transactions) }}</p>
     </div>
 

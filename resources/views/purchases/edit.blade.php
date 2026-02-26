@@ -494,8 +494,8 @@
                 let discount = parseFloat($('#discount_amount').val()) || 0;
                 let netAmount = totalAmount - discount;
 
-                $('#total_amount').val(totalAmount.toFixed(2));
-                $('#net_amount').val(netAmount.toFixed(2));
+                $('#total_amount').val(totalAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+                $('#net_amount').val(netAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 updatePaymentTotals();
             }
@@ -519,7 +519,7 @@
                     ? `<img src="${productImage}" alt="${productName}" class="img-thumbnail product-thumb" data-image_url="${productImage}" style="width: 50px; height: 50px; cursor: pointer;">`
                     : `<span>N/A</span>`;
 
-                let totalAmount = (qty * purchasePrice).toFixed(2);
+                let totalAmount = (qty * purchasePrice).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
                 let expiryVal = expiryDate || '';
 
                 let newRow = `
@@ -620,7 +620,7 @@
                 let qty = parseFloat(row.find('.qty').val()) || 0;
                 let purchase_price = parseFloat(row.find('.purchase_price').val()) || 0;
                 let total = qty * purchase_price;
-                row.find('.total_amount').val(total.toFixed(2));
+                row.find('.total_amount').val(total.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 updateTotals();
             });
 
@@ -629,7 +629,7 @@
                 let discount = parseFloat($(this).val()) || 0;
                 let totalAmount = parseFloat($('#total_amount').val()) || 0;
                 let netAmount = totalAmount - discount;
-                $('#net_amount').val(netAmount.toFixed(2));
+                $('#net_amount').val(netAmount.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 updatePaymentTotals();
             });
 
@@ -735,7 +735,7 @@
                 });
 
                 let netAmount = parseFloat($('#net_amount').val()) || 0;
-                $('#total_payment_amount').val(totalPayment.toFixed(2));
+                $('#total_payment_amount').val(totalPayment.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 $('#payment-methods-container-wrapper').removeClass('error-shadow');
                 if (totalPayment > 0 && totalPayment !== netAmount) {

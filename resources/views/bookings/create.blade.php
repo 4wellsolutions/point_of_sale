@@ -239,7 +239,7 @@
                 let qty = parseFloat(row.find('.qty').val()) || 0;
                 let price = parseFloat(row.find('.unit-price').val()) || 0;
                 let total = qty * price;
-                row.find('.item-total').val(total.toFixed(2));
+                row.find('.item-total').val(total.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
 
                 // Show warning if booking more than available (optional, since it's just a booking)
                 let available = parseFloat(row.find('.available-qty').val()) || 0;
@@ -262,8 +262,8 @@
                 let discount = parseFloat($('#discount_amount').val()) || 0;
                 let net = total - discount;
 
-                $('#total_amount').val(total.toFixed(2));
-                $('#net_amount').val(net.toFixed(2));
+                $('#total_amount').val(total.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+                $('#net_amount').val(net.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
             }
 
             $('#discount_amount').on('input', updateTotals);

@@ -95,7 +95,7 @@
                                     </td>
                                     <td>{{ $transaction->paymentMethod->name ?? '—' }}</td>
                                     <td class="text-end fw-bold">
-                                        {{ setting('currency_symbol', '$') }}{{ number_format($transaction->amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($transaction->amount, 2) }}</td>
                                     <td><small class="text-muted">{{ $transaction->reference ?? '—' }}</small></td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('transactions.edit', $transaction->id) }}" class="btn btn-sm btn-warning"

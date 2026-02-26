@@ -84,7 +84,7 @@
                                     <td>{{ $payment->transactionable->name ?? '—' }}</td>
                                     <td>{{ $payment->paymentMethod->method_name ?? '—' }}</td>
                                     <td class="text-end fw-bold text-danger">
-                                        {{ setting('currency_symbol', 'Rs.') }} {{ number_format($payment->amount, 2) }}
+                                        {{ setting('currency_symbol', 'Rs.') }} {{ format_number($payment->amount, 2) }}
                                     </td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('payments.edit', $payment->id) }}" class="btn btn-sm btn-warning"
@@ -99,7 +99,7 @@
                             <tr class="table-light fw-bold">
                                 <td colspan="4" class="text-end">Total:</td>
                                 <td class="text-end text-danger">
-                                    {{ setting('currency_symbol', 'Rs.') }} {{ number_format($payments->sum('amount'), 2) }}
+                                    {{ setting('currency_symbol', 'Rs.') }} {{ format_number($payments->sum('amount'), 2) }}
                                 </td>
                                 <td></td>
                             </tr>
