@@ -19,12 +19,12 @@
                     <td>{{ $purchase->invoice_no }}</td>
                     <td>{{ $purchase->vendor->name ?? '—' }}</td>
                     <td>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</td>
-                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ format_number($purchase->total_amount, 2) }}
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ format_number($purchase->total_amount) }}
                     </td>
                     <td class="text-right">
-                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->discount_amount, 2) }}</td>
+                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->discount_amount) }}</td>
                     <td class="text-right fw-bold">
-                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount, 2) }}</td>
+                        {{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount) }}</td>
                 </tr>
             @endforeach
         </tbody>

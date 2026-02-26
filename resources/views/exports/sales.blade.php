@@ -19,11 +19,11 @@
                     <td>{{ $sale->invoice_no }}</td>
                     <td>{{ $sale->customer->name ?? 'Walk-in' }}</td>
                     <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</td>
-                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ format_number($sale->total_amount, 2) }}</td>
-                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ format_number($sale->discount_amount, 2) }}
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ format_number($sale->total_amount) }}</td>
+                    <td class="text-right">{{ setting('currency_symbol', '$') }}{{ format_number($sale->discount_amount) }}
                     </td>
                     <td class="text-right fw-bold">
-                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->net_amount, 2) }}</td>
+                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->net_amount) }}</td>
                 </tr>
             @endforeach
         </tbody>

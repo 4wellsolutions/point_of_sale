@@ -34,7 +34,7 @@
             <div class="card border-0 shadow-sm text-center h-100">
                 <div class="card-body">
                     <div class="text-muted small mb-1">Total Received</div>
-                    <div class="fw-bold fs-4 text-success">Rs {{ format_number($totalReceived, 2) }}</div>
+                    <div class="fw-bold fs-4 text-success">Rs {{ format_number($totalReceived) }}</div>
                 </div>
             </div>
         </div>
@@ -42,7 +42,7 @@
             <div class="card border-0 shadow-sm text-center h-100">
                 <div class="card-body">
                     <div class="text-muted small mb-1">Total Paid Out</div>
-                    <div class="fw-bold fs-4 text-danger">Rs {{ format_number($totalPaid, 2) }}</div>
+                    <div class="fw-bold fs-4 text-danger">Rs {{ format_number($totalPaid) }}</div>
                 </div>
             </div>
         </div>
@@ -80,8 +80,8 @@
                             @forelse($rows as $row)
                                 <tr>
                                     <td><i class="fas fa-wallet me-2 text-primary"></i>{{ $row->name }}</td>
-                                    <td class="text-end text-success">Rs {{ format_number($row->received, 2) }}</td>
-                                    <td class="text-end text-danger">Rs {{ format_number($row->paid, 2) }}</td>
+                                    <td class="text-end text-success">Rs {{ format_number($row->received) }}</td>
+                                    <td class="text-end text-danger">Rs {{ format_number($row->paid) }}</td>
                                     <td class="text-end fw-bold {{ $row->balance >= 0 ? 'text-success' : 'text-danger' }}">
                                         Rs {{ format_number(abs($row->balance), 2) }}
                                         {{ $row->balance < 0 ? '(-)' : '' }}
@@ -96,8 +96,8 @@
                         <tfoot class="table-secondary fw-bold">
                             <tr>
                                 <td>Total</td>
-                                <td class="text-end text-success">Rs {{ format_number($totalReceived, 2) }}</td>
-                                <td class="text-end text-danger">Rs {{ format_number($totalPaid, 2) }}</td>
+                                <td class="text-end text-success">Rs {{ format_number($totalReceived) }}</td>
+                                <td class="text-end text-danger">Rs {{ format_number($totalPaid) }}</td>
                                 <td class="text-end {{ $netBalance >= 0 ? 'text-success' : 'text-danger' }}">
                                     Rs {{ format_number(abs($netBalance), 2) }}
                                 </td>
@@ -118,11 +118,11 @@
                     <table class="table table-sm mb-0">
                         <tr>
                             <td>Receivable (Debit)</td>
-                            <td class="text-end fw-bold text-success">Rs {{ format_number($custDebit, 2) }}</td>
+                            <td class="text-end fw-bold text-success">Rs {{ format_number($custDebit) }}</td>
                         </tr>
                         <tr>
                             <td>Payable to Customers (Credit)</td>
-                            <td class="text-end fw-bold text-danger">Rs {{ format_number($custCredit, 2) }}</td>
+                            <td class="text-end fw-bold text-danger">Rs {{ format_number($custCredit) }}</td>
                         </tr>
                         <tr class="table-light fw-bold">
                             <td>Net Customer Balance</td>
@@ -144,11 +144,11 @@
                     <table class="table table-sm mb-0">
                         <tr>
                             <td>Payable to Vendors (Credit)</td>
-                            <td class="text-end fw-bold text-danger">Rs {{ format_number($vendCredit, 2) }}</td>
+                            <td class="text-end fw-bold text-danger">Rs {{ format_number($vendCredit) }}</td>
                         </tr>
                         <tr>
                             <td>Receivable (Debit)</td>
-                            <td class="text-end fw-bold text-success">Rs {{ format_number($vendDebit, 2) }}</td>
+                            <td class="text-end fw-bold text-success">Rs {{ format_number($vendDebit) }}</td>
                         </tr>
                         <tr class="table-light fw-bold">
                             <td>Net Vendor Balance</td>

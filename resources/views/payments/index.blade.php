@@ -84,7 +84,7 @@
                                     <td>{{ $payment->transactionable->name ?? '—' }}</td>
                                     <td>{{ $payment->paymentMethod->method_name ?? '—' }}</td>
                                     <td class="text-end fw-bold text-danger">
-                                        {{ setting('currency_symbol', 'Rs.') }} {{ format_number($payment->amount, 2) }}
+                                        {{ setting('currency_symbol', 'Rs.') }} {{ format_number($payment->amount) }}
                                     </td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('payments.edit', $payment->id) }}" class="btn btn-sm btn-warning"

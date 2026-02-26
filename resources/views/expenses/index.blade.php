@@ -76,7 +76,7 @@
                                     <td><span class="badge bg-warning">{{ $expense->expenseType->name ?? '—' }}</span></td>
                                     <td>{{ Str::limit($expense->description, 50) }}</td>
                                     <td class="text-end fw-bold">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($expense->amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($expense->amount) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('expenses.edit', $expense->id) }}" class="btn btn-sm btn-warning"
                                             title="Edit"><i class="fas fa-edit"></i></a>

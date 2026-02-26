@@ -239,45 +239,45 @@
 
                 // Create new sale item row with hidden purchase_price field
                 let newRow = `
-                        <tr data-product-id="${productId}">
-                            <td>
-                                ${productData.text}
-                                <input type="hidden" name="sale_items[${saleItemIndex}][product_id]" value="${productId}">
-                            </td>
-                            <td>
-                                <select name="sale_items[${saleItemIndex}][batch_no]" class="form-select batch-select" required>
-                                    <option value="">Loading batches...</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="sale_items[${saleItemIndex}][location_id]" class="form-select location-select" required>
-                                    <option value="">Select Batch First</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control available-qty" readonly value="0">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" class="form-control cost_price_display" readonly value="0.00" style="background:#f8f9fa;">
-                                <input type="hidden" name="sale_items[${saleItemIndex}][purchase_price]" class="purchase_price_hidden" value="0.00">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" name="sale_items[${saleItemIndex}][sale_price]" class="form-control sale_price" required min="0" value="0.00">
-                                <div class="below-cost-text d-none">⚠ Below cost price!</div>
-                            </td>
-                            <td>
-                                <input type="number" name="sale_items[${saleItemIndex}][quantity]" class="form-control sale-qty" required min="1">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" name="sale_items[${saleItemIndex}][total_amount]" class="form-control item-total" value="0.00" readonly>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm remove-sale-item">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                            <tr data-product-id="${productId}">
+                                <td>
+                                    ${productData.text}
+                                    <input type="hidden" name="sale_items[${saleItemIndex}][product_id]" value="${productId}">
+                                </td>
+                                <td>
+                                    <select name="sale_items[${saleItemIndex}][batch_no]" class="form-select batch-select" required>
+                                        <option value="">Loading batches...</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="sale_items[${saleItemIndex}][location_id]" class="form-select location-select" required>
+                                        <option value="">Select Batch First</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control available-qty" readonly value="0">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control cost_price_display" readonly value="0.00" style="background:#f8f9fa;">
+                                    <input type="hidden" name="sale_items[${saleItemIndex}][purchase_price]" class="purchase_price_hidden" value="0.00">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="sale_items[${saleItemIndex}][sale_price]" class="form-control sale_price" required min="0" value="0.00">
+                                    <div class="below-cost-text d-none">⚠ Below cost price!</div>
+                                </td>
+                                <td>
+                                    <input type="number" name="sale_items[${saleItemIndex}][quantity]" class="form-control sale-qty" required min="1">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="sale_items[${saleItemIndex}][total_amount]" class="form-control item-total" value="0.00" readonly>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-sale-item">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
                 $('#sale-items-table tbody').append(newRow);
                 loadBatches(productId, saleItemIndex);
                 saleItemIndex++;
@@ -453,26 +453,26 @@
                 });
 
                 let newRow = `
-                        <div class="row g-2 payment-method-row">
-                            <div class="col-md-6">
-                                <label class="form-label">Payment Method</label>
-                                <select name="payment_methods[${paymentMethodIndex}][payment_method_id]" class="form-select payment-method-select">
-                                    ${options}
-                                </select>
-                                <div class="invalid-feedback"></div>
+                            <div class="row g-2 payment-method-row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Payment Method</label>
+                                    <select name="payment_methods[${paymentMethodIndex}][payment_method_id]" class="form-select payment-method-select">
+                                        ${options}
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
+                                    <input type="number" step="0.01" name="payment_methods[${paymentMethodIndex}][amount]" class="form-control payment-amount" min="0.01" style="display: none;">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger remove-payment-method">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
-                                <input type="number" step="0.01" name="payment_methods[${paymentMethodIndex}][amount]" class="form-control payment-amount" min="0.01" style="display: none;">
-                                <div class="invalid-feedback"></div>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger remove-payment-method">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                        `;
                 $('#payment-methods-container').append(newRow);
                 paymentMethodIndex++;
                 toggleRemoveAllButton();
@@ -577,7 +577,19 @@
                         window.location.href = '{{ route("sales.index") }}';
                     },
                     error: function (xhr) {
-                        toastr.error('An error occurred while submitting the sale.');
+                        let msg = 'An error occurred while submitting the sale.';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            msg = xhr.responseJSON.error;
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            // Extract first validation error
+                            let errors = xhr.responseJSON.errors;
+                            msg = Object.values(errors)[0][0];
+                        }
+                        toastr.error(msg);
                     }
                 });
             });

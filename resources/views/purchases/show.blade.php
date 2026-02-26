@@ -43,7 +43,8 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->total_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->total_amount) }}
+                            </div>
                             <div class="stat-tile-label">Total Amount</div>
                         </div>
                     </div>
@@ -55,7 +56,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->discount_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->discount_amount) }}
                             </div>
                             <div class="stat-tile-label">Discount</div>
                         </div>
@@ -68,7 +69,8 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount, 2) }}</div>
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount) }}
+                            </div>
                             <div class="stat-tile-label">Net Amount</div>
                         </div>
                     </div>
@@ -159,7 +161,18 @@
                                         <img src="{{ asset('images/no-image.png') }}" alt="No Image" class="product-thumb">
                                     @endif
                                 </td>
-                                <td class="fw-medium">{{ $item->product->name }}</td>
+                                <td class="fw-medium">
+                                    {{ $item->product->name }}
+                                    @if($item->product->flavour)
+                                        <br><small class="text-muted"><i
+                                                class="fas fa-palette me-1"></i>{{ $item->product->flavour->name }}</small>
+                                    @endif
+                                    @if($item->product->packing)
+                                        <br><small class="text-muted"><i
+                                                class="fas fa-box me-1"></i>{{ $item->product->packing->type }} —
+                                            {{ $item->product->packing->unit_size }}</small>
+                                    @endif
+                                </td>
                                 <td><span class="font-monospace">{{ $item->batch_no ?? '—' }}</span></td>
                                 <td>{{ $item->location->name }}</td>
                                 <td>
@@ -170,23 +183,23 @@
                                     @endif
                                 </td>
                                 <td class="text-end">{{ $item->quantity }}</td>
-                                <td class="text-end">{{ format_number($item->purchase_price, 2) }}</td>
-                                <td class="text-end fw-medium">{{ format_number($item->total_amount, 2) }}</td>
+                                <td class="text-end">{{ format_number($item->purchase_price) }}</td>
+                                <td class="text-end fw-medium">{{ format_number($item->total_amount) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="7" class="text-end">Total:</th>
-                            <th class="text-end">{{ format_number($purchase->total_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($purchase->total_amount) }}</th>
                         </tr>
                         <tr>
                             <th colspan="7" class="text-end">Discount:</th>
-                            <th class="text-end">{{ format_number($purchase->discount_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($purchase->discount_amount) }}</th>
                         </tr>
                         <tr>
                             <th colspan="7" class="text-end">Net Amount:</th>
-                            <th class="text-end">{{ format_number($purchase->net_amount, 2) }}</th>
+                            <th class="text-end">{{ format_number($purchase->net_amount) }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -216,7 +229,7 @@
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('d M Y') }}</td>
                                     <td>{{ $transaction->paymentMethod->method_name }}</td>
-                                    <td class="text-end">{{ format_number($transaction->amount, 2) }}</td>
+                                    <td class="text-end">{{ format_number($transaction->amount) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -228,7 +241,8 @@
                             <tr>
                                 <th colspan="2">Remaining Balance:</th>
                                 <th class="text-end">
-                                    {{ format_number($purchase->net_amount - $purchase->transactions->sum('amount'), 2) }}</th>
+                                    {{ format_number($purchase->net_amount - $purchase->transactions->sum('amount'), 2) }}
+                                </th>
                             </tr>
                         </tfoot>
                     </table>

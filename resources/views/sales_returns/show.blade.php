@@ -86,7 +86,7 @@
                                 </div>
                                 <div>
                                     <div class="stat-tile-value">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($salesReturn->refund_amount, 2) }}
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($salesReturn->refund_amount) }}
                                     </div>
                                     <div class="stat-tile-label">Refund Amount</div>
                                 </div>

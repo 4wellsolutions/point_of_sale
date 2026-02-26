@@ -17,7 +17,7 @@
                     <td>{{ \Carbon\Carbon::parse($expense->date)->format('d M Y') }}</td>
                     <td>{{ $expense->expenseType->name ?? '—' }}</td>
                     <td>{{ $expense->description }}</td>
-                    <td class="text-right fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($expense->amount, 2) }}
+                    <td class="text-right fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($expense->amount) }}
                     </td>
                 </tr>
             @endforeach

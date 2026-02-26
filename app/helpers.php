@@ -37,9 +37,10 @@ if (!function_exists('format_number')) {
      * Format a number allowing up to 2 decimal places, stripped of unnecessary trailing zeroes.
      *
      * @param  mixed  $value
+     * @param  int    $decimals  (accepted for backward compatibility, always uses 2)
      * @return string
      */
-    function format_number($value): string
+    function format_number($value, int $decimals = 2): string
     {
         if (!is_numeric($value)) {
             return $value ?? '0';

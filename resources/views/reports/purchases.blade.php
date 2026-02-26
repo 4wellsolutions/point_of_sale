@@ -18,14 +18,14 @@
         <div class="col-md-4">
             <div class="kpi-card kpi-revenue">
                 <div class="kpi-icon"><i class="fas fa-coins"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalAmount, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalAmount) }}</div>
                 <div class="kpi-label">Total Purchase Amount</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="kpi-card kpi-expenses">
                 <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
-                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalDiscount, 2) }}</div>
+                <div class="kpi-value">{{ setting('currency_symbol') }}{{ format_number($totalDiscount) }}</div>
                 <div class="kpi-label">Total Discount Received</div>
             </div>
         </div>
@@ -95,11 +95,11 @@
                             <td><small class="text-muted">{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</small>
                             </td>
                             <td class="text-end">
-                                {{ setting('currency_symbol') }}{{ format_number($purchase->total_amount ?? 0, 2) }}</td>
+                                {{ setting('currency_symbol') }}{{ format_number($purchase->total_amount ?? 0) }}</td>
                             <td class="text-end">
-                                {{ setting('currency_symbol') }}{{ format_number($purchase->discount_amount ?? 0, 2) }}</td>
+                                {{ setting('currency_symbol') }}{{ format_number($purchase->discount_amount ?? 0) }}</td>
                             <td class="text-end">
-                                <strong>{{ setting('currency_symbol') }}{{ format_number($purchase->net_amount ?? 0, 2) }}</strong>
+                                <strong>{{ setting('currency_symbol') }}{{ format_number($purchase->net_amount ?? 0) }}</strong>
                             </td>
                             <td><small>—</small></td>
                         </tr>

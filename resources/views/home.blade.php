@@ -106,7 +106,7 @@
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase mb-1">Total Receivable</div>
                             <h3 class="mb-0 text-success fw-bold">
-                                {{ setting('currency_symbol', 'Rs.') }} {{ format_number($totalReceivable, 2) }}
+                                {{ setting('currency_symbol', 'Rs.') }} {{ format_number($totalReceivable) }}
                             </h3>
                             <small class="text-muted">Outstanding from customers</small>
                         </div>
@@ -124,7 +124,7 @@
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase mb-1">Total Payable</div>
                             <h3 class="mb-0 text-danger fw-bold">
-                                {{ setting('currency_symbol', 'Rs.') }} {{ format_number($totalPayable, 2) }}
+                                {{ setting('currency_symbol', 'Rs.') }} {{ format_number($totalPayable) }}
                             </h3>
                             <small class="text-muted">Outstanding to vendors</small>
                         </div>
@@ -206,7 +206,7 @@
                                         <tr>
                                             <td>{{ $sale->customer->name ?? 'Walk-in' }}</td>
                                             <td><small>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</small></td>
-                                            <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($sale->net_amount, 2) }}</td>
+                                            <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($sale->net_amount) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -245,7 +245,7 @@
                                             <td>{{ $purchase->vendor->name ?? 'N/A' }}</td>
                                             <td><small>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}</small>
                                             </td>
-                                            <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount, 2) }}</td>
+                                            <td class="text-end fw-bold">{{ setting('currency_symbol', '$') }}{{ format_number($purchase->net_amount) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

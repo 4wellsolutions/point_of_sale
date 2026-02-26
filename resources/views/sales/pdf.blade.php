@@ -27,15 +27,15 @@
             </tr>
             <tr>
                 <td><strong>Total Amount ({{ setting('currency_symbol', '$') }}):</strong></td>
-                <td>{{ format_number($sale->total_amount, 2) }}</td>
+                <td>{{ format_number($sale->total_amount) }}</td>
             </tr>
             <tr>
                 <td><strong>Discount ({{ setting('currency_symbol', '$') }}):</strong></td>
-                <td>{{ format_number($sale->discount_amount, 2) }}</td>
+                <td>{{ format_number($sale->discount_amount) }}</td>
             </tr>
             <tr>
                 <td><strong>Net Amount ({{ setting('currency_symbol', '$') }}):</strong></td>
-                <td>{{ format_number($sale->net_amount, 2) }}</td>
+                <td>{{ format_number($sale->net_amount) }}</td>
             </tr>
         </table>
 
@@ -74,23 +74,23 @@
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location->name }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->batch_no ?? 'N/A' }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->quantity }}</td>
-                        <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->sale_price, 2) }}</td>
-                        <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->total_amount, 2) }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->sale_price) }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->total_amount) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
                     <th colspan="6" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Total:</th>
-                    <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->total_amount, 2) }}</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->total_amount) }}</th>
                 </tr>
                 <tr>
                     <th colspan="6" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Discount:</th>
-                    <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->discount_amount, 2) }}</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->discount_amount) }}</th>
                 </tr>
                 <tr>
                     <th colspan="6" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Net Amount:</th>
-                    <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->net_amount, 2) }}</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->net_amount) }}</th>
                 </tr>
             </tfoot>
         </table>
@@ -116,7 +116,7 @@
                             </td>
                             <td style="border: 1px solid #ddd; padding: 5px;">{{ $transaction->paymentMethod->method_name }}</td>
                             <td style="border: 1px solid #ddd; padding: 5px; text-align: right;">
-                                {{ format_number($transaction->amount, 2) }}</td>
+                                {{ format_number($transaction->amount) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

@@ -55,9 +55,9 @@
                             &nbsp;<em style="color:#64748b;">({{ $ledger->transaction->paymentMethod->method_name }})</em>
                         @endif
                     </td>
-                    <td class="text-right">{{ $symbol }} {{ format_number($ledger->debit, 2) }}</td>
-                    <td class="text-right">{{ $symbol }} {{ format_number($ledger->credit, 2) }}</td>
-                    <td class="text-right fw-bold">{{ $symbol }} {{ format_number($ledger->balance, 2) }}</td>
+                    <td class="text-right">{{ $symbol }} {{ format_number($ledger->debit) }}</td>
+                    <td class="text-right">{{ $symbol }} {{ format_number($ledger->credit) }}</td>
+                    <td class="text-right fw-bold">{{ $symbol }} {{ format_number($ledger->balance) }}</td>
                 </tr>
             @endforeach
         </tbody>

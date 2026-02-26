@@ -97,11 +97,11 @@
                                     <td><strong>{{ $sale->customer->name ?? 'Walk-in' }}</strong></td>
                                     <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}</td>
                                     <td class="text-end">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->total_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->total_amount) }}</td>
                                     <td class="text-end">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->discount_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->discount_amount) }}</td>
                                     <td class="text-end fw-bold">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->net_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($sale->net_amount) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-info" title="View">
                                             <i class="fas fa-eye"></i>

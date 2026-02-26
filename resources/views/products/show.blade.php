@@ -164,8 +164,8 @@
                                             <td><span class="font-monospace fw-medium">{{ $item->batch_no ?? '—' }}</span></td>
                                             <td>{{ $item->purchase ? \Carbon\Carbon::parse($item->purchase->purchase_date)->format('d M Y') : '—' }}</td>
                                             <td class="text-end fw-medium">{{ format_number($item->quantity) }}</td>
-                                            <td class="text-end">{{ format_number($item->purchase_price, 2) }}</td>
-                                            <td class="text-end fw-medium">{{ format_number($item->total_amount, 2) }}</td>
+                                            <td class="text-end">{{ format_number($item->purchase_price) }}</td>
+                                            <td class="text-end fw-medium">{{ format_number($item->total_amount) }}</td>
                                             <td>{{ $item->expiry_date ? \Carbon\Carbon::parse($item->expiry_date)->format('d M Y') : '—' }}</td>
                                             <td class="text-center">
                                                 @if($item->expiry_date && \Carbon\Carbon::parse($item->expiry_date)->isPast())

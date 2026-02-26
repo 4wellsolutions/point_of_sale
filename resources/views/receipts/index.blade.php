@@ -85,7 +85,7 @@
                                     <td>{{ $receipt->transactionable->name ?? '—' }}</td>
                                     <td>{{ $receipt->paymentMethod->method_name ?? '—' }}</td>
                                     <td class="text-end fw-bold text-success">
-                                        {{ setting('currency_symbol', 'Rs.') }} {{ format_number($receipt->amount, 2) }}
+                                        {{ setting('currency_symbol', 'Rs.') }} {{ format_number($receipt->amount) }}
                                     </td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('receipts.edit', $receipt->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>

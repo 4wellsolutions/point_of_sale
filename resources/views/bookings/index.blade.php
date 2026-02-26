@@ -96,11 +96,11 @@
                                     <span class="badge bg-{{ $color }}">{{ ucfirst($booking->status) }}</span>
                                     </td>
                                     <td class="text-end">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($booking->total_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($booking->total_amount) }}</td>
                                     <td class="text-end">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($booking->discount_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($booking->discount_amount) }}</td>
                                     <td class="text-end fw-bold">
-                                        {{ setting('currency_symbol', '$') }}{{ format_number($booking->net_amount, 2) }}</td>
+                                        {{ setting('currency_symbol', '$') }}{{ format_number($booking->net_amount) }}</td>
                                     <td class="text-center action-btns">
                                         <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-info" title="View/Print">
                                             <i class="fas fa-eye"></i>

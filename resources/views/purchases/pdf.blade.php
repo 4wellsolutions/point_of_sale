@@ -20,13 +20,13 @@
                     <th>Purchase Date:</th>
                     <td>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('F j, Y') }}</td>
                     <th>Total Amount ({{ setting('currency_symbol', '$') }}):</th>
-                    <td>{{ format_number($purchase->total_amount, 2) }}</td>
+                    <td>{{ format_number($purchase->total_amount) }}</td>
                 </tr>
                 <tr>
                     <th>Discount ({{ setting('currency_symbol', '$') }}):</th>
-                    <td>{{ format_number($purchase->discount_amount, 2) }}</td>
+                    <td>{{ format_number($purchase->discount_amount) }}</td>
                     <th>Net Amount ({{ setting('currency_symbol', '$') }}):</th>
-                    <td>{{ format_number($purchase->net_amount, 2) }}</td>
+                    <td>{{ format_number($purchase->net_amount) }}</td>
                 </tr>
             </table>
 
@@ -56,28 +56,36 @@
                 <tbody>
                     @foreach($purchase->purchaseItems as $item)
                         <tr>
-                            <td>{{ $item->product->name }}</td>
+                            <td>
+                                {{ $item->product->name }}
+                                @if($item->product->flavour)
+                                    <br><small>{{ $item->product->flavour->name }}</small>
+                                @endif
+                                @if($item->product->packing)
+                                    <br><small>{{ $item->product->packing->type }} — {{ $item->product->packing->unit_size }}</small>
+                                @endif
+                            </td>
                             <td>{{ $item->expiry_date ? \Carbon\Carbon::parse($item->expiry_date)->format('F j, Y') : 'N/A' }}</td>
                             <td>{{ $item->location->name }}</td>
                             <td>{{ $item->batch_no ?? 'N/A' }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td>{{ format_number($item->cost_per_piece, 2) }}</td>
-                            <td>{{ format_number($item->total_amount, 2) }}</td>
+                            <td>{{ format_number($item->cost_per_piece) }}</td>
+                            <td>{{ format_number($item->total_amount) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot class="summary-row">
                     <tr>
                         <th colspan="6">Total:</th>
-                        <td>{{ format_number($purchase->total_amount, 2) }}</td>
+                        <td>{{ format_number($purchase->total_amount) }}</td>
                     </tr>
                     <tr>
                         <th colspan="6">Discount:</th>
-                        <td>{{ format_number($purchase->discount_amount, 2) }}</td>
+                        <td>{{ format_number($purchase->discount_amount) }}</td>
                     </tr>
                     <tr>
                         <th colspan="6">Net Amount:</th>
-                        <td>{{ format_number($purchase->net_amount, 2) }}</td>
+                        <td>{{ format_number($purchase->net_amount) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -103,7 +111,7 @@
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('F j, Y') }}</td>
                                 <td>{{ $transaction->paymentMethod->method_name }}</td>
-                                <td>{{ format_number($transaction->amount, 2) }}</td>
+                                <td>{{ format_number($transaction->amount) }}</td>
                             </tr>
                         @endforeach
                     </tbody>

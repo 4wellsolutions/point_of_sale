@@ -43,7 +43,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->total_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->total_amount) }}
                             </div>
                             <div class="stat-tile-label">Total Amount</div>
                         </div>
@@ -56,7 +56,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->discount_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->discount_amount) }}
                             </div>
                             <div class="stat-tile-label">Discount</div>
                         </div>
@@ -69,7 +69,7 @@
                         </div>
                         <div>
                             <div class="stat-tile-value">
-                                {{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->net_amount, 2) }}
+                                {{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->net_amount) }}
                             </div>
                             <div class="stat-tile-label">Net Amount</div>
                         </div>
@@ -143,14 +143,14 @@
                             <div class="detail-row">
                                 <span class="detail-label"><i class="fas fa-calculator"></i> Total Amount</span>
                                 <span
-                                    class="detail-value">{{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->purchase->total_amount, 2) }}</span>
+                                    class="detail-value">{{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->purchase->total_amount) }}</span>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="detail-row">
                                 <span class="detail-label"><i class="fas fa-money-bill"></i> Net Amount</span>
                                 <span
-                                    class="detail-value">{{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->purchase->net_amount, 2) }}</span>
+                                    class="detail-value">{{ setting('currency_symbol', '$') }}{{ format_number($purchaseReturn->purchase->net_amount) }}</span>
                             </div>
                         </div>
                     </div>
@@ -189,8 +189,8 @@
                                     <td><span class="font-monospace">{{ $item->purchaseItem->batch_no ?? 'N/A' }}</span></td>
                                     <td>{{ $item->purchaseItem->location->name ?? 'N/A' }}</td>
                                     <td class="text-end">{{ $item->quantity }}</td>
-                                    <td class="text-end">{{ format_number($item->unit_price, 2) }}</td>
-                                    <td class="text-end fw-medium">{{ format_number($item->total_amount, 2) }}</td>
+                                    <td class="text-end">{{ format_number($item->unit_price) }}</td>
+                                    <td class="text-end fw-medium">{{ format_number($item->total_amount) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -228,7 +228,7 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $transaction->paymentMethod->name ?? 'N/A' }}</td>
-                                    <td class="text-end">{{ format_number($transaction->amount, 2) }}</td>
+                                    <td class="text-end">{{ format_number($transaction->amount) }}</td>
                                     <td>{{ $transaction->transaction_date->format('d M Y, h:i A') }}</td>
                                 </tr>
                             @endforeach
@@ -277,9 +277,9 @@
                                     <td>{{ $loop->index + 1 }}</td>
                                     <td>{{ $ledger->date }}</td>
                                     <td>{{ $ledger->description }}</td>
-                                    <td class="text-end">{{ format_number($ledger->debit, 2) }}</td>
-                                    <td class="text-end">{{ format_number($ledger->credit, 2) }}</td>
-                                    <td class="text-end fw-medium">{{ format_number($ledger->balance, 2) }}</td>
+                                    <td class="text-end">{{ format_number($ledger->debit) }}</td>
+                                    <td class="text-end">{{ format_number($ledger->credit) }}</td>
+                                    <td class="text-end fw-medium">{{ format_number($ledger->balance) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

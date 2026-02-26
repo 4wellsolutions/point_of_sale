@@ -24,7 +24,7 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Purchase::with(['vendor', 'purchaseItems.product']);
+        $query = Purchase::with(['vendor', 'purchaseItems.product.flavour', 'purchaseItems.product.packing']);
         if ($request->filled('vendor_id'))
             $query->where('vendor_id', $request->vendor_id);
         if ($request->filled('invoice_no'))
@@ -75,7 +75,8 @@ class PurchaseController extends Controller
         // Retrieve the purchase with related vendor, purchase items, transactions, and ledger entries
         $purchase = Purchase::with([
             'vendor',
-            'purchaseItems.product',
+            'purchaseItems.product.flavour',
+            'purchaseItems.product.packing',
             'purchaseItems.location',
             'transactions.paymentMethod',
             'vendor.LedgerEntries' // Assuming Vendor has ledgerEntries relation
@@ -106,7 +107,7 @@ class PurchaseController extends Controller
      */
     public function edit($id)
     {
-        $purchase = Purchase::with('vendor', 'purchaseItems.product', 'purchaseItems.location', 'transactions.paymentMethod')->findOrFail($id);
+        $purchase = Purchase::with('vendor', 'purchaseItems.product.flavour', 'purchaseItems.product.packing', 'purchaseItems.location', 'transactions.paymentMethod')->findOrFail($id);
         $vendors = Vendor::all();
         $locations = Location::all();
         $paymentMethods = PaymentMethod::all();
@@ -451,7 +452,7 @@ class PurchaseController extends Controller
 
     public function generatePdf($purchaseId)
     {
-        $purchase = Purchase::with(['vendor', 'purchaseItems.product', 'purchaseItems.location', 'transactions.paymentMethod'])->findOrFail($purchaseId);
+        $purchase = Purchase::with(['vendor', 'purchaseItems.product.flavour', 'purchaseItems.product.packing', 'purchaseItems.location', 'transactions.paymentMethod'])->findOrFail($purchaseId);
 
         $pdf = PDF::loadView('purchases.pdf', compact('purchase'));
 

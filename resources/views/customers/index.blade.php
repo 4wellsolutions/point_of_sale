@@ -106,10 +106,10 @@
                                     <td class="fw-bold">
                                         @if(($customer->balance ?? 0) > 0)
                                             <span
-                                                class="text-success">{{ setting('currency_symbol', '$') }}{{ format_number($customer->balance, 2) }}</span>
+                                                class="text-success">{{ setting('currency_symbol', '$') }}{{ format_number($customer->balance) }}</span>
                                         @elseif(($customer->balance ?? 0) < 0)
                                             <span
-                                                class="text-danger">{{ setting('currency_symbol', '$') }}{{ format_number($customer->balance, 2) }}</span>
+                                                class="text-danger">{{ setting('currency_symbol', '$') }}{{ format_number($customer->balance) }}</span>
                                         @else
                                             {{ setting('currency_symbol', '$') }}0.00
                                         @endif

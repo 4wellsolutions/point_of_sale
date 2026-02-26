@@ -392,7 +392,7 @@
                 @foreach($locations as $loc)
                     opts += `<option value="{{ $loc->id }}" ${selectedId == {{ $loc->id }} ? 'selected' : ''}>{{ $loc->name }}</option>`;
                 @endforeach
-            return opts;
+                    return opts;
             }
 
             function addItemRow(productId, productName, productImage, batchNo, locationId, availQty, costPrice, salePrice, qty) {
@@ -403,38 +403,38 @@
                 let rowTotal = ((qty || 1) * (salePrice || 0)).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
 
                 let row = `
-                <tr>
-                    <td>${img}
-                        <input type="hidden" name="sale_items[${itemIdx}][product_id]" value="${productId}">
-                    </td>
-                    <td><strong>${productName}</strong></td>
-                    <td>
-                        <select name="sale_items[${itemIdx}][batch_no]" class="form-select batch-select" required style="min-width:100px;">
-                            <option value="">Loading...</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select name="sale_items[${itemIdx}][location_id]" class="form-select location-select" required>
-                            ${getLocOptions(locationId)}
-                        </select>
-                    </td>
-                    <td><input type="number" class="form-control avail-qty" readonly value="${availQty || 0}" style="background:#f8f9fa;max-width:70px;"></td>
-                    <td>
-                        <input type="number" step="0.01" name="sale_items[${itemIdx}][purchase_price]" class="form-control cost-price" value="${costPrice || 0}" readonly style="background:#f8f9fa;max-width:90px;">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="sale_items[${itemIdx}][sale_price]" class="form-control sale-price" required value="${salePrice || ''}" style="max-width:90px;">
-                    </td>
-                    <td>
-                        <input type="number" name="sale_items[${itemIdx}][quantity]" class="form-control qty" required min="1" value="${qty || 1}" style="max-width:70px;">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="sale_items[${itemIdx}][total_amount]" class="form-control row_total" readonly value="${rowTotal}" style="background:#f8f9fa;">
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`;
+                        <tr>
+                            <td>${img}
+                                <input type="hidden" name="sale_items[${itemIdx}][product_id]" value="${productId}">
+                            </td>
+                            <td><strong>${productName}</strong></td>
+                            <td>
+                                <select name="sale_items[${itemIdx}][batch_no]" class="form-select batch-select" required style="min-width:100px;">
+                                    <option value="">Loading...</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="sale_items[${itemIdx}][location_id]" class="form-select location-select" required>
+                                    ${getLocOptions(locationId)}
+                                </select>
+                            </td>
+                            <td><input type="number" class="form-control avail-qty" readonly value="${availQty || 0}" style="background:#f8f9fa;max-width:70px;"></td>
+                            <td>
+                                <input type="number" step="0.01" name="sale_items[${itemIdx}][purchase_price]" class="form-control cost-price" value="${costPrice || 0}" readonly style="background:#f8f9fa;max-width:90px;">
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" name="sale_items[${itemIdx}][sale_price]" class="form-control sale-price" required value="${salePrice || ''}" style="max-width:90px;">
+                            </td>
+                            <td>
+                                <input type="number" name="sale_items[${itemIdx}][quantity]" class="form-control qty" required min="1" value="${qty || 1}" style="max-width:70px;">
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" name="sale_items[${itemIdx}][total_amount]" class="form-control row_total" readonly value="${rowTotal}" style="background:#f8f9fa;">
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
 
                 let $row = $(row);
                 $('#sale-items-table tbody').append($row);
@@ -472,7 +472,7 @@
 
                 if (!batchNo) return;
 
-                $.get('{{ route("batches.locations") }}', { product_id: productId, batch_no: batchNo }, function (resp) {
+                $.get(`/batches/${batchNo}/products/${productId}/locations`, function (resp) {
                     if (resp.success && resp.locations) {
                         let lopts = '<option value="">Select Location</option>';
                         resp.locations.forEach(l => {
@@ -547,8 +547,8 @@
                     @json($item->batch_no),
                     '{{ $item->location_id }}',
                     0,
-                    {{ $item->purchase_price }},
-                    {{ $item->sale_price }},
+                                    {{ $item->purchase_price }},
+                                    {{ $item->sale_price }},
                     {{ $item->quantity }}
                 );
             @endforeach
@@ -563,19 +563,19 @@
                 let amtVal = amount ? amount : '';
                 let amtShow = amount ? '' : 'display:none;';
                 let html = `
-                <div class="row g-2 payment-method-row">
-                    <div class="col-md-6">
-                        <label class="form-label">Payment Method</label>
-                        <select name="payment_methods[${pmIdx}][payment_method_id]" class="form-select pm-select">${opts}</select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
-                        <input type="number" step="0.01" name="payment_methods[${pmIdx}][amount]" class="form-control pm-amount" min="0.01" value="${amtVal}" style="${amtShow}">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger remove-pm"><i class="fas fa-minus"></i></button>
-                    </div>
-                </div>`;
+                        <div class="row g-2 payment-method-row">
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Method</label>
+                                <select name="payment_methods[${pmIdx}][payment_method_id]" class="form-select pm-select">${opts}</select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
+                                <input type="number" step="0.01" name="payment_methods[${pmIdx}][amount]" class="form-control pm-amount" min="0.01" value="${amtVal}" style="${amtShow}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger remove-pm"><i class="fas fa-minus"></i></button>
+                            </div>
+                        </div>`;
                 $('#payment-methods-container').append(html);
                 pmIdx++;
                 toggleRemoveAll();
@@ -650,17 +650,23 @@
                     },
                     error: function (xhr) {
                         $btn.prop('disabled', false).html('<i class="fas fa-save me-2"></i>Update Sale');
-                        if (xhr.status === 422) {
+                        let msg = 'An error occurred while updating the sale.';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            msg = xhr.responseJSON.error;
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
                             let errors = xhr.responseJSON.errors;
+                            msg = Object.values(errors)[0][0];
                             $.each(errors, function (key, msgs) {
                                 let input = $('[name="' + key + '"]');
                                 input.addClass('is-invalid');
                                 input.next('.invalid-feedback').text(msgs[0]);
-                                toastr.error(msgs[0]);
                             });
-                        } else {
-                            toastr.error(xhr.responseJSON?.message || 'An error occurred.');
                         }
+                        toastr.error(msg);
                     }
                 });
             });

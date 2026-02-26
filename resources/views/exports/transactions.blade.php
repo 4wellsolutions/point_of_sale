@@ -25,7 +25,7 @@
                     <td>{{ $transaction->vendor->name ?? $transaction->customer->name ?? '—' }}</td>
                     <td>{{ $transaction->paymentMethod->name ?? '—' }}</td>
                     <td class="text-right fw-bold">
-                        {{ setting('currency_symbol', '$') }}{{ format_number($transaction->amount, 2) }}</td>
+                        {{ setting('currency_symbol', '$') }}{{ format_number($transaction->amount) }}</td>
                     <td>{{ $transaction->reference ?? '—' }}</td>
                 </tr>
             @endforeach
