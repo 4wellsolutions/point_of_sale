@@ -29,8 +29,11 @@ class BatchController extends Controller
             ], 404);
         }
 
-        // Load batchstocks along with location details
-        $batchstocks = BatchStock::where("product_id", $product)->with('location')->get();
+        // Load batchstocks along with location details for the specific batch and product
+        $batchstocks = BatchStock::where('batch_id', $batch->id)
+            ->where('product_id', $product)
+            ->with('location')
+            ->get();
         // If there are no batch stocks, return an empty response with a message
         if ($batchstocks->isEmpty()) {
             return response()->json([
@@ -50,7 +53,7 @@ class BatchController extends Controller
                 'id' => $batchStock->location->id,
                 'name' => $batchStock->location->name,
                 'product_id' => $batchStock->product_id,
-                'quantity' => is_numeric($batchStock->quantity) ? (int) $batchStock->quantity : 0,
+                'quantity' => is_numeric($batchStock->quantity) ? (float) $batchStock->quantity : 0,
                 'purchase_price' => $batchStock->purchase_price,
                 'sale_price' => 0,
             ];

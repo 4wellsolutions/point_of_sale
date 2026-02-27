@@ -83,6 +83,10 @@
                         <th>Product</th>
                         <th>SKU</th>
                         <th>Category</th>
+                        <th>Batch No</th>
+                        <th>Location</th>
+                        <th>Cost</th>
+                        <th>Price</th>
                         <th class="text-center">Current Stock</th>
                         <th class="text-center">Reorder Level</th>
                         <th class="text-center">Status</th>
@@ -91,7 +95,7 @@
                 <tbody>
                     @forelse($products as $product)
                         @php
-                            $stock = $product->total_stock ?? 0;
+                            $stock = $product->quantity ?? 0;
                             $alertQty = $product->reorder_level ?? 0;
                             if ($stock <= 0) {
                                 $statusClass = 'bg-danger';
@@ -106,9 +110,13 @@
                         @endphp
                         <tr class="{{ $stock <= 0 ? 'low-stock-row' : '' }}">
                             <td>{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</td>
-                            <td><strong>{{ $product->name }}</strong></td>
+                            <td><strong>{{ $product->product_name ?? '—' }}</strong></td>
                             <td><code>{{ $product->sku }}</code></td>
-                            <td>{{ $product->category->name ?? '—' }}</td>
+                            <td>{{ $product->product->category->name ?? '—' }}</td>
+                            <td>{{ $product->batch->batch_no ?? '—' }}</td>
+                            <td>{{ $product->location->name ?? '—' }}</td>
+                            <td class="text-right">{{ format_number($product->purchase_price ?? 0) }}</td>
+                            <td class="text-right">{{ format_number($product->product->sale_price ?? 0) }}</td>
                             <td class="text-center"><strong>{{ format_number($stock) }}</strong></td>
                             <td class="text-center">{{ format_number($alertQty) }}</td>
                             <td class="text-center"><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>

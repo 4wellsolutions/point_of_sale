@@ -160,33 +160,41 @@ class ReportController extends Controller
      */
     public function stock(Request $request)
     {
-        // Subquery: sum batch_stocks.quantity through batches → products
-        $stockSubquery = DB::raw('(SELECT COALESCE(SUM(bs.quantity), 0)
-            FROM batch_stocks bs
-            INNER JOIN batches b ON b.id = bs.batch_id
-            WHERE b.product_id = products.id
-            AND b.deleted_at IS NULL) as total_stock');
-
-        $query = Product::with(['category'])
-            ->select('products.*', $stockSubquery)
-            ->where('products.status', 'active');
+        $query = \App\Models\BatchStock::with(['product.category', 'batch', 'location'])
+            ->join('products', 'batch_stocks.product_id', '=', 'products.id')
+            ->join('batches', 'batch_stocks.batch_id', '=', 'batches.id')
+            ->join('locations', 'batch_stocks.location_id', '=', 'locations.id')
+            ->where('products.status', 'active')
+            ->whereNull('batches.deleted_at')
+            ->select(
+                'batch_stocks.*',
+                'products.name as product_name',
+                'products.sku',
+                'products.category_id',
+                'products.reorder_level'
+            );
 
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $query->where('products.category_id', $request->category_id);
         }
         if ($request->filled('stock_status')) {
             if ($request->stock_status === 'low') {
-                $query->havingRaw('total_stock <= products.reorder_level AND total_stock > 0');
+                $query->whereRaw('batch_stocks.quantity <= products.reorder_level AND batch_stocks.quantity > 0');
             } elseif ($request->stock_status === 'out') {
-                $query->havingRaw('total_stock <= 0');
+                $query->whereRaw('batch_stocks.quantity <= 0');
             } elseif ($request->stock_status === 'in') {
-                $query->havingRaw('total_stock > products.reorder_level');
+                $query->whereRaw('batch_stocks.quantity > products.reorder_level');
             }
         }
 
-        $products = $query->orderBy('name')->paginate(50)->appends($request->query());
+        $stockEntries = $query->orderBy('products.name')
+            ->orderBy('batches.batch_no')
+            ->paginate(50)
+            ->appends($request->query());
+
         $categories = Category::orderBy('name')->get();
 
+        // Calculate KPI totals
         $totalProducts = Product::where('status', 'active')->count();
 
         $stockSql = '(SELECT COALESCE(SUM(bs.quantity),0)
@@ -204,7 +212,7 @@ class ReportController extends Controller
             ->count();
 
         return view('reports.stock', compact(
-            'products',
+            'stockEntries',
             'categories',
             'totalProducts',
             'lowStockCount',
@@ -335,10 +343,35 @@ class ReportController extends Controller
        ───────────────────────────────────────────── */
     public function stockPdf(Request $request)
     {
-        $stockSql = '(SELECT COALESCE(SUM(bs.quantity),0) FROM batch_stocks bs INNER JOIN batches b ON b.id = bs.batch_id WHERE b.product_id = products.id AND b.deleted_at IS NULL) as total_stock';
-        $records = Product::with(['category'])->where('status', 'active')
-            ->selectRaw('products.*, ' . $stockSql)
-            ->orderBy('name')->get();
+        $records = \App\Models\BatchStock::with(['product.category', 'batch', 'location'])
+            ->join('products', 'batch_stocks.product_id', '=', 'products.id')
+            ->join('batches', 'batch_stocks.batch_id', '=', 'batches.id')
+            ->join('locations', 'batch_stocks.location_id', '=', 'locations.id')
+            ->where('products.status', 'active')
+            ->whereNull('batches.deleted_at')
+            ->select(
+                'batch_stocks.*',
+                'products.name as product_name',
+                'products.sku',
+                'products.category_id',
+                'products.reorder_level'
+            );
+
+        if ($request->filled('category_id')) {
+            $records->where('products.category_id', $request->category_id);
+        }
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'low') {
+                $records->whereRaw('batch_stocks.quantity <= products.reorder_level AND batch_stocks.quantity > 0');
+            } elseif ($request->stock_status === 'out') {
+                $records->whereRaw('batch_stocks.quantity <= 0');
+            } elseif ($request->stock_status === 'in') {
+                $records->whereRaw('batch_stocks.quantity > products.reorder_level');
+            }
+        }
+
+        $records = $records->orderBy('products.name')->orderBy('batches.batch_no')->get();
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.stock-pdf', compact('records'))
             ->setPaper('a4', 'landscape');
         return $pdf->stream('stock-report.pdf');
@@ -346,18 +379,55 @@ class ReportController extends Controller
 
     public function stockCsv(Request $request)
     {
-        $stockSql = '(SELECT COALESCE(SUM(bs.quantity),0) FROM batch_stocks bs INNER JOIN batches b ON b.id = bs.batch_id WHERE b.product_id = products.id AND b.deleted_at IS NULL) as total_stock';
-        $records = Product::with(['category'])->where('status', 'active')
-            ->selectRaw('products.*, ' . $stockSql)
-            ->orderBy('name')->get();
+        $records = \App\Models\BatchStock::with(['product.category', 'batch', 'location'])
+            ->join('products', 'batch_stocks.product_id', '=', 'products.id')
+            ->join('batches', 'batch_stocks.batch_id', '=', 'batches.id')
+            ->join('locations', 'batch_stocks.location_id', '=', 'locations.id')
+            ->where('products.status', 'active')
+            ->whereNull('batches.deleted_at')
+            ->select(
+                'batch_stocks.*',
+                'products.name as product_name',
+                'products.sku',
+                'products.category_id',
+                'products.reorder_level'
+            );
+
+        if ($request->filled('category_id')) {
+            $records->where('products.category_id', $request->category_id);
+        }
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'low') {
+                $records->whereRaw('batch_stocks.quantity <= products.reorder_level AND batch_stocks.quantity > 0');
+            } elseif ($request->stock_status === 'out') {
+                $records->whereRaw('batch_stocks.quantity <= 0');
+            } elseif ($request->stock_status === 'in') {
+                $records->whereRaw('batch_stocks.quantity > products.reorder_level');
+            }
+        }
+
+        $records = $records->orderBy('products.name')->orderBy('batches.batch_no')->get();
+
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="stock-report.csv"'];
         return response()->stream(function () use ($records) {
             $f = fopen('php://output', 'w');
-            fputcsv($f, ['#', 'Product', 'SKU', 'Category', 'Stock Qty', 'Reorder Level', 'Status']);
+            fputcsv($f, ['#', 'Product', 'SKU', 'Category', 'Batch No', 'Location', 'Purchase Price', 'Sale Price', 'Stock Qty', 'Reorder Level', 'Status']);
             foreach ($records as $i => $r) {
-                $qty = $r->total_stock ?? 0;
+                $qty = $r->quantity ?? 0;
                 $status = $qty <= 0 ? 'Out of Stock' : ($qty <= $r->reorder_level ? 'Low Stock' : 'In Stock');
-                fputcsv($f, [$i + 1, $r->name, $r->sku, $r->category->name ?? '—', $qty, $r->reorder_level, $status]);
+                fputcsv($f, [
+                    $i + 1,
+                    $r->product_name,
+                    $r->sku,
+                    $r->product->category->name ?? '—',
+                    $r->batch->batch_no ?? '—',
+                    $r->location->name ?? '—',
+                    $r->purchase_price,
+                    $r->product->sale_price,
+                    $qty,
+                    $r->reorder_level,
+                    $status
+                ]);
             }
             fclose($f);
         }, 200, $headers);

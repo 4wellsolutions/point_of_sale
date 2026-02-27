@@ -150,7 +150,7 @@ class PurchaseController extends Controller
             'purchase_items.*.product_id' => 'required|exists:products,id',
             'purchase_items.*.batch_no' => 'required|string|max:255',
             'purchase_items.*.location_id' => 'required|exists:locations,id',
-            'purchase_items.*.quantity' => 'required|integer|min:1',
+            'purchase_items.*.quantity' => 'required|numeric|min:0.01',
             'purchase_items.*.purchase_price' => 'required|numeric|min:0.01',
 
             // Payment Methods - Made Optional
@@ -499,7 +499,7 @@ class PurchaseController extends Controller
             'purchase_items.*.product_id' => 'required|exists:products,id',
             'purchase_items.*.batch_no' => 'required|string|max:255',
             'purchase_items.*.location_id' => 'required|exists:locations,id',
-            'purchase_items.*.quantity' => 'required|integer|min:1',
+            'purchase_items.*.quantity' => 'required|numeric|min:0.01',
             'purchase_items.*.purchase_price' => 'required|numeric|min:0.01',
 
             'payment_methods' => 'nullable|array',
@@ -514,7 +514,7 @@ class PurchaseController extends Controller
             'purchase_items.*.product_id.required' => 'Please select a product.',
             'purchase_items.*.batch_no.required' => 'Batch number is required.',
             'purchase_items.*.quantity.required' => 'Please enter the quantity.',
-            'purchase_items.*.quantity.min' => 'Quantity must be at least 1.',
+            'purchase_items.*.quantity.min' => 'Quantity must be at least 0.01.',
             'purchase_items.*.purchase_price.required' => 'Please enter the purchase price.',
             'purchase_items.*.purchase_price.min' => 'Purchase price must be positive.',
             'purchase_items.*.location_id.required' => 'Please select a location.',
