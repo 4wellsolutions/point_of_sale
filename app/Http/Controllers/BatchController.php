@@ -18,8 +18,10 @@ class BatchController extends Controller
             ], 422);
         }
 
-        // Fetch the batch using batch_no
-        $batch = Batch::where('batch_no', $batch)->first();
+        // Fetch the batch using batch_no and tie it to the specific product
+        $batch = Batch::where('batch_no', $batch)
+            ->where('product_id', $product)
+            ->first();
 
         // If batch does not exist, return an error response
         if (!$batch) {

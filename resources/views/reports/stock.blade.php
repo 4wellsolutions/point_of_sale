@@ -91,36 +91,48 @@
                         <th class="text-center">Reorder Level</th>
                         <th class="text-center">Status</th>
                     </tr>
-                </thead>
                 <tbody>
-                    @forelse($products as $product)
-                        @php
-                            $stock = $product->quantity ?? 0;
-                            $alertQty = $product->reorder_level ?? 0;
-                            if ($stock <= 0) {
-                                $statusClass = 'bg-danger';
-                                $statusLabel = 'Out of Stock';
-                            } elseif ($stock <= $alertQty) {
-                                $statusClass = 'bg-warning';
-                                $statusLabel = 'Low Stock';
-                            } else {
-                                $statusClass = 'bg-success';
-                                $statusLabel = 'In Stock';
-                            }
-                        @endphp
-                        <tr class="{{ $stock <= 0 ? 'low-stock-row' : '' }}">
-                            <td>{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</td>
-                            <td><strong>{{ $product->product_name ?? '—' }}</strong></td>
-                            <td><code>{{ $product->sku }}</code></td>
-                            <td>{{ $product->product->category->name ?? '—' }}</td>
-                            <td>{{ $product->batch->batch_no ?? '—' }}</td>
-                            <td>{{ $product->location->name ?? '—' }}</td>
-                            <td class="text-right">{{ format_number($product->purchase_price ?? 0) }}</td>
-                            <td class="text-right">{{ format_number($product->product->sale_price ?? 0) }}</td>
-                            <td class="text-center"><strong>{{ format_number($stock) }}</strong></td>
-                            <td class="text-center">{{ format_number($alertQty) }}</td>
-                            <td class="text-center"><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
-                        </tr>
+                    @php
+                        $groupedStocks = $stockEntries->groupBy('product_id');
+                        $counter = 1;
+                    @endphp
+                    @forelse($groupedStocks as $productId => $productStocks)
+                        @foreach($productStocks as $index => $product)
+                            @php
+                                $stock = $product->quantity ?? 0;
+                                $alertQty = $product->reorder_level ?? 0;
+                                if ($stock <= 0) {
+                                    $statusClass = 'bg-danger';
+                                    $statusLabel = 'Out of Stock';
+                                } elseif ($stock <= $alertQty) {
+                                    $statusClass = 'bg-warning';
+                                    $statusLabel = 'Low Stock';
+                                } else {
+                                    $statusClass = 'bg-success';
+                                    $statusLabel = 'In Stock';
+                                }
+                                $isFirst = $index === 0;
+                                $rowspan = $productStocks->count();
+                            @endphp
+                            <tr class="{{ $stock <= 0 ? 'low-stock-row' : '' }}">
+                                @if($isFirst)
+                                    <td rowspan="{{ $rowspan }}" style="vertical-align: middle;">
+                                        {{ $counter++ + ($stockEntries->currentPage() - 1) * $stockEntries->perPage() }}</td>
+                                    <td rowspan="{{ $rowspan }}" style="vertical-align: middle;">
+                                        <strong>{{ $product->product_name ?? '—' }}</strong></td>
+                                    <td rowspan="{{ $rowspan }}" style="vertical-align: middle;"><code>{{ $product->sku }}</code></td>
+                                    <td rowspan="{{ $rowspan }}" style="vertical-align: middle;">
+                                        {{ $product->product->category->name ?? '—' }}</td>
+                                @endif
+                                <td>{{ $product->batch->batch_no ?? '—' }}</td>
+                                <td>{{ $product->location->name ?? '—' }}</td>
+                                <td class="text-right">{{ format_number($product->purchase_price ?? 0) }}</td>
+                                <td class="text-right">{{ format_number($product->product->sale_price ?? 0) }}</td>
+                                <td class="text-center"><strong>{{ format_number($stock) }}</strong></td>
+                                <td class="text-center">{{ format_number($alertQty) }}</td>
+                                <td class="text-center"><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                            </tr>
+                        @endforeach
                     @empty
                         <tr>
                             <td colspan="7" class="text-center py-4 text-muted">No products found for the selected filters.</td>
@@ -129,8 +141,8 @@
                 </tbody>
             </table>
         </div>
-        @if($products->hasPages())
-            <div class="card-footer">{{ $products->links() }}</div>
+        @if($stockEntries->hasPages())
+            <div class="card-footer">{{ $stockEntries->links() }}</div>
         @endif
     </div>
 @endsection

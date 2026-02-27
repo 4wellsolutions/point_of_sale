@@ -24,4 +24,14 @@ class BatchStock extends Model implements AuditableContract
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class);
+    }
 }
