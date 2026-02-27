@@ -431,5 +431,134 @@ class ReportController extends Controller
             'vendDebit'
         ));
     }
-}
 
+    /**
+     * Sales Invoice Income Statement — profit per invoice
+     */
+    public function salesIncomeStatement(Request $request)
+    {
+        $query = Sale::with(['customer', 'saleItems']);
+
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('sale_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('sale_date', '<=', $request->date_to);
+        }
+
+        $sales = $query->latest('id')->paginate(50)->appends($request->query());
+
+        // Calculate per-invoice profit data
+        $salesData = $sales->getCollection()->map(function ($sale) {
+            $revenue = $sale->saleItems->sum(fn($i) => $i->quantity * $i->sale_price);
+            $cogs = $sale->saleItems->sum(fn($i) => $i->quantity * $i->purchase_price);
+            $itemDiscount = $sale->saleItems->sum('discount');
+            $invoiceDisc = $sale->discount_amount ?? 0;
+            $totalDiscount = $itemDiscount + $invoiceDisc;
+            $netRevenue = $revenue - $totalDiscount;
+            $grossProfit = $netRevenue - $cogs;
+            $profitPct = $netRevenue > 0 ? ($grossProfit / $netRevenue) * 100 : 0;
+
+            $sale->_revenue = $revenue;
+            $sale->_cogs = $cogs;
+            $sale->_item_discount = $itemDiscount;
+            $sale->_invoice_disc = $invoiceDisc;
+            $sale->_total_discount = $totalDiscount;
+            $sale->_net_revenue = $netRevenue;
+            $sale->_gross_profit = $grossProfit;
+            $sale->_profit_pct = $profitPct;
+
+            return $sale;
+        });
+
+        // Aggregated KPI totals
+        $totalRevenue = $salesData->sum('_revenue');
+        $totalCogs = $salesData->sum('_cogs');
+        $totalDiscount = $salesData->sum('_total_discount');
+        $totalNetRev = $salesData->sum('_net_revenue');
+        $totalProfit = $salesData->sum('_gross_profit');
+        $totalProfitPct = $totalNetRev > 0 ? ($totalProfit / $totalNetRev) * 100 : 0;
+        $totalCount = (clone $query)->getQuery()->count();
+
+        $customers = Customer::orderBy('name')->get();
+
+        return view('reports.sales-income-statement', compact(
+            'sales',
+            'customers',
+            'totalRevenue',
+            'totalCogs',
+            'totalDiscount',
+            'totalNetRev',
+            'totalProfit',
+            'totalProfitPct',
+            'totalCount'
+        ));
+    }
+
+    /**
+     * Sales Income Statement — Single invoice show (detailed)
+     */
+    public function salesIncomeStatementShow(Sale $sale)
+    {
+        $sale->load(['customer', 'saleItems.product', 'saleItems.location']);
+
+        // Calculate per-item profit
+        $items = $sale->saleItems->map(function ($item) {
+            $item->_revenue = $item->quantity * $item->sale_price;
+            $item->_cost = $item->quantity * $item->purchase_price;
+            $item->_discount = $item->discount ?? 0;
+            $item->_net = $item->_revenue - $item->_discount;
+            $item->_profit = $item->_net - $item->_cost;
+            $item->_margin = $item->_net > 0 ? ($item->_profit / $item->_net) * 100 : 0;
+            return $item;
+        });
+
+        // Invoice totals
+        $totals = (object) [
+            'revenue' => $items->sum('_revenue'),
+            'cogs' => $items->sum('_cost'),
+            'item_discount' => $items->sum('_discount'),
+            'invoice_disc' => $sale->discount_amount ?? 0,
+            'net_revenue' => $items->sum('_net') - ($sale->discount_amount ?? 0),
+            'gross_profit' => $items->sum('_profit') - ($sale->discount_amount ?? 0),
+        ];
+        $totals->margin = $totals->net_revenue > 0 ? ($totals->gross_profit / $totals->net_revenue) * 100 : 0;
+
+        return view('reports.sales-income-statement-show', compact('sale', 'items', 'totals'));
+    }
+
+    /**
+     * Sales Income Statement — PDF download
+     */
+    public function salesIncomeStatementPdf(Sale $sale)
+    {
+        $sale->load(['customer', 'saleItems.product', 'saleItems.location']);
+
+        $items = $sale->saleItems->map(function ($item) {
+            $item->_revenue = $item->quantity * $item->sale_price;
+            $item->_cost = $item->quantity * $item->purchase_price;
+            $item->_discount = $item->discount ?? 0;
+            $item->_net = $item->_revenue - $item->_discount;
+            $item->_profit = $item->_net - $item->_cost;
+            $item->_margin = $item->_net > 0 ? ($item->_profit / $item->_net) * 100 : 0;
+            return $item;
+        });
+
+        $totals = (object) [
+            'revenue' => $items->sum('_revenue'),
+            'cogs' => $items->sum('_cost'),
+            'item_discount' => $items->sum('_discount'),
+            'invoice_disc' => $sale->discount_amount ?? 0,
+            'net_revenue' => $items->sum('_net') - ($sale->discount_amount ?? 0),
+            'gross_profit' => $items->sum('_profit') - ($sale->discount_amount ?? 0),
+        ];
+        $totals->margin = $totals->net_revenue > 0 ? ($totals->gross_profit / $totals->net_revenue) * 100 : 0;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.sales-income-statement-pdf', compact('sale', 'items', 'totals'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->stream("income-statement-{$sale->invoice_no}.pdf");
+    }
+}

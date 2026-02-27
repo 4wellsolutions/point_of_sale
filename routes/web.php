@@ -199,6 +199,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/stock/export/pdf', [\App\Http\Controllers\ReportController::class, 'stockPdf'])->name('stock.pdf');
         Route::get('/stock/export/csv', [\App\Http\Controllers\ReportController::class, 'stockCsv'])->name('stock.csv');
         Route::get('/payment-methods-balance', [\App\Http\Controllers\ReportController::class, 'paymentMethodsBalance'])->name('payment-methods-balance');
+        Route::get('/sales-income-statement', [\App\Http\Controllers\ReportController::class, 'salesIncomeStatement'])->name('sales-income-statement');
+        Route::get('/sales-income-statement/{sale}', [\App\Http\Controllers\ReportController::class, 'salesIncomeStatementShow'])->name('sales-income-statement.show');
+        Route::get('/sales-income-statement/{sale}/pdf', [\App\Http\Controllers\ReportController::class, 'salesIncomeStatementPdf'])->name('sales-income-statement.pdf');
     });
 
     // ── SETTINGS ──

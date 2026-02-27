@@ -3,9 +3,6 @@
     <a href="{{ route('home') }}" class="brand-link" style="text-align:center; padding:10px 5px;">
         <span class="brand-text font-weight-bold"
             style="font-size:16px;">{{ setting('business_name', setting('app_name', 'POS System')) }}</span>
-        @if(setting('business_name') && setting('app_name') && setting('business_name') !== setting('app_name'))
-            <br><small class="text-muted" style="font-size:11px;">{{ setting('app_name') }}</small>
-        @endif
     </a>
 
     <!-- Sidebar -->
@@ -411,6 +408,13 @@
                                 class="nav-link {{ request()->routeIs('reports.payment-methods-balance') ? 'active' : '' }}">
                                 <i class="fas fa-wallet nav-icon"></i>
                                 <p>Business Balance</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.sales-income-statement') }}"
+                                class="nav-link {{ request()->routeIs('reports.sales-income-statement*') ? 'active' : '' }}">
+                                <i class="fas fa-file-invoice nav-icon"></i>
+                                <p>Sales Profit Report</p>
                             </a>
                         </li>
                         <li class="nav-item">
