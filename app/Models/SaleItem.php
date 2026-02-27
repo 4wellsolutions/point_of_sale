@@ -19,6 +19,7 @@ class SaleItem extends Model implements AuditableContract
         'location_id',
         'purchase_price',
         'sale_price',
+        'discount',
         'total_amount',
     ];
     protected $dates = ['deleted_at'];

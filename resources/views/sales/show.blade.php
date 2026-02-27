@@ -149,6 +149,7 @@
                             <th>Expiry</th>
                             <th class="text-end">Qty</th>
                             <th class="text-end">Sale Price</th>
+                            <th class="text-end">Discount</th>
                             <th class="text-end">Total</th>
                         </tr>
                     </thead>
@@ -175,21 +176,22 @@
                                 </td>
                                 <td class="text-end">{{ $item->quantity }}</td>
                                 <td class="text-end">{{ format_number($item->sale_price) }}</td>
+                                <td class="text-end">{{ format_number($item->discount) }}</td>
                                 <td class="text-end fw-medium">{{ format_number($item->total_amount) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="7" class="text-end">Total:</th>
+                            <th colspan="8" class="text-end">Total:</th>
                             <th class="text-end">{{ format_number($sale->total_amount) }}</th>
                         </tr>
                         <tr>
-                            <th colspan="7" class="text-end">Discount:</th>
+                            <th colspan="8" class="text-end">Discount:</th>
                             <th class="text-end">{{ format_number($sale->discount_amount) }}</th>
                         </tr>
                         <tr>
-                            <th colspan="7" class="text-end">Net Amount:</th>
+                            <th colspan="8" class="text-end">Net Amount:</th>
                             <th class="text-end">{{ format_number($sale->net_amount) }}</th>
                         </tr>
                     </tfoot>

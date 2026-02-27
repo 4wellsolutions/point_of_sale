@@ -68,19 +68,20 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive" style="max-height:350px; overflow-y:auto;">
-                    <table class="table table-hover mb-0" id="sale-items-table">
+                    <table class="table table-hover table-sm mb-0" id="sale-items-table" style="font-size:0.8rem;">
                         <thead>
                             <tr>
-                                <th style="width:6%;">Image</th>
-                                <th style="width:18%;">Product</th>
-                                <th style="width:11%;">Batch No <span class="text-danger">*</span></th>
+                                <th style="width:4%;">Img</th>
+                                <th style="width:16%;">Product</th>
+                                <th style="width:10%;">Batch <span class="text-danger">*</span></th>
                                 <th style="width:12%;">Location <span class="text-danger">*</span></th>
-                                <th style="width:9%;">Avail Qty</th>
-                                <th style="width:8%;">Cost Price</th>
-                                <th style="width:9%;">Sale Price <span class="text-danger">*</span></th>
-                                <th style="width:8%;">Qty <span class="text-danger">*</span></th>
-                                <th style="width:11%;">Total</th>
-                                <th style="width:5%;"></th>
+                                <th style="width:6%;">Avail</th>
+                                <th style="width:9%;">Cost</th>
+                                <th style="width:9%;">Price <span class="text-danger">*</span></th>
+                                <th style="width:8%;">Disc</th>
+                                <th style="width:6%;">Qty <span class="text-danger">*</span></th>
+                                <th style="width:10%;">Total</th>
+                                <th style="width:4%;"></th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -392,49 +393,56 @@
                 @foreach($locations as $loc)
                     opts += `<option value="{{ $loc->id }}" ${selectedId == {{ $loc->id }} ? 'selected' : ''}>{{ $loc->name }}</option>`;
                 @endforeach
-                    return opts;
+                                return opts;
             }
 
-            function addItemRow(productId, productName, productImage, batchNo, locationId, availQty, costPrice, salePrice, qty) {
+            function addItemRow(productId, productName, productImage, batchNo, locationId, availQty, costPrice, salePrice, qty, discount) {
                 let img = productImage
-                    ? `<img src="${productImage}" class="img-thumbnail product-thumb" style="width:50px;height:50px;cursor:pointer;" data-image_url="${productImage}">`
+                    ? `<img src="${productImage}" class="img-thumbnail product-thumb" style="width:40px;height:40px;cursor:pointer;" data-image_url="${productImage}">`
                     : '<span class="text-muted small">N/A</span>';
 
-                let rowTotal = ((qty || 1) * (salePrice || 0)).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+                discount = discount || 0;
+                let rowTotal = ((qty || 1) * (salePrice || 0) - discount);
+                if (rowTotal < 0) rowTotal = 0;
+                rowTotal = rowTotal.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
 
                 let row = `
-                        <tr>
-                            <td>${img}
-                                <input type="hidden" name="sale_items[${itemIdx}][product_id]" value="${productId}">
-                            </td>
-                            <td><strong>${productName}</strong></td>
-                            <td>
-                                <select name="sale_items[${itemIdx}][batch_no]" class="form-select batch-select" required style="min-width:100px;">
-                                    <option value="">Loading...</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="sale_items[${itemIdx}][location_id]" class="form-select location-select" required>
-                                    ${getLocOptions(locationId)}
-                                </select>
-                            </td>
-                            <td><input type="number" class="form-control avail-qty" readonly value="${availQty || 0}" style="background:#f8f9fa;max-width:70px;"></td>
-                            <td>
-                                <input type="number" step="0.01" name="sale_items[${itemIdx}][purchase_price]" class="form-control cost-price" value="${costPrice || 0}" readonly style="background:#f8f9fa;max-width:90px;">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" name="sale_items[${itemIdx}][sale_price]" class="form-control sale-price" required value="${salePrice || ''}" style="max-width:90px;">
-                            </td>
-                            <td>
-                                <input type="number" name="sale_items[${itemIdx}][quantity]" class="form-control qty" required min="1" value="${qty || 1}" style="max-width:70px;">
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" name="sale_items[${itemIdx}][total_amount]" class="form-control row_total" readonly value="${rowTotal}" style="background:#f8f9fa;">
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm remove-item"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>`;
+                    <tr>
+                        <td>${img}
+                            <input type="hidden" name="sale_items[${itemIdx}][product_id]" value="${productId}">
+                        </td>
+                        <td>${productName}</td>
+                        <td>
+                            <select name="sale_items[${itemIdx}][batch_no]" class="form-select form-select-sm batch-select" required style="font-size:0.78rem;padding:3px 6px;">
+                                <option value="">Select</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="sale_items[${itemIdx}][location_id]" class="form-select form-select-sm location-select" required style="font-size:0.78rem;padding:3px 6px;">
+                                ${getLocOptions(locationId)}
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control form-control-sm avail-qty" readonly value="${availQty || 0}" style="background:#f8f9fa;font-size:0.78rem;padding:3px 4px;"></td>
+                        <td>
+                            <input type="number" step="0.01" name="sale_items[${itemIdx}][purchase_price]" class="form-control form-control-sm cost-price" value="${costPrice || 0}" readonly style="background:#f8f9fa;font-size:0.78rem;padding:3px 4px;">
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" name="sale_items[${itemIdx}][sale_price]" class="form-control form-control-sm sale-price" required value="${salePrice || ''}" style="font-size:0.78rem;padding:3px 4px;">
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" name="sale_items[${itemIdx}][discount]" class="form-control form-control-sm item-discount" value="${discount}" min="0" style="font-size:0.78rem;padding:3px 4px;">
+                        </td>
+                        <td>
+                            <input type="number" name="sale_items[${itemIdx}][quantity]" class="form-control form-control-sm qty" required min="1" value="${qty || 1}" style="font-size:0.78rem;padding:3px 4px;">
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" name="sale_items[${itemIdx}][total_amount]" class="form-control form-control-sm row_total" readonly value="${rowTotal}" style="background:#f8f9fa;font-size:0.78rem;padding:3px 4px;">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm remove-item" style="padding:2px 6px;font-size:0.7rem;"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+
 
                 let $row = $(row);
                 $('#sale-items-table tbody').append($row);
@@ -496,7 +504,7 @@
                 updateRowTotal(row);
             });
 
-            $('#sale-items-table').on('input', '.sale-price, .qty', function () {
+            $('#sale-items-table').on('input', '.sale-price, .qty, .item-discount', function () {
                 let row = $(this).closest('tr');
                 checkBelowCost(row);
                 updateRowTotal(row);
@@ -505,7 +513,10 @@
             function updateRowTotal(row) {
                 let qty = parseFloat(row.find('.qty').val()) || 0;
                 let price = parseFloat(row.find('.sale-price').val()) || 0;
-                row.find('.row_total').val((qty * price).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
+                let discount = parseFloat(row.find('.item-discount').val()) || 0;
+                let total = (qty * price) - discount;
+                if (total < 0) total = 0;
+                row.find('.row_total').val(total.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'));
                 updateTotals();
             }
 
@@ -534,7 +545,7 @@
                 let productId = $('#product_select').val();
                 let productData = $('#product_select').select2('data')[0];
                 if (!productId) { toastr.warning('Please select a product.'); return; }
-                addItemRow(productId, productData.text, productData.image_url || '', '', '', 0, 0, '', 1);
+                addItemRow(productId, productData.text, productData.image_url || '', '', '', 0, 0, '', 1, 0);
                 $('#product_select').val(null).trigger('change');
             });
 
@@ -547,9 +558,10 @@
                     @json($item->batch_no),
                     '{{ $item->location_id }}',
                     0,
-                                    {{ $item->purchase_price }},
-                                    {{ $item->sale_price }},
-                    {{ $item->quantity }}
+                                            {{ $item->purchase_price }},
+                                            {{ $item->sale_price }},
+                                            {{ $item->quantity }},
+                    {{ $item->discount ?? 0 }}
                 );
             @endforeach
 
@@ -563,19 +575,19 @@
                 let amtVal = amount ? amount : '';
                 let amtShow = amount ? '' : 'display:none;';
                 let html = `
-                        <div class="row g-2 payment-method-row">
-                            <div class="col-md-6">
-                                <label class="form-label">Payment Method</label>
-                                <select name="payment_methods[${pmIdx}][payment_method_id]" class="form-select pm-select">${opts}</select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
-                                <input type="number" step="0.01" name="payment_methods[${pmIdx}][amount]" class="form-control pm-amount" min="0.01" value="${amtVal}" style="${amtShow}">
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger remove-pm"><i class="fas fa-minus"></i></button>
-                            </div>
-                        </div>`;
+                                    <div class="row g-2 payment-method-row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Payment Method</label>
+                                            <select name="payment_methods[${pmIdx}][payment_method_id]" class="form-select pm-select">${opts}</select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Amount ({{ setting('currency_symbol', '$') }})</label>
+                                            <input type="number" step="0.01" name="payment_methods[${pmIdx}][amount]" class="form-control pm-amount" min="0.01" value="${amtVal}" style="${amtShow}">
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger remove-pm"><i class="fas fa-minus"></i></button>
+                                        </div>
+                                    </div>`;
                 $('#payment-methods-container').append(html);
                 pmIdx++;
                 toggleRemoveAll();

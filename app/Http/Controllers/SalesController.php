@@ -96,6 +96,7 @@ class SalesController extends Controller
             'sale_items.*.location_id' => 'required|exists:locations,id',
             'sale_items.*.purchase_price' => 'required|numeric|min:0',
             'sale_items.*.sale_price' => 'required|numeric|min:0',
+            'sale_items.*.discount' => 'nullable|numeric|min:0',
             'sale_items.*.quantity' => 'required|numeric|min:1',
             'sale_items.*.total_amount' => 'required|numeric|min:0',
             'payment_methods' => 'nullable|array',
@@ -129,6 +130,11 @@ class SalesController extends Controller
                     ->where('batch_no', $itemData['batch_no'])
                     ->first();
 
+                if (!$batch) {
+                    $product = \App\Models\Product::find($itemData['product_id']);
+                    throw new \Exception("Batch '{$itemData['batch_no']}' not found for product '{$product->name}'.");
+                }
+
                 // Find the corresponding BatchStock entry
                 $batchStock = BatchStock::where('batch_id', $batch->id)
                     ->where('location_id', $itemData['location_id'])
@@ -137,13 +143,16 @@ class SalesController extends Controller
                 if ($batchStock) {
                     // Check if there's enough stock
                     if ($batchStock->quantity < $itemData['quantity']) {
-                        throw new \Exception('Not enough stock available for the sale.');
+                        $product = \App\Models\Product::find($itemData['product_id']);
+                        throw new \Exception("Not enough stock for '{$product->name}' (Batch: {$itemData['batch_no']}). Available: {$batchStock->quantity}, Requested: {$itemData['quantity']}.");
                     }
 
                     // Reduce the stock quantity
                     $batchStock->decrement('quantity', $itemData['quantity']);
                 } else {
-                    throw new \Exception('Batch stock not found.');
+                    $product = \App\Models\Product::find($itemData['product_id']);
+                    $location = \App\Models\Location::find($itemData['location_id']);
+                    throw new \Exception("No stock found for '{$product->name}' (Batch: {$itemData['batch_no']}) at location '{$location->name}'.");
                 }
 
                 // Create sale item record
@@ -153,6 +162,7 @@ class SalesController extends Controller
                     'location_id' => $itemData['location_id'],
                     'purchase_price' => $itemData['purchase_price'],
                     'sale_price' => $itemData['sale_price'],
+                    'discount' => $itemData['discount'] ?? 0,
                     'quantity' => $itemData['quantity'],
                     'total_amount' => $itemData['total_amount'],
                 ]);
@@ -324,6 +334,7 @@ class SalesController extends Controller
             'sale_items.*.location_id' => 'required|exists:locations,id',
             'sale_items.*.purchase_price' => 'required|numeric|min:0',
             'sale_items.*.sale_price' => 'required|numeric|min:0',
+            'sale_items.*.discount' => 'nullable|numeric|min:0',
             'sale_items.*.quantity' => 'required|integer|min:1',
             'sale_items.*.total_amount' => 'required|numeric|min:0',
             'payment_methods' => 'nullable|array',
@@ -450,6 +461,7 @@ class SalesController extends Controller
                     'location_id' => $itemData['location_id'],
                     'purchase_price' => $itemData['purchase_price'],
                     'sale_price' => $itemData['sale_price'],
+                    'discount' => $itemData['discount'] ?? 0,
                     'quantity' => $itemData['quantity'],
                     'total_amount' => $itemTotal,
                 ]);

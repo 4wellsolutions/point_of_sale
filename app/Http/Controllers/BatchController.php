@@ -18,10 +18,8 @@ class BatchController extends Controller
             ], 422);
         }
 
-        // Fetch the batch using batch_no and product_id
-        $batch = Batch::where('batch_no', $batch)
-            ->where('product_id', $product)
-            ->first();
+        // Fetch the batch using batch_no
+        $batch = Batch::where('batch_no', $batch)->first();
 
         // If batch does not exist, return an error response
         if (!$batch) {
@@ -32,10 +30,7 @@ class BatchController extends Controller
         }
 
         // Load batchstocks along with location details
-        $batchstocks = BatchStock::where("product_id", $product)
-            ->where("batch_id", $batch->id)
-            ->with('location')
-            ->get();
+        $batchstocks = BatchStock::where("product_id", $product)->with('location')->get();
         // If there are no batch stocks, return an empty response with a message
         if ($batchstocks->isEmpty()) {
             return response()->json([

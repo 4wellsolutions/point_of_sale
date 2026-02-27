@@ -57,6 +57,7 @@
                     <th style="border: 1px solid #ddd; padding: 5px;">Batch No.</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">Quantity</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">Sale Price</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Discount</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">Total ({{ setting('currency_symbol', '$') }})</th>
                 </tr>
             </thead>
@@ -75,21 +76,22 @@
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->batch_no ?? 'N/A' }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->quantity }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->sale_price) }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->discount) }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->total_amount) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
-                    <th colspan="6" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Total:</th>
+                    <th colspan="7" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Total:</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->total_amount) }}</th>
                 </tr>
                 <tr>
-                    <th colspan="6" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Discount:</th>
+                    <th colspan="7" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Discount:</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->discount_amount) }}</th>
                 </tr>
                 <tr>
-                    <th colspan="6" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Net Amount:</th>
+                    <th colspan="7" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Net Amount:</th>
                     <th style="border: 1px solid #ddd; padding: 5px;">{{ format_number($sale->net_amount) }}</th>
                 </tr>
             </tfoot>
