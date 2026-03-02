@@ -67,7 +67,7 @@ class SalesController extends Controller
         $paymentMethods = PaymentMethod::all();
 
         // Retrieve the maximum invoice_no from the sales table.
-        $lastInvoice = Sale::max('invoice_no');
+        $lastInvoice = Sale::max(\DB::raw('CAST(invoice_no AS UNSIGNED)'));
 
         // If there’s no previous invoice, start from 1; otherwise, add 1.
         $invoice_no = $lastInvoice ? $lastInvoice + 1 : 1;
@@ -108,7 +108,7 @@ class SalesController extends Controller
 
         try {
             // Generate invoice number
-            $lastInvoice = Sale::max('invoice_no');
+            $lastInvoice = Sale::max(\DB::raw('CAST(invoice_no AS UNSIGNED)'));
             $invoiceNo = $lastInvoice ? $lastInvoice + 1 : 1;
 
             // Create the sale record

@@ -246,7 +246,7 @@ class BookingController extends Controller
         DB::beginTransaction();
         try {
             // Create the Sale header
-            $lastInvoice = Sale::max('invoice_no');
+            $lastInvoice = Sale::max(\DB::raw('CAST(invoice_no AS UNSIGNED)'));
             $invoiceNo = $lastInvoice ? $lastInvoice + 1 : 1;
 
             $totalAmount = $booking->total_amount;

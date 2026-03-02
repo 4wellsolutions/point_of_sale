@@ -141,6 +141,16 @@
                     </li>
                 @endif
 
+                <!-- Areas -->
+                @if(auth()->user()->hasModule('customers'))
+                    <li class="nav-item {{ request()->is('areas*') ? 'active' : '' }}">
+                        <a href="{{ route('areas.index') }}" class="nav-link {{ request()->is('areas*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-map-marker-alt"></i>
+                            <p>Areas</p>
+                        </a>
+                    </li>
+                @endif
+
                 <!-- ── TRANSACTIONS ── -->
                 @if(auth()->user()->hasModule('purchases') || auth()->user()->hasModule('sales'))
                     <li class="sidebar-section-header">Transactions</li>
