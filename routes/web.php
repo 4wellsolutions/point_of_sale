@@ -202,6 +202,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sales-income-statement', [\App\Http\Controllers\ReportController::class, 'salesIncomeStatement'])->name('sales-income-statement');
         Route::get('/sales-income-statement/{sale}', [\App\Http\Controllers\ReportController::class, 'salesIncomeStatementShow'])->name('sales-income-statement.show');
         Route::get('/sales-income-statement/{sale}/pdf', [\App\Http\Controllers\ReportController::class, 'salesIncomeStatementPdf'])->name('sales-income-statement.pdf');
+        Route::get('/bookings', [\App\Http\Controllers\ReportController::class, 'bookings'])->name('bookings');
+        Route::get('/bookings/export/pdf', [\App\Http\Controllers\ReportController::class, 'bookingsPdf'])->name('bookings.pdf');
+        Route::get('/bookings/export/csv', [\App\Http\Controllers\ReportController::class, 'bookingsCsv'])->name('bookings.csv');
     });
 
     // ── SETTINGS ──

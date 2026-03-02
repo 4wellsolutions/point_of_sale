@@ -428,6 +428,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('reports.bookings') }}"
+                                class="nav-link {{ request()->routeIs('reports.bookings*') ? 'active' : '' }}">
+                                <i class="fas fa-clipboard-list nav-icon"></i>
+                                <p>Bookings Report</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('activity-log.index') }}"
                                 class="nav-link {{ request()->is('activity-log*') ? 'active' : '' }}">
                                 <i class="fas fa-history nav-icon"></i>

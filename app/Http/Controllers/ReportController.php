@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Vendor;
 use App\Models\Category;
+use App\Models\Booking;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -257,6 +258,20 @@ class ReportController extends Controller
             $q->whereDate('date', '>=', $request->date_from);
         if ($request->filled('date_to'))
             $q->whereDate('date', '<=', $request->date_to);
+        return $q;
+    }
+
+    private function buildBookingsQuery(Request $request)
+    {
+        $q = Booking::with(['customer', 'user', 'items.product']);
+        if ($request->filled('customer_id'))
+            $q->where('customer_id', $request->customer_id);
+        if ($request->filled('status'))
+            $q->where('status', $request->status);
+        if ($request->filled('date_from'))
+            $q->whereDate('booking_date', '>=', $request->date_from);
+        if ($request->filled('date_to'))
+            $q->whereDate('booking_date', '<=', $request->date_to);
         return $q;
     }
 
@@ -630,5 +645,89 @@ class ReportController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.sales-income-statement-pdf', compact('sale', 'items', 'totals'))
             ->setPaper('a4', 'landscape');
         return $pdf->stream("income-statement-{$sale->invoice_no}.pdf");
+    }
+
+    /**
+     * Bookings Report
+     */
+    public function bookings(Request $request)
+    {
+        $query = Booking::with(['customer', 'user', 'items.product']);
+
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('booking_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('booking_date', '<=', $request->date_to);
+        }
+
+        $bookings = $query->latest('id')->paginate(50)->appends($request->query());
+
+        $totalAmount = (clone $query)->getQuery()->sum('net_amount');
+        $totalDiscount = (clone $query)->getQuery()->sum('discount_amount');
+        $totalCount = (clone $query)->getQuery()->count();
+        $pendingCount = (clone $query)->getQuery()->where('status', 'pending')->count();
+        $convertedCount = (clone $query)->getQuery()->where('status', 'converted')->count();
+
+        $customers = Customer::orderBy('name')->get();
+
+        return view('reports.bookings', compact(
+            'bookings',
+            'customers',
+            'totalAmount',
+            'totalDiscount',
+            'totalCount',
+            'pendingCount',
+            'convertedCount'
+        ));
+    }
+
+    /* ─────────────────────────────────────────────
+       BOOKINGS EXPORTS
+       ───────────────────────────────────────────── */
+    public function bookingsPdf(Request $request)
+    {
+        $records = $this->buildBookingsQuery($request)->latest('id')->get();
+        $filters = array_filter([
+            'Customer' => Customer::find($request->customer_id)?->name,
+            'Status' => $request->status ? ucfirst($request->status) : null,
+            'From' => $request->date_from,
+            'To' => $request->date_to,
+        ]);
+        $title = 'Bookings Report';
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.bookings-pdf', compact('records', 'filters', 'title'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->stream('bookings-report.pdf');
+    }
+
+    public function bookingsCsv(Request $request)
+    {
+        $records = $this->buildBookingsQuery($request)->latest('id')->get();
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="bookings-report.csv"'];
+        return response()->stream(function () use ($records) {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, ['#', 'Invoice No', 'Customer', 'Date', 'Status', 'Items', 'Total Amount', 'Discount', 'Net Amount', 'Created By']);
+            foreach ($records as $i => $r) {
+                fputcsv($f, [
+                    $i + 1,
+                    $r->invoice_no,
+                    $r->customer->name ?? '—',
+                    $r->booking_date->format('Y-m-d'),
+                    ucfirst($r->status),
+                    $r->items->count(),
+                    $r->total_amount,
+                    $r->discount_amount,
+                    $r->net_amount,
+                    $r->user->name ?? '—',
+                ]);
+            }
+            fclose($f);
+        }, 200, $headers);
     }
 }

@@ -486,7 +486,7 @@ class PurchaseController extends Controller
     {
         $purchase = Purchase::with(['purchaseItems', 'transactions'])->findOrFail($id);
 
-        // 1. Validation (same as store, but invoice_no unique is ignored for current)
+        // 1. Validation
         $rules = [
             'vendor_id' => 'required|exists:vendors,id',
             'purchase_date' => 'required|date',
@@ -532,6 +532,9 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
+            // Save old vendor_id before any changes (needed if vendor changes)
+            $oldVendorId = $purchase->vendor_id;
+
             // ─── 2. REVERSE OLD STOCK & DELETE OLD ITEMS ───
             foreach ($purchase->purchaseItems as $item) {
                 $batch = Batch::where('product_id', $item->product_id)
@@ -564,36 +567,29 @@ class PurchaseController extends Controller
                     ]);
                 }
 
-                $item->delete();
+                $item->forceDelete();
             }
 
-            // ─── 3. REVERSE OLD LEDGER ENTRIES ───
-            $oldLedgers = LedgerEntry::where('ledgerable_id', $purchase->vendor_id)
+            // ─── 3. DELETE OLD LEDGER ENTRIES (hard-delete to prevent compounding) ───
+            LedgerEntry::where('ledgerable_id', $oldVendorId)
                 ->where('ledgerable_type', Vendor::class)
-                ->where('description', 'LIKE', '%Invoice #' . $purchase->invoice_no . '%')
-                ->get();
+                ->where(function ($query) use ($purchase) {
+                    $query->where('description', 'Purchase Invoice #' . $purchase->invoice_no)
+                        ->orWhere('description', 'Payment for Purchase Invoice #' . $purchase->invoice_no)
+                        ->orWhere('description', 'LIKE', 'Reversal:%Invoice #' . $purchase->invoice_no . '%');
+                })
+                ->forceDelete();
 
-            foreach ($oldLedgers as $ledger) {
-                $reversalLedger = new LedgerEntry([
-                    'transaction_id' => $ledger->transaction_id,
-                    'date' => now(),
-                    'description' => 'Reversal: ' . $ledger->description,
-                    'debit' => $ledger->credit,
-                    'credit' => $ledger->debit,
-                    'balance' => $this->calculateNewBalance($purchase->vendor_id, $ledger->debit ?: $ledger->credit, $ledger->debit > 0 ? 'credit' : 'debit'),
-                    'user_id' => auth()->id(),
-                ]);
-                $vendor = Vendor::find($purchase->vendor_id);
-                $reversalLedger->ledgerable()->associate($vendor);
-                $reversalLedger->save();
-            }
-
-            // ─── 4. DELETE OLD TRANSACTIONS/PAYMENTS ───
+            // ─── 4. DELETE OLD TRANSACTIONS/PAYMENTS (hard-delete) ───
             foreach ($purchase->transactions as $transaction) {
-                $transaction->delete();
+                $transaction->forceDelete();
             }
 
-            // ─── 5. UPDATE PURCHASE HEADER ───
+            // ─── 5. RECALCULATE OLD VENDOR BALANCE ───
+            // After deleting old ledger entries, recalculate the old vendor's running balance
+            $this->recalculateVendorLedgerBalances($oldVendorId);
+
+            // ─── 6. UPDATE PURCHASE HEADER ───
             $purchase->update([
                 'vendor_id' => $request->vendor_id,
                 'purchase_date' => $request->purchase_date,
@@ -603,7 +599,7 @@ class PurchaseController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // ─── 6. CREATE NEW ITEMS (same logic as store) ───
+            // ─── 7. CREATE NEW ITEMS (same logic as store) ───
             foreach ($request->purchase_items as $item) {
                 $itemTotal = $item['quantity'] * $item['purchase_price'];
 
@@ -673,26 +669,27 @@ class PurchaseController extends Controller
                 ]);
             }
 
-            // ─── 7. CREATE NEW LEDGER ENTRY ───
+            // ─── 8. CREATE NEW LEDGER ENTRY (Purchase Debit) ───
+            $newVendorId = $request->vendor_id;
             $purchaseLedger = new LedgerEntry([
                 'transaction_id' => null,
                 'date' => now(),
                 'description' => 'Purchase Invoice #' . $purchase->invoice_no,
                 'debit' => $request->net_amount + ($request->discount_amount ?? 0),
                 'credit' => 0,
-                'balance' => $this->calculateNewBalance($purchase->vendor_id, $request->net_amount + ($request->discount_amount ?? 0), 'debit'),
+                'balance' => $this->calculateNewBalance($newVendorId, $request->net_amount + ($request->discount_amount ?? 0), 'debit'),
                 'user_id' => auth()->id(),
             ]);
-            $vendor = Vendor::find($purchase->vendor_id);
+            $vendor = Vendor::find($newVendorId);
             $purchaseLedger->ledgerable()->associate($vendor);
             $purchaseLedger->save();
 
-            // ─── 8. HANDLE PAYMENT METHODS ───
+            // ─── 9. HANDLE PAYMENT METHODS ───
             if (is_array($request->payment_methods) && count($request->payment_methods) > 0) {
                 foreach ($request->payment_methods as $payment) {
                     $transaction = Transaction::create([
                         'payment_method_id' => $payment['payment_method_id'],
-                        'vendor_id' => $purchase->vendor_id,
+                        'vendor_id' => $newVendorId,
                         'customer_id' => null,
                         'amount' => $payment['amount'],
                         'transactionable_id' => $purchase->id,
@@ -707,10 +704,10 @@ class PurchaseController extends Controller
                         'description' => 'Payment for Purchase Invoice #' . $purchase->invoice_no,
                         'debit' => 0,
                         'credit' => $payment['amount'],
-                        'balance' => $this->calculateNewBalance($purchase->vendor_id, $payment['amount'], 'credit'),
+                        'balance' => $this->calculateNewBalance($newVendorId, $payment['amount'], 'credit'),
                         'user_id' => auth()->id(),
                     ]);
-                    $vendor = Vendor::find($purchase->vendor_id);
+                    $vendor = Vendor::find($newVendorId);
                     $paymentLedger->ledgerable()->associate($vendor);
                     $paymentLedger->save();
                 }
@@ -726,13 +723,33 @@ class PurchaseController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Purchase Update Error: ' . $e->getMessage());
+            \Log::error('Purchase Update Error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred while updating the purchase.',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Recalculate all ledger entry balances for a vendor after deletions.
+     */
+    protected function recalculateVendorLedgerBalances($vendorId)
+    {
+        $entries = LedgerEntry::where('ledgerable_id', $vendorId)
+            ->where('ledgerable_type', Vendor::class)
+            ->orderBy('id')
+            ->get();
+
+        $runningBalance = 0;
+        foreach ($entries as $entry) {
+            $runningBalance += $entry->debit;
+            $runningBalance -= $entry->credit;
+            if ($entry->balance != $runningBalance) {
+                $entry->update(['balance' => $runningBalance]);
+            }
         }
     }
 
@@ -745,6 +762,8 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
+            $vendorId = $purchase->vendor_id;
+
             // 1. Reverse stock for each purchase item
             foreach ($purchase->purchaseItems as $item) {
                 $batch = Batch::where('product_id', $item->product_id)
@@ -777,36 +796,28 @@ class PurchaseController extends Controller
                     ]);
                 }
 
-                $item->delete();
+                $item->forceDelete();
             }
 
-            // 2. Reverse ledger entries for this purchase
-            $purchaseLedgers = LedgerEntry::where('ledgerable_id', $purchase->vendor_id)
+            // 2. Delete ledger entries for this purchase (hard-delete)
+            LedgerEntry::where('ledgerable_id', $vendorId)
                 ->where('ledgerable_type', Vendor::class)
-                ->where('description', 'LIKE', '%Invoice #' . $purchase->invoice_no . '%')
-                ->get();
+                ->where(function ($query) use ($purchase) {
+                    $query->where('description', 'Purchase Invoice #' . $purchase->invoice_no)
+                        ->orWhere('description', 'Payment for Purchase Invoice #' . $purchase->invoice_no)
+                        ->orWhere('description', 'LIKE', 'Reversal:%Invoice #' . $purchase->invoice_no . '%');
+                })
+                ->forceDelete();
 
-            foreach ($purchaseLedgers as $ledger) {
-                $reversalLedger = new LedgerEntry([
-                    'transaction_id' => $ledger->transaction_id,
-                    'date' => now(),
-                    'description' => 'Reversal: ' . $ledger->description,
-                    'debit' => $ledger->credit,
-                    'credit' => $ledger->debit,
-                    'balance' => $this->calculateNewBalance($purchase->vendor_id, $ledger->debit ?: $ledger->credit, $ledger->debit > 0 ? 'credit' : 'debit'),
-                    'user_id' => auth()->id(),
-                ]);
-                $vendor = Vendor::find($purchase->vendor_id);
-                $reversalLedger->ledgerable()->associate($vendor);
-                $reversalLedger->save();
-            }
-
-            // 3. Delete transactions/payments
+            // 3. Delete transactions/payments (hard-delete)
             foreach ($purchase->transactions as $transaction) {
-                $transaction->delete();
+                $transaction->forceDelete();
             }
 
-            // 4. Delete the purchase (soft delete)
+            // 4. Recalculate vendor ledger balances
+            $this->recalculateVendorLedgerBalances($vendorId);
+
+            // 5. Delete the purchase (soft delete)
             $purchase->delete();
 
             DB::commit();

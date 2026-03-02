@@ -1,0 +1,55 @@
+@extends('exports.layout')
+@section('content')
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Invoice No</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-right">Total</th>
+                <th class="text-right">Discount</th>
+                <th class="text-right">Net Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($records as $i => $r)
+                <tr class="{{ $i % 2 == 0 ? 'row-alt' : '' }}">
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $r->invoice_no }}</td>
+                    <td>{{ $r->customer->name ?? '—' }}</td>
+                    <td>{{ \Carbon\Carbon::parse($r->booking_date)->format('d M Y') }}</td>
+                    <td>
+                        @if($r->status === 'pending')
+                            <span class="badge badge-warning">Pending</span>
+                        @elseif($r->status === 'converted')
+                            <span class="badge badge-success">Converted</span>
+                        @elseif($r->status === 'cancelled')
+                            <span class="badge badge-danger">Cancelled</span>
+                        @else
+                            <span class="badge badge-info">{{ ucfirst($r->status) }}</span>
+                        @endif
+                    </td>
+                    <td class="text-right">{{ setting('currency_symbol') }}{{ format_number($r->total_amount) }}</td>
+                    <td class="text-right">{{ setting('currency_symbol') }}{{ format_number($r->discount_amount) }}</td>
+                    <td class="text-right">
+                        <strong>{{ setting('currency_symbol') }}{{ format_number($r->net_amount) }}</strong>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="5">Totals ({{ $records->count() }} records)</th>
+                <th class="text-right">{{ setting('currency_symbol') }}{{ format_number($records->sum('total_amount'), 2) }}
+                </th>
+                <th class="text-right">
+                    {{ setting('currency_symbol') }}{{ format_number($records->sum('discount_amount'), 2) }}
+                </th>
+                <th class="text-right">{{ setting('currency_symbol') }}{{ format_number($records->sum('net_amount'), 2) }}
+                </th>
+            </tr>
+        </tfoot>
+    </table>
+@endsection
