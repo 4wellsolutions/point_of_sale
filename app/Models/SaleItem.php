@@ -15,7 +15,7 @@ class SaleItem extends Model implements AuditableContract
         'sale_id',
         'product_id',
         'quantity',
-        'batch_no',
+        'batch_id',
         'location_id',
         'purchase_price',
         'sale_price',
@@ -41,6 +41,10 @@ class SaleItem extends Model implements AuditableContract
     public function location()
     {
         return $this->belongsTo(Location::class);
+    }
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class);
     }
     public function inventoryTransactions()
     {

@@ -73,7 +73,7 @@
                             @endif
                         </td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location->name }}</td>
-                        <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->batch_no ?? 'N/A' }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->batch?->batch_no ?? 'N/A' }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->quantity }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->sale_price) }}</td>
                         <td style="border: 1px solid #ddd; padding: 5px;">{{ format_number($item->discount) }}</td>

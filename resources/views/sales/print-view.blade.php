@@ -167,7 +167,7 @@
             @foreach($sale->saleItems as $item)
                 <tr>
                     <td>{{ $item->product->name }}</td>
-                    <td>{{ $item->batch_no ?? '—' }}</td>
+                    <td>{{ $item->batch?->batch_no ?? '—' }}</td>
                     <td>{{ $item->location->name ?? '—' }}</td>
                     <td style="text-align:right">{{ $item->quantity }}</td>
                     <td style="text-align:right">{{ format_number($item->sale_price) }}</td>

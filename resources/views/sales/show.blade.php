@@ -165,7 +165,7 @@
                                     @endif
                                 </td>
                                 <td class="fw-medium">{{ $item->product->name }}</td>
-                                <td><span class="font-monospace">{{ $item->batch_no ?? '—' }}</span></td>
+                                <td><span class="font-monospace">{{ $item->batch?->batch_no ?? '—' }}</span></td>
                                 <td>{{ $item->location->name }}</td>
                                 <td>
                                     @if($item->expiry_date)

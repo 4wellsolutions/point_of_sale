@@ -274,6 +274,7 @@ class SalesController extends Controller
             'customer',
             'saleItems.product',
             'saleItems.location',
+            'saleItems.batch',
             'transactions.paymentMethod',
             'customer.LedgerEntries' // Assuming Customer has ledgerEntries relation
         ])->findOrFail($id);
@@ -293,7 +294,7 @@ class SalesController extends Controller
     public function generatePdf($saleId)
     {
         // Retrieve the sale with related customer, sale items, transactions, and payment methods
-        $sale = Sale::with(['customer', 'saleItems.product', 'saleItems.location', 'transactions.paymentMethod'])->findOrFail($saleId);
+        $sale = Sale::with(['customer', 'saleItems.product', 'saleItems.location', 'saleItems.batch', 'transactions.paymentMethod'])->findOrFail($saleId);
 
         // Load the PDF view with the sale data
         $pdf = PDF::loadView('sales.pdf', compact('sale'));
@@ -307,7 +308,7 @@ class SalesController extends Controller
      */
     public function edit(string $id)
     {
-        $sale = Sale::with(['customer', 'saleItems.product', 'saleItems.location', 'transactions.paymentMethod'])->findOrFail($id);
+        $sale = Sale::with(['customer', 'saleItems.product', 'saleItems.location', 'saleItems.batch', 'transactions.paymentMethod'])->findOrFail($id);
         $paymentMethods = PaymentMethod::all();
         $locations = \App\Models\Location::all();
         return view('sales.edit', compact('sale', 'paymentMethods', 'locations'));
@@ -457,7 +458,6 @@ class SalesController extends Controller
                     'sale_id' => $sale->id,
                     'product_id' => $itemData['product_id'],
                     'batch_id' => $batch->id,
-                    'batch_no' => $itemData['batch_no'],
                     'location_id' => $itemData['location_id'],
                     'purchase_price' => $itemData['purchase_price'],
                     'sale_price' => $itemData['sale_price'],
@@ -676,7 +676,7 @@ class SalesController extends Controller
      */
     public function printView(\App\Models\Sale $sale)
     {
-        $sale->load(['customer', 'saleItems.product', 'saleItems.location', 'transactions.paymentMethod']);
+        $sale->load(['customer', 'saleItems.product', 'saleItems.location', 'saleItems.batch', 'transactions.paymentMethod']);
         return view('sales.print-view', compact('sale'));
     }
 }
