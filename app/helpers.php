@@ -49,13 +49,6 @@ if (!function_exists('format_number')) {
         $value = (float) $value;
         $value = round($value, 2);
 
-        $formatted = number_format($value, 2, '.', ',');
-
-        if (strpos($formatted, '.') !== false) {
-            $formatted = rtrim($formatted, '0');
-            $formatted = rtrim($formatted, '.');
-        }
-
-        return $formatted;
+        return number_format($value, 2, '.', ',');
     }
 }
