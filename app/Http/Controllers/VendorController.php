@@ -120,7 +120,25 @@ class VendorController extends Controller
             $data['image'] = $request->file('image')->storeAs('vendors', $imageName, 'public');
         }
 
-        Vendor::create($data);
+        $vendor = Vendor::create($data);
+
+        // Add ledger entry if opening balance exists
+        if (!empty($vendor->opening_balance) && $vendor->opening_balance > 0) {
+            $debit = $vendor->opening_balance_type === 'debit' ? $vendor->opening_balance : 0;
+            $credit = $vendor->opening_balance_type === 'credit' ? $vendor->opening_balance : 0;
+
+            $ledgerEntry = new \App\Models\LedgerEntry([
+                'transaction_id' => null,
+                'date' => $vendor->created_at ?? now(),
+                'description' => 'Opening Balance',
+                'debit' => $debit,
+                'credit' => $credit,
+                'balance' => $debit - $credit,
+                'user_id' => auth()->id(),
+            ]);
+            $ledgerEntry->ledgerable()->associate($vendor);
+            $ledgerEntry->save();
+        }
 
         return redirect()->route('vendors.index')->with('success', 'Vendor created successfully.');
     }
@@ -217,6 +235,46 @@ class VendorController extends Controller
 
         // Update the vendor
         $vendor->update($data);
+
+        // Check and update Opening Balance Ledger Entry
+        $openingLedger = \App\Models\LedgerEntry::where('ledgerable_id', $vendor->id)
+            ->where('ledgerable_type', \App\Models\Vendor::class)
+            ->where('description', 'Opening Balance')
+            ->first();
+
+        if (!empty($vendor->opening_balance) && $vendor->opening_balance > 0) {
+            $debit = $vendor->opening_balance_type === 'debit' ? $vendor->opening_balance : 0;
+            $credit = $vendor->opening_balance_type === 'credit' ? $vendor->opening_balance : 0;
+
+            if ($openingLedger) {
+                // Check if values actually changed to avoid unnecessary recalculation
+                if ($openingLedger->debit != $debit || $openingLedger->credit != $credit) {
+                    $openingLedger->update([
+                        'debit' => $debit,
+                        'credit' => $credit,
+                    ]);
+                    $this->recalculateVendorLedgerBalances($vendor->id);
+                }
+            } else {
+                $openingLedger = new \App\Models\LedgerEntry([
+                    'transaction_id' => null,
+                    'date' => $vendor->created_at ?? now(),
+                    'description' => 'Opening Balance',
+                    'debit' => $debit,
+                    'credit' => $credit,
+                    'balance' => 0,
+                    'user_id' => auth()->id(),
+                ]);
+                $openingLedger->ledgerable()->associate($vendor);
+                $openingLedger->save();
+
+                $this->recalculateVendorLedgerBalances($vendor->id);
+            }
+        } elseif ($openingLedger) {
+            // Opening balance removed
+            $openingLedger->delete();
+            $this->recalculateVendorLedgerBalances($vendor->id);
+        }
 
         return redirect()->route('vendors.index')->with('success', 'Vendor updated successfully.');
     }
@@ -322,5 +380,23 @@ class VendorController extends Controller
             fclose($file);
         };
         return response()->stream($callback, 200, $headers);
+    }
+
+    protected function recalculateVendorLedgerBalances($vendorId)
+    {
+        $entries = \App\Models\LedgerEntry::where('ledgerable_id', $vendorId)
+            ->where('ledgerable_type', \App\Models\Vendor::class)
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $runningBalance = 0;
+        foreach ($entries as $entry) {
+            $runningBalance += $entry->debit;
+            $runningBalance -= $entry->credit;
+            if ($entry->balance != $runningBalance) {
+                $entry->update(['balance' => $runningBalance]);
+            }
+        }
     }
 }

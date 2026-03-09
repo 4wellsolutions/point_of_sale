@@ -113,7 +113,25 @@ class CustomerController extends Controller
             $data['image'] = $request->file('image')->storeAs('customers', $imageName, 'public');
         }
 
-        Customer::create($data);
+        $customer = Customer::create($data);
+
+        // Add ledger entry if opening balance exists
+        if (!empty($customer->opening_balance) && $customer->opening_balance > 0) {
+            $debit = $customer->opening_balance_type === 'debit' ? $customer->opening_balance : 0;
+            $credit = $customer->opening_balance_type === 'credit' ? $customer->opening_balance : 0;
+
+            $ledgerEntry = new \App\Models\LedgerEntry([
+                'transaction_id' => null,
+                'date' => $customer->created_at ?? now(),
+                'description' => 'Opening Balance',
+                'debit' => $debit,
+                'credit' => $credit,
+                'balance' => $debit - $credit,
+                'user_id' => auth()->id(),
+            ]);
+            $ledgerEntry->ledgerable()->associate($customer);
+            $ledgerEntry->save();
+        }
 
         return redirect()->route('customers.index')->with('success', 'Customer created successfully.');
     }
@@ -201,6 +219,46 @@ class CustomerController extends Controller
 
         // Update the customer
         $customer->update($data);
+
+        // Check and update Opening Balance Ledger Entry
+        $openingLedger = \App\Models\LedgerEntry::where('ledgerable_id', $customer->id)
+            ->where('ledgerable_type', \App\Models\Customer::class)
+            ->where('description', 'Opening Balance')
+            ->first();
+
+        if (!empty($customer->opening_balance) && $customer->opening_balance > 0) {
+            $debit = $customer->opening_balance_type === 'debit' ? $customer->opening_balance : 0;
+            $credit = $customer->opening_balance_type === 'credit' ? $customer->opening_balance : 0;
+
+            if ($openingLedger) {
+                // Check if values actually changed to avoid unnecessary recalculation
+                if ($openingLedger->debit != $debit || $openingLedger->credit != $credit) {
+                    $openingLedger->update([
+                        'debit' => $debit,
+                        'credit' => $credit,
+                    ]);
+                    $this->recalculateCustomerLedgerBalances($customer->id);
+                }
+            } else {
+                $openingLedger = new \App\Models\LedgerEntry([
+                    'transaction_id' => null,
+                    'date' => $customer->created_at ?? now(),
+                    'description' => 'Opening Balance',
+                    'debit' => $debit,
+                    'credit' => $credit,
+                    'balance' => 0,
+                    'user_id' => auth()->id(),
+                ]);
+                $openingLedger->ledgerable()->associate($customer);
+                $openingLedger->save();
+
+                $this->recalculateCustomerLedgerBalances($customer->id);
+            }
+        } elseif ($openingLedger) {
+            // Opening balance removed
+            $openingLedger->delete();
+            $this->recalculateCustomerLedgerBalances($customer->id);
+        }
 
         return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
     }
@@ -300,5 +358,23 @@ class CustomerController extends Controller
             fclose($file);
         };
         return response()->stream($callback, 200, $headers);
+    }
+
+    protected function recalculateCustomerLedgerBalances($customerId)
+    {
+        $entries = \App\Models\LedgerEntry::where('ledgerable_id', $customerId)
+            ->where('ledgerable_type', \App\Models\Customer::class)
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $runningBalance = 0;
+        foreach ($entries as $entry) {
+            $runningBalance += $entry->debit;
+            $runningBalance -= $entry->credit;
+            if ($entry->balance != $runningBalance) {
+                $entry->update(['balance' => $runningBalance]);
+            }
+        }
     }
 }
